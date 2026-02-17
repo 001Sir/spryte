@@ -59,6 +59,30 @@ canvas {
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
 
+/* Fullscreen game canvas scaling */
+#game-container:fullscreen {
+  display: flex;
+  flex-direction: column;
+  background: #000;
+}
+
+#game-container:fullscreen > div:first-child {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+#game-container:fullscreen canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: contain !important;
+  image-rendering: auto !important;
+}
+
 /* Play button glow */
 @keyframes glow-pulse {
   0%, 100% { box-shadow: 0 0 20px rgba(233, 69, 96, 0.3); }
