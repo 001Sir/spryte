@@ -179,12 +179,13 @@ function makeLevels(): Level[] {
       name: 'Orb Gauntlet',
       walls: [
         ...border(),
-        { x: 200, y: 14, w: 14, h: 200 },
-        { x: 400, y: 200, w: 14, h: 400 },
-        { x: 600, y: 14, w: 14, h: 350 },
+        { x: 200, y: 14, w: 14, h: 250 },
+        { x: 400, y: 336, w: 14, h: 264 },
+        { x: 600, y: 14, w: 14, h: 300 },
       ],
       spikes: [
-        { x: 200, y: 200, w: 200, h: 14, dir: 'down' },
+        { x: 250, y: 264, w: 112, h: 14, dir: 'down' },
+        { x: 450, y: 322, w: 112, h: 14, dir: 'up' },
       ],
       bouncePads: [],
       windZones: [],
@@ -192,14 +193,14 @@ function makeLevels(): Level[] {
       gravityWells: [], stickyWalls: [], portals: [],
       orbs: [
         { x: 100, y: 150, collected: false },
-        { x: 300, y: 100, collected: false },
-        { x: 300, y: 400, collected: false },
-        { x: 500, y: 300, collected: false },
-        { x: 700, y: 200, collected: false },
+        { x: 300, y: 450, collected: false },
+        { x: 300, y: 120, collected: false },
+        { x: 500, y: 200, collected: false },
+        { x: 700, y: 450, collected: false },
       ],
       startX: 60, startY: 500,
       exitX: 700, exitY: 500,
-      par: 4,
+      par: 5,
     },
     // 9: Gravity Well
     {
@@ -266,6 +267,11 @@ export default function DriftGame() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Preload Drift sound files
+    SoundEngine.preload('/sounds/drift-launch.wav');
+    SoundEngine.preload('/sounds/drift-wall-hit.wav');
+    SoundEngine.preload('/sounds/drift-level-complete.wav');
 
     // ── State ──
     type GState = 'menu' | 'playing' | 'levelComplete' | 'gameover';
@@ -847,7 +853,7 @@ export default function DriftGame() {
             const impactSpeed = Math.abs(dot);
             if (impactSpeed > 0.5) {
               shakeIntensity = Math.min(impactSpeed * 0.5, 8);
-              SoundEngine.play('wallHit');
+              SoundEngine.playFile('/sounds/drift-wall-hit.wav');
               spawnParticles(gx, gy, Math.floor(impactSpeed * 2), '#51e2ff', impactSpeed * 0.5);
               // squash in impact direction
               if (Math.abs(col.nx) > Math.abs(col.ny)) {
@@ -885,6 +891,7 @@ export default function DriftGame() {
           SoundEngine.play('spikeHit');
           state = 'gameover';
           SoundEngine.play('gameOver');
+          SoundEngine.stopMusic();
           return;
         }
       }
@@ -904,7 +911,7 @@ export default function DriftGame() {
             spawnParticles(gx, gy, 10, '#51e2ff', 3);
             scaleX = Math.abs(col.nx) > 0.5 ? 0.6 : 1.4;
             scaleY = Math.abs(col.ny) > 0.5 ? 0.6 : 1.4;
-            SoundEngine.play('bounce');
+            SoundEngine.playFile('/sounds/drift-wall-hit.wav', 0.4);
           }
           onSurface = false;
         }
@@ -949,7 +956,8 @@ export default function DriftGame() {
         if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScoreVal('drift', totalScore); }
         state = 'levelComplete';
         spawnParticles(lv.exitX, lv.exitY, 25, '#51e2ff', 5);
-        SoundEngine.play('levelComplete');
+        SoundEngine.playFile('/sounds/drift-level-complete.wav');
+        SoundEngine.pauseMusic();
       }
     };
 
@@ -1397,6 +1405,7 @@ export default function DriftGame() {
           totalScore = 0;
           newHighScore = false;
           initLevel(0);
+          SoundEngine.playMusic('/sounds/drift-music.mp3');
         }
         return;
       }
@@ -1404,6 +1413,7 @@ export default function DriftGame() {
       if (state === 'gameover') {
         state = 'playing';
         initLevel(currentLevel);
+        SoundEngine.playMusic('/sounds/drift-music.mp3');
         return;
       }
 
@@ -1414,10 +1424,12 @@ export default function DriftGame() {
             state = 'menu';
             totalScore = 0;
             newHighScore = false;
+            SoundEngine.stopMusic();
           } else {
             currentLevel++;
             state = 'playing';
             initLevel(currentLevel);
+            SoundEngine.resumeMusic();
           }
         }
         return;
@@ -1480,7 +1492,7 @@ export default function DriftGame() {
           }
 
           spawnParticles(gx, gy, 6, '#51e2ff', 2);
-          SoundEngine.play('launch');
+          SoundEngine.playFile('/sounds/drift-launch.wav');
         }
         isAiming = false;
         canvas.style.cursor = 'default';
@@ -1527,6 +1539,7 @@ export default function DriftGame() {
           totalScore = 0;
           newHighScore = false;
           initLevel(0);
+          SoundEngine.playMusic('/sounds/drift-music.mp3');
         }
         return;
       }
@@ -1535,6 +1548,7 @@ export default function DriftGame() {
         if (key === ' ' || key === 'Enter') {
           state = 'playing';
           initLevel(currentLevel);
+          SoundEngine.playMusic('/sounds/drift-music.mp3');
         }
         return;
       }
@@ -1545,10 +1559,12 @@ export default function DriftGame() {
             state = 'menu';
             totalScore = 0;
             newHighScore = false;
+            SoundEngine.stopMusic();
           } else {
             currentLevel++;
             state = 'playing';
             initLevel(currentLevel);
+            SoundEngine.resumeMusic();
           }
         }
         return;
@@ -1558,6 +1574,8 @@ export default function DriftGame() {
         // Pause toggle
         if (key === 'p' || key === 'P' || key === 'Escape') {
           paused = !paused;
+          if (paused) SoundEngine.pauseMusic();
+          else SoundEngine.resumeMusic();
           return;
         }
         if (paused) return;
@@ -1601,7 +1619,7 @@ export default function DriftGame() {
         }
 
         spawnParticles(gx, gy, 6, '#51e2ff', 2);
-        SoundEngine.play('launch');
+        SoundEngine.playFile('/sounds/drift-launch.wav');
         kbCharging = false;
         SoundEngine.stopLoop('charge');
         kbAiming = false;
@@ -1633,6 +1651,7 @@ export default function DriftGame() {
 
     return () => {
       cancelAnimationFrame(rafId);
+      SoundEngine.stopMusic();
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseup', handleMouseUp);

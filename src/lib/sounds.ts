@@ -429,6 +429,15 @@ class _SoundEngine {
   private loopTimers: Map<string, number> = new Map();
   private static COOLDOWN_MS = 30;
 
+  // Music playback
+  private musicAudio: HTMLAudioElement | null = null;
+  private musicVolume: number = 0.35;
+  private musicPlaying: boolean = false;
+
+  // Cached audio file buffers
+  private fileCache: Map<string, AudioBuffer> = new Map();
+  private loadingFiles: Map<string, Promise<AudioBuffer | null>> = new Map();
+
   constructor() {
     // Load persisted settings (SSR-safe)
     if (typeof window !== 'undefined') {
@@ -522,6 +531,10 @@ class _SoundEngine {
     if (muted) {
       this.stopAllLoops();
     }
+    // Sync music volume
+    if (this.musicAudio) {
+      this.musicAudio.volume = muted ? 0 : this.musicVolume;
+    }
     try {
       localStorage.setItem('spryte-sound-muted', String(muted));
     } catch {
@@ -532,6 +545,89 @@ class _SoundEngine {
   toggleMute() {
     this.setMuted(!this._muted);
     return this._muted;
+  }
+
+  // ── File-based SFX ──
+
+  /** Preload an audio file into the buffer cache */
+  preload(src: string) {
+    this.init();
+    if (!this.ctx) return;
+    if (this.fileCache.has(src) || this.loadingFiles.has(src)) return;
+    const promise = fetch(src)
+      .then(r => r.arrayBuffer())
+      .then(buf => this.ctx!.decodeAudioData(buf))
+      .then(decoded => { this.fileCache.set(src, decoded); return decoded; })
+      .catch(() => null);
+    this.loadingFiles.set(src, promise);
+  }
+
+  /** Play an audio file (WAV/MP3) as a one-shot sound effect */
+  playFile(src: string, volume = 0.5) {
+    if (this._muted) return;
+    this.init();
+    if (!this.ctx || !this.master) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const cached = this.fileCache.get(src);
+    if (cached) {
+      this._playBuffer(cached, volume);
+    } else {
+      // Load on demand
+      const loading = this.loadingFiles.get(src);
+      if (loading) {
+        loading.then(buf => { if (buf) this._playBuffer(buf, volume); });
+      } else {
+        this.preload(src);
+        this.loadingFiles.get(src)?.then(buf => { if (buf) this._playBuffer(buf, volume); });
+      }
+    }
+  }
+
+  private _playBuffer(buffer: AudioBuffer, volume: number) {
+    if (!this.ctx || !this.master) return;
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+    source.connect(gain).connect(this.master);
+    source.start();
+  }
+
+  // ── Music (MP3 file playback) ──
+
+  playMusic(src: string, loop = true) {
+    if (typeof window === 'undefined') return;
+    this.stopMusic();
+    const audio = new Audio(src);
+    audio.loop = loop;
+    audio.volume = this._muted ? 0 : this.musicVolume;
+    audio.play().catch(() => {
+      // Autoplay blocked — will retry on next user gesture via ensureResumed
+    });
+    this.musicAudio = audio;
+    this.musicPlaying = true;
+  }
+
+  stopMusic() {
+    if (this.musicAudio) {
+      this.musicAudio.pause();
+      this.musicAudio.currentTime = 0;
+      this.musicAudio = null;
+    }
+    this.musicPlaying = false;
+  }
+
+  pauseMusic() {
+    if (this.musicAudio && this.musicPlaying) {
+      this.musicAudio.pause();
+    }
+  }
+
+  resumeMusic() {
+    if (this.musicAudio && this.musicPlaying && !this._muted) {
+      this.musicAudio.play().catch(() => {});
+    }
   }
 
   get volume() {
