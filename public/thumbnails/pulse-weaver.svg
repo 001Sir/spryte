@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#0a0a0f"/>
+  <line x1="0" y1="280" x2="400" y2="280" stroke="#f43f5e" stroke-width="0.5" opacity="0.2"/>
+  <line x1="0" y1="260" x2="400" y2="260" stroke="#f43f5e" stroke-width="0.5" opacity="0.15"/>
+  <line x1="0" y1="240" x2="400" y2="240" stroke="#f43f5e" stroke-width="0.5" opacity="0.1"/>
+  <polygon points="200,230 190,250 210,250" fill="#f43f5e" opacity="0.9"/>
+  <path d="M200,230 Q220,210 240,220 Q260,230 280,200 Q300,170 320,180 Q340,190 360,160" fill="none" stroke="#f43f5e" stroke-width="2.5" opacity="0.8"/>
+  <path d="M200,230 Q220,215 240,225 Q260,235 280,205 Q300,175 320,185 Q340,195 360,165" fill="none" stroke="#ff6b8a" stroke-width="1" opacity="0.4"/>
+  <polygon points="340,150 330,140 330,160" fill="none" stroke="#00ff88" stroke-width="1.5" opacity="0.7"/>
+  <rect x="90" y="80" width="30" height="30" fill="none" stroke="#ffaa00" stroke-width="1.5" opacity="0.6" transform="rotate(15, 105, 95)"/>
+  <polygon points="280,70 270,55 275,55 265,40 275,40 280,25 285,40 295,40 285,55 290,55" fill="none" stroke="#00aaff" stroke-width="1" opacity="0.5"/>
+  <circle cx="200" cy="230" r="4" fill="#ffffff" opacity="0.6"/>
+  <text x="200" y="285" text-anchor="middle" fill="#f43f5e" font-family="sans-serif" font-size="18" font-weight="bold" opacity="0.8">PULSE WEAVER</text>
+</svg>

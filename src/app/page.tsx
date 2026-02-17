@@ -1,65 +1,123 @@
-import Image from "next/image";
+import { games, getAllCategories, getGamesByCategory } from '@/data/games';
+import GameCard from '@/components/game/GameCard';
+import Link from 'next/link';
+
+const categoryIcons: Record<string, string> = {
+  Action: '⚡',
+  Arcade: '🕹️',
+  Puzzle: '🧩',
+  Racing: '🏎️',
+  Strategy: '♟️',
+};
+
+const categoryColors: Record<string, string> = {
+  Action: '#e94560',
+  Arcade: '#f59e0b',
+  Puzzle: '#06b6d4',
+  Racing: '#84cc16',
+  Strategy: '#7c3aed',
+};
 
 export default function Home() {
+  const featured = games.find((g) => g.featured) || games[0];
+  const categories = getAllCategories();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Hero */}
+      <section className="relative rounded-2xl overflow-hidden mb-14 border border-border">
+        <div
+          className="animate-gradient p-8 sm:p-12 md:p-16 relative"
+          style={{
+            background: `linear-gradient(135deg, ${featured.color}20, #e9456020, ${featured.color}30, #0a0a0f)`,
+            backgroundSize: '200% 200%',
+          }}
+        >
+          {/* Subtle decorative circles */}
+          <div
+            className="absolute top-[-50px] right-[-50px] w-[200px] h-[200px] rounded-full opacity-10 blur-3xl"
+            style={{ background: featured.color }}
+          />
+          <div
+            className="absolute bottom-[-30px] left-[20%] w-[150px] h-[150px] rounded-full opacity-10 blur-3xl"
+            style={{ background: '#e94560' }}
+          />
+
+          <div className="relative max-w-lg">
+            <span className="text-xs font-medium uppercase tracking-wider text-accent">
+              Featured Game
+            </span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mt-2 mb-4 leading-tight">
+              {featured.title}
+            </h1>
+            <p className="text-muted mb-6 text-lg">{featured.description}</p>
+
+            {/* Stat badges */}
+            <div className="flex flex-wrap gap-3 mb-8">
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-foreground/80">
+                🎮 {games.length} Games
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-foreground/80">
+                📂 {categories.length} Categories
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-foreground/80">
+                ✨ Free Forever
+              </span>
+            </div>
+
+            <Link
+              href={`/games/${featured.slug}`}
+              className="animate-glow inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-7 py-3.5 rounded-xl font-semibold transition-all duration-300"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Play Now
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* All Games / Trending */}
+      <section className="mb-14" id="games">
+        <h2 className="text-2xl font-bold mb-6">Trending Games</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {games.map((game) => (
+            <GameCard key={game.slug} game={game} />
+          ))}
         </div>
-      </main>
+      </section>
+
+      {/* Browse by Category */}
+      <section className="mb-14">
+        <h2 className="text-2xl font-bold mb-6">Browse by Category</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          {categories.map((cat) => {
+            const catGames = getGamesByCategory(cat);
+            const color = categoryColors[cat] || '#e94560';
+            const icon = categoryIcons[cat] || '🎮';
+            return (
+              <Link
+                key={cat}
+                href={`/category/${cat.toLowerCase()}`}
+                className="group relative overflow-hidden rounded-xl border border-border bg-card hover:border-accent/40 transition-all duration-200 p-5 hover:scale-[1.02]"
+              >
+                <div
+                  className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity"
+                  style={{ background: `linear-gradient(135deg, ${color}, transparent)` }}
+                />
+                <div className="relative">
+                  <span className="text-2xl mb-2 block">{icon}</span>
+                  <h3 className="font-semibold text-foreground">{cat}</h3>
+                  <p className="text-xs text-muted mt-1">
+                    {catGames.length} game{catGames.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }

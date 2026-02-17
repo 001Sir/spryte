@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#0a0a0f"/>
+  <circle cx="150" cy="140" r="30" fill="#d946ef" opacity="0.3"/>
+  <circle cx="150" cy="140" r="30" fill="none" stroke="#d946ef" stroke-width="2" opacity="0.8"/>
+  <circle cx="150" cy="140" r="35" fill="none" stroke="#d946ef" stroke-width="1" opacity="0.4"/>
+  <circle cx="280" cy="110" r="14" fill="#ff69ff" opacity="0.4"/>
+  <circle cx="280" cy="110" r="14" fill="none" stroke="#ff69ff" stroke-width="2" opacity="0.9"/>
+  <path d="M175,130 Q210,100 250,105 Q265,108 280,110" fill="none" stroke="#d946ef" stroke-width="2.5" opacity="0.7"/>
+  <circle cx="200" cy="115" r="2" fill="#d946ef" opacity="0.8"/>
+  <circle cx="225" cy="107" r="2" fill="#d946ef" opacity="0.6"/>
+  <circle cx="250" cy="106" r="2" fill="#d946ef" opacity="0.4"/>
+  <circle cx="100" cy="200" r="10" fill="#22c55e" opacity="0.5"/>
+  <circle cx="100" cy="200" r="10" fill="none" stroke="#22c55e" stroke-width="1"/>
+  <circle cx="300" cy="190" r="12" fill="#eab308" opacity="0.5"/>
+  <circle cx="300" cy="190" r="12" fill="none" stroke="#eab308" stroke-width="1"/>
+  <circle cx="200" cy="210" r="8" fill="#ef4444" opacity="0.5"/>
+  <circle cx="200" cy="210" r="8" fill="none" stroke="#ef4444" stroke-width="1"/>
+  <circle cx="340" cy="70" r="4" fill="#06b6d4" opacity="0.7"/>
+  <circle cx="60" cy="90" r="4" fill="#06b6d4" opacity="0.7"/>
+  <text x="200" y="275" text-anchor="middle" fill="#d946ef" font-family="sans-serif" font-size="18" font-weight="bold" opacity="0.8">SYMBIOSIS</text>
+</svg>
