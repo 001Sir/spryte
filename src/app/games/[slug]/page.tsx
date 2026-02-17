@@ -111,11 +111,11 @@ export default async function GamePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-sm text-muted mb-5">
+      <nav className="flex items-center gap-2 text-sm text-muted mb-5" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-foreground transition-colors">
           Home
         </Link>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40" aria-hidden="true">
           <path d="M9 18l6-6-6-6" />
         </svg>
         <Link
@@ -124,10 +124,10 @@ export default async function GamePage({ params }: Props) {
         >
           {primaryCategory}
         </Link>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40" aria-hidden="true">
           <path d="M9 18l6-6-6-6" />
         </svg>
-        <span className="text-foreground font-medium">{game.title}</span>
+        <span className="text-foreground font-medium truncate">{game.title}</span>
       </nav>
 
       <GamePlayer slug={game.slug} />

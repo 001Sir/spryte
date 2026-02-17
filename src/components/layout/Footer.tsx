@@ -5,7 +5,7 @@ export default function Footer() {
   const categories = getAllCategories();
 
   return (
-    <footer className="border-t border-border mt-20 pt-12 pb-8 px-4">
+    <footer className="border-t border-border mt-20 pt-12 pb-8 px-4" role="contentinfo">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
         {/* Branding */}
         <div className="col-span-2 md:col-span-1">
@@ -24,48 +24,48 @@ export default function Footer() {
         </div>
 
         {/* Categories */}
-        <div>
+        <nav aria-label="Game categories">
           <h4 className="font-semibold mb-3 text-sm text-foreground">Categories</h4>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             {categories.map((cat) => (
               <Link
                 key={cat}
                 href={`/category/${cat.toLowerCase()}`}
-                className="text-sm text-muted hover:text-accent transition-colors"
+                className="text-sm text-muted hover:text-accent transition-colors py-0.5"
               >
                 {cat}
               </Link>
             ))}
           </div>
-        </div>
+        </nav>
 
         {/* Quick Links */}
-        <div>
+        <nav aria-label="Quick links">
           <h4 className="font-semibold mb-3 text-sm text-foreground">Quick Links</h4>
-          <div className="flex flex-col gap-1.5">
-            <Link href="/" className="text-sm text-muted hover:text-accent transition-colors">
+          <div className="flex flex-col gap-2">
+            <Link href="/" className="text-sm text-muted hover:text-accent transition-colors py-0.5">
               Home
             </Link>
-            <Link href="/search" className="text-sm text-muted hover:text-accent transition-colors">
+            <Link href="/search" className="text-sm text-muted hover:text-accent transition-colors py-0.5">
               Search
             </Link>
-            <Link href="/#games" className="text-sm text-muted hover:text-accent transition-colors">
+            <Link href="/#games" className="text-sm text-muted hover:text-accent transition-colors py-0.5">
               All Games
             </Link>
           </div>
-        </div>
+        </nav>
 
         {/* Legal & Info */}
         <div>
           <h4 className="font-semibold mb-3 text-sm text-foreground">Legal</h4>
-          <div className="flex flex-col gap-1.5">
-            <Link href="/privacy" className="text-sm text-muted hover:text-accent transition-colors">
+          <nav aria-label="Legal links" className="flex flex-col gap-2">
+            <Link href="/privacy" className="text-sm text-muted hover:text-accent transition-colors py-0.5">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="text-sm text-muted hover:text-accent transition-colors">
+            <Link href="/terms" className="text-sm text-muted hover:text-accent transition-colors py-0.5">
               Terms of Service
             </Link>
-          </div>
+          </nav>
           <p className="text-sm text-muted mt-4">
             All games run in your browser using HTML5. No plugins required.
           </p>
