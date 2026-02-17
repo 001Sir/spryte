@@ -574,8 +574,7 @@ export default function PulseWeaverGame() {
       // Beam hit detection
       if (firing) {
         const beamDir = normalize({ x: mouseX - px, y: mouseY - py });
-        const _beamEndX = px + beamDir.x * BEAM_LENGTH;
-        const _beamEndY = py + beamDir.y * BEAM_LENGTH;
+        // beamDir is used for hit detection below
 
         const beamAngles = [0];
         if (hasMultibeam) {
@@ -912,8 +911,7 @@ export default function PulseWeaverGame() {
 
     function drawBeam() {
       const beamDir = normalize({ x: mouseX - px, y: mouseY - py });
-      const _perpX = -beamDir.y;
-      const _perpY = beamDir.x;
+      // perpendicular computed per-beam in the loop below
 
       const angles = [0];
       if (hasMultibeam) angles.push(-0.15, 0.15);

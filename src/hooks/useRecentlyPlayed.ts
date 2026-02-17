@@ -1,19 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 
 const STORAGE_KEY = 'spryte-recently-played';
 const MAX_RECENT = 6;
 
-export function useRecentlyPlayed() {
-  const [recent, setRecent] = useState<string[]>([]);
+function getStoredRecent(): string[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setRecent(JSON.parse(stored));
-    } catch {}
-  }, []);
+const subscribe = () => () => {};
+
+export function useRecentlyPlayed() {
+  const initial = useSyncExternalStore(subscribe, getStoredRecent, () => []);
+  const [recent, setRecent] = useState<string[]>(initial);
 
   const addPlayed = (slug: string) => {
     try {

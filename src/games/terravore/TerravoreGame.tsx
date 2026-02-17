@@ -11,7 +11,7 @@ const ROWS = 30;
 const CELL = W / COLS; // 20px
 const LIME = '#84cc16';
 const LIME_DARK = '#65a30d';
-const _LIME_DARKER = '#4d7c0f';
+// const LIME_DARKER = '#4d7c0f';
 
 // ─── Cell types ───────────────────────────────────────────────────────────────
 const EMPTY = 0;
@@ -24,8 +24,8 @@ const LAVA = 6;
 const BEDROCK = 7;
 const SURFACE = 8; // sky / air above ground
 
-type _CellType = typeof EMPTY | typeof GRASS | typeof SOIL | typeof ROCK |
-  typeof GEM | typeof SOIL | typeof WATER | typeof LAVA | typeof BEDROCK | typeof SURFACE;
+// type CellType = typeof EMPTY | typeof GRASS | typeof SOIL | typeof ROCK |
+//   typeof GEM | typeof SOIL | typeof WATER | typeof LAVA | typeof BEDROCK | typeof SURFACE;
 
 // ─── Direction helpers ────────────────────────────────────────────────────────
 const DIR = { UP: 0, DOWN: 1, LEFT: 2, RIGHT: 3 } as const;

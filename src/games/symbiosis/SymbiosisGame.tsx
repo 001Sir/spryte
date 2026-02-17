@@ -13,7 +13,7 @@ const CANVAS_H = 600;
 const BG = '#0a0a0f';
 const FUCHSIA = '#d946ef';
 const MAGENTA = '#f0abfc';
-const _CYAN = '#06d6a0';
+// const CYAN = '#06d6a0';
 const RESOURCE_CYAN = '#22d3ee';
 
 const HOST_RADIUS = 24;

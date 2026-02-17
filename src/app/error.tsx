@@ -2,13 +2,10 @@
 
 import Link from 'next/link';
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function Error(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  { error, reset }: { error: Error & { digest?: string }; reset: () => void },
+) {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="text-center max-w-md">

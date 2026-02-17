@@ -196,8 +196,8 @@ export default function ChromaFloodGame() {
 
     // Hover tracking
     let hoveredPaletteIdx = -1;
-    let _mouseX = 0;
-    let _mouseY = 0;
+    let _mouseX = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
+    let _mouseY = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
 
     // --- Helpers -------------------------------------------------------
 
@@ -208,7 +208,7 @@ export default function ChromaFloodGame() {
       return { r, g, b };
     };
 
-    const _lerpColor = (a: string, b: string, t: number): string => {
+    const _lerpColor = (a: string, b: string, t: number): string => { // eslint-disable-line @typescript-eslint/no-unused-vars
       const ca = hexToRgb(a);
       const cb = hexToRgb(b);
       const r = Math.round(ca.r + (cb.r - ca.r) * t);

@@ -357,7 +357,7 @@ export default function EchoChamberGame() {
       keys[e.key] = false;
     }
 
-    function onClick(_e: MouseEvent) {
+    function onClick() {
       if (state === 'menu') {
         state = 'playing';
         SoundEngine.play('menuSelect');

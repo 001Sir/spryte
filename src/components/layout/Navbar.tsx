@@ -10,6 +10,7 @@ export default function Navbar() {
   const [query, setQuery] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [lastPathname, setLastPathname] = useState('');
   const router = useRouter();
   const pathname = usePathname();
   const categories = getAllCategories();
@@ -23,9 +24,10 @@ export default function Navbar() {
   }, []);
 
   // Close mobile menu on route change
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    if (mobileOpen) setMobileOpen(false);
+  }
 
   // Body scroll lock when mobile menu is open
   useEffect(() => {

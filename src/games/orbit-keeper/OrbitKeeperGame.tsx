@@ -700,7 +700,7 @@ export default function OrbitKeeperGame() {
       c.globalAlpha = 1;
     }
 
-    function drawSolarFlare(flare: SolarFlare, _time: number) {
+    function drawSolarFlare(flare: SolarFlare) {
       const c = ctx!;
       const progress = 1 - flare.life / flare.maxLife;
       const burstPhase = progress < 0.5 ? progress * 2 : 2 - progress * 2;
@@ -1047,7 +1047,7 @@ export default function OrbitKeeperGame() {
     // Main Update & Render
     // -----------------------------------------------------------------------
 
-    function update(dt: number, time: number) {
+    function update(dt: number) {
       if (state !== 'playing' || paused) return;
 
       // Update planets
@@ -1168,7 +1168,7 @@ export default function OrbitKeeperGame() {
 
       // Solar flares (behind sun)
       for (const flare of solarFlares) {
-        drawSolarFlare(flare, time);
+        drawSolarFlare(flare);
       }
 
       // Sun
@@ -1216,7 +1216,7 @@ export default function OrbitKeeperGame() {
       const dt = Math.min(lastTime === 0 ? DT : (timestamp - lastTime) / 1000, 0.05);
       lastTime = timestamp;
 
-      update(dt, time);
+      update(dt);
       render(time);
 
       animId = requestAnimationFrame(gameLoop);

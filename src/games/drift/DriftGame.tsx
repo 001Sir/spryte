@@ -830,8 +830,7 @@ export default function DriftGame() {
     };
 
     // ── Collision ──
-    const handleCollisions = (lv: Level, _dt: number) => {
-      const _speed = Math.sqrt(gvx * gvx + gvy * gvy);
+    const handleCollisions = (lv: Level) => {
 
       // Walls
       const allWalls: Rect[] = [...lv.walls];
@@ -1037,10 +1036,6 @@ export default function DriftGame() {
 
       // Keyboard aim direction — smooth rotation
       if (onSurface && !isAiming) {
-        let rotateDir = 0;
-        if (keysDown['ArrowLeft'] || keysDown['a']) rotateDir -= 1;
-        if (keysDown['ArrowRight'] || keysDown['d']) rotateDir += 1;
-
         // Up/down also influence angle (steer toward target angle)
         let targetAngle: number | null = null;
         const hasLeft = keysDown['ArrowLeft'] || keysDown['a'];
@@ -1091,7 +1086,7 @@ export default function DriftGame() {
       if (shakeIntensity < 0.1) shakeIntensity = 0;
 
       // Collisions
-      handleCollisions(lv, dt);
+      handleCollisions(lv);
     };
 
     // ── Draw ──

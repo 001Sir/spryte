@@ -43,7 +43,6 @@ export default function GamePlayer({ slug }: { slug: string }) {
   // Track this game as recently played
   useEffect(() => {
     addPlayed(slug);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- addPlayed is stable from useRef-backed hook
   }, [slug, addPlayed]);
 
   const containerRef = useCallback(
