@@ -498,6 +498,13 @@ export default function EchoChamberGame() {
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
+    const onVisibilityChange = () => {
+      if (document.hidden && state === 'playing' && !paused) {
+        paused = true;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     /* ── collision helpers ───────────────────────────────── */
     function wallAt(wx: number, wy: number): boolean {
       const c = Math.floor(wx / TILE);
@@ -1052,6 +1059,7 @@ export default function EchoChamberGame() {
       canvas.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 

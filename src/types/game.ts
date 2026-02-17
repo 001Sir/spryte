@@ -4,6 +4,8 @@ export interface Game {
   description: string;
   categories: Category[];
   controls: string;
+  howToPlay?: string[];
+  controlsList?: { key: string; action: string }[];
   difficulty: 'Easy' | 'Medium' | 'Hard';
   thumbnail: string;
   color: string;

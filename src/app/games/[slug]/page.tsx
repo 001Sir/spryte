@@ -33,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `${game.description} No downloads required.`,
       url: `https://sprytegames.com/games/${slug}`,
       type: 'website',
+      images: [{ url: game.thumbnail, alt: game.title }],
     },
     twitter: {
       card: 'summary',

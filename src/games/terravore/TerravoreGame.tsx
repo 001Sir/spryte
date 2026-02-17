@@ -11,7 +11,6 @@ const ROWS = 30;
 const CELL = W / COLS; // 20px
 const LIME = '#84cc16';
 const LIME_DARK = '#65a30d';
-// const LIME_DARKER = '#4d7c0f';
 
 // ─── Cell types ───────────────────────────────────────────────────────────────
 const EMPTY = 0;
@@ -668,6 +667,13 @@ export default function TerravoreGame() {
     canvas.addEventListener('click', onClick);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+
+    const onVisibilityChange = () => {
+      if (document.hidden && state === 'Playing' && !paused) {
+        paused = true;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     // ── Update ──────────────────────────────────────────────────────────────
     function update() {
@@ -1488,6 +1494,7 @@ export default function TerravoreGame() {
       canvas.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 

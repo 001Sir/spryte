@@ -144,15 +144,47 @@ export default function GameInfo({ game }: { game: Game }) {
           How to Play
         </button>
         {howToPlayOpen && (
-          <div id="how-to-play-content" className="mt-3 pl-6 text-sm text-muted space-y-2" role="region" aria-label="How to play instructions">
-            <p><strong className="text-foreground">Controls:</strong> {game.controls}</p>
+          <div id="how-to-play-content" className="mt-3 pl-6 text-sm text-muted space-y-4" role="region" aria-label="How to play instructions">
+            {/* Step-by-step instructions */}
+            {game.howToPlay ? (
+              <div>
+                <strong className="text-foreground block mb-2">Instructions:</strong>
+                <ol className="list-decimal list-inside space-y-1.5">
+                  {game.howToPlay.map((step, i) => (
+                    <li key={i}>{step}</li>
+                  ))}
+                </ol>
+              </div>
+            ) : (
+              <p><strong className="text-foreground">Objective:</strong> {game.description}</p>
+            )}
+
+            {/* Structured controls grid */}
+            {game.controlsList ? (
+              <div>
+                <strong className="text-foreground block mb-2">Controls:</strong>
+                <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 items-center">
+                  {game.controlsList.map((ctrl, i) => (
+                    <div key={i} className="contents">
+                      <kbd className="inline-block text-xs font-mono font-semibold px-2 py-1 rounded bg-white/5 border border-white/10 text-foreground whitespace-nowrap">
+                        {ctrl.key}
+                      </kbd>
+                      <span>{ctrl.action}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p><strong className="text-foreground">Controls:</strong> {game.controls}</p>
+            )}
+
+            {/* Difficulty info */}
             <p><strong className="text-foreground">Difficulty:</strong>{' '}
               <span style={{ color: diff.color }}>{diff.label}</span>
               {game.difficulty === 'Easy' && ' — Great for beginners'}
               {game.difficulty === 'Medium' && ' — Some experience recommended'}
               {game.difficulty === 'Hard' && ' — For experienced players'}
             </p>
-            <p><strong className="text-foreground">Objective:</strong> {game.description}</p>
           </div>
         )}
       </div>

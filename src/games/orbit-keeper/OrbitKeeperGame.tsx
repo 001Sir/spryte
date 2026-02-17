@@ -1398,6 +1398,13 @@ export default function OrbitKeeperGame() {
     const onContextMenu = (e: Event) => e.preventDefault();
     canvas.addEventListener('contextmenu', onContextMenu);
 
+    const onVisibilityChange = () => {
+      if (document.hidden && state === 'playing' && !paused) {
+        paused = true;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     animId = requestAnimationFrame(gameLoop);
 
     // Cleanup
@@ -1411,6 +1418,7 @@ export default function OrbitKeeperGame() {
       canvas.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       canvas.removeEventListener('contextmenu', onContextMenu);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 

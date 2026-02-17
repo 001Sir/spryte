@@ -13,7 +13,6 @@ const CANVAS_H = 600;
 const BG = '#0a0a0f';
 const FUCHSIA = '#d946ef';
 const MAGENTA = '#f0abfc';
-// const CYAN = '#06d6a0';
 const RESOURCE_CYAN = '#22d3ee';
 
 const HOST_RADIUS = 24;
@@ -300,6 +299,13 @@ export default function SymbiosisGame() {
     canvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+
+    const onVisibilityChange = () => {
+      if (document.hidden && state === 'Playing' && !paused) {
+        paused = true;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     // -- Game state --
     let state: GameState = 'Menu';
@@ -1304,6 +1310,7 @@ export default function SymbiosisGame() {
       canvas.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 

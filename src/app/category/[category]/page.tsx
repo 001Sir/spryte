@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getAllCategories, getGamesByCategory } from '@/data/games';
+import { getCategoryColor, getCategoryIcon } from '@/data/categories';
 import CategoryGameGrid from '@/components/game/CategoryGameGrid';
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -7,22 +8,6 @@ import type { Metadata } from 'next';
 interface Props {
   params: Promise<{ category: string }>;
 }
-
-const categoryColors: Record<string, string> = {
-  action: '#e94560',
-  arcade: '#f59e0b',
-  puzzle: '#06b6d4',
-  racing: '#84cc16',
-  strategy: '#7c3aed',
-};
-
-const categoryIcons: Record<string, string> = {
-  action: '⚡',
-  arcade: '🕹️',
-  puzzle: '🧩',
-  racing: '🏎️',
-  strategy: '♟️',
-};
 
 export async function generateStaticParams() {
   return getAllCategories().map((c) => ({ category: c.toLowerCase() }));
@@ -58,11 +43,11 @@ export default async function CategoryPage({ params }: Props) {
   if (catGames.length === 0) notFound();
 
   const label = category.charAt(0).toUpperCase() + category.slice(1);
-  const color = categoryColors[category] || '#e94560';
-  const icon = categoryIcons[category] || '🎮';
+  const color = getCategoryColor(category);
+  const icon = getCategoryIcon(category);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm text-muted mb-5" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-foreground transition-colors">

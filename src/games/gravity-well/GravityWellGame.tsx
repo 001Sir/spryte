@@ -1451,6 +1451,13 @@ export default function GravityWellGame() {
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     window.addEventListener('keydown', handleKeyDown);
 
+    const onVisibilityChange = () => {
+      if (document.hidden && state === 'playing' && !paused) {
+        paused = true;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     animId = requestAnimationFrame(gameLoop);
 
     return () => {
@@ -1463,6 +1470,7 @@ export default function GravityWellGame() {
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 

@@ -196,8 +196,6 @@ export default function ChromaFloodGame() {
 
     // Hover tracking
     let hoveredPaletteIdx = -1;
-    let _mouseX = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
-    let _mouseY = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
 
     // --- Helpers -------------------------------------------------------
 
@@ -208,14 +206,6 @@ export default function ChromaFloodGame() {
       return { r, g, b };
     };
 
-    const _lerpColor = (a: string, b: string, t: number): string => { // eslint-disable-line @typescript-eslint/no-unused-vars
-      const ca = hexToRgb(a);
-      const cb = hexToRgb(b);
-      const r = Math.round(ca.r + (cb.r - ca.r) * t);
-      const g = Math.round(ca.g + (cb.g - ca.g) * t);
-      const bl = Math.round(ca.b + (cb.b - ca.b) * t);
-      return `rgb(${r},${g},${bl})`;
-    };
 
     const brighten = (hex: string, amount: number): string => {
       const c = hexToRgb(hex);
@@ -1002,9 +992,6 @@ export default function ChromaFloodGame() {
 
     const handleMouseMove = (e: MouseEvent) => {
       const { cx, cy } = getCanvasCoords(e);
-      _mouseX = cx;
-      _mouseY = cy;
-
       if (state === 'playing') {
         const cfg = LEVELS[currentLevel];
         hoveredPaletteIdx = -1;
@@ -1134,6 +1121,13 @@ export default function ChromaFloodGame() {
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     window.addEventListener('keydown', handleKeyDown);
 
+    const onVisibilityChange = () => {
+      if (document.hidden && state === 'playing' && !paused) {
+        paused = true;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     // --- Cleanup -------------------------------------------------------
 
     return () => {
@@ -1145,6 +1139,7 @@ export default function ChromaFloodGame() {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 

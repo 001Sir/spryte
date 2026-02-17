@@ -1641,6 +1641,13 @@ export default function DriftGame() {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
+    const onVisibilityChange = () => {
+      if (document.hidden && state === 'playing' && !paused) {
+        paused = true;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     // Start
     rafId = requestAnimationFrame(gameLoop);
 
@@ -1656,6 +1663,7 @@ export default function DriftGame() {
       canvas.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 

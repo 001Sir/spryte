@@ -1,24 +1,9 @@
 import { games, getAllCategories, getGamesByCategory } from '@/data/games';
+import { categoryColors, categoryIcons } from '@/data/categories';
 import GameCard from '@/components/game/GameCard';
 import RecentlyPlayed from '@/components/game/RecentlyPlayed';
 import Link from 'next/link';
 import Image from 'next/image';
-
-const categoryIcons: Record<string, string> = {
-  Action: '⚡',
-  Arcade: '🕹️',
-  Puzzle: '🧩',
-  Racing: '🏎️',
-  Strategy: '♟️',
-};
-
-const categoryColors: Record<string, string> = {
-  Action: '#e94560',
-  Arcade: '#f59e0b',
-  Puzzle: '#06b6d4',
-  Racing: '#84cc16',
-  Strategy: '#7c3aed',
-};
 
 export default function Home() {
   const featured = games.find((g) => g.featured) || games[0];

@@ -364,6 +364,13 @@ export default function PulseWeaverGame() {
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
+    const onVisibilityChange = () => {
+      if (document.hidden && state === 'playing' && !paused) {
+        paused = true;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     // ── Start / Reset Game ───────────────────────────────────────────────
     function startGame() {
       state = 'playing';
@@ -1308,6 +1315,7 @@ export default function PulseWeaverGame() {
       canvas.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 
