@@ -31,11 +31,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await params;
   const label = category.charAt(0).toUpperCase() + category.slice(1);
   return {
-    title: `${label} Games — Spryte Games`,
-    description: `Play free ${label} games in your browser.`,
+    title: `Free ${label} Games — Play Online`,
+    description: `Play free ${label} games in your browser on Spryte Games. No downloads, no installs — instant ${label.toLowerCase()} gaming fun.`,
+    keywords: [
+      `${label.toLowerCase()} games`,
+      `free ${label.toLowerCase()} games`,
+      `online ${label.toLowerCase()} games`,
+      'browser games',
+      'no download games',
+    ],
     openGraph: {
-      title: `${label} Games — Spryte Games`,
+      title: `Free ${label} Games — Spryte Games`,
       description: `Play free ${label} games in your browser. No downloads required.`,
+      url: `https://sprytegames.com/category/${category}`,
+    },
+    alternates: {
+      canonical: `https://sprytegames.com/category/${category}`,
     },
   };
 }

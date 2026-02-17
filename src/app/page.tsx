@@ -23,8 +23,58 @@ export default function Home() {
   const featured = games.find((g) => g.featured) || games[0];
   const categories = getAllCategories();
 
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Spryte Games',
+    url: 'https://sprytegames.com',
+    description:
+      'Play free browser games instantly. No downloads, no installs — just fun.',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://sprytegames.com/search?q={search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
+  const orgJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Spryte Games',
+    url: 'https://sprytegames.com',
+    logo: 'https://sprytegames.com/favicon.ico',
+  };
+
+  const gameListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Trending Games on Spryte Games',
+    numberOfItems: games.length,
+    itemListElement: games.map((game, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: game.title,
+      url: `https://sprytegames.com/games/${game.slug}`,
+    })),
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(gameListJsonLd) }}
+      />
       {/* Hero */}
       <section className="relative rounded-2xl overflow-hidden mb-14 border border-border">
         <div

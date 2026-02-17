@@ -55,14 +55,19 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Info */}
+        {/* Legal & Info */}
         <div>
-          <h4 className="font-semibold mb-3 text-sm text-foreground">About</h4>
-          <p className="text-sm text-muted">
-            All games run directly in your browser using HTML5 Canvas. No plugins required.
-          </p>
-          <p className="text-sm text-muted mt-2">
-            Built with Next.js & React.
+          <h4 className="font-semibold mb-3 text-sm text-foreground">Legal</h4>
+          <div className="flex flex-col gap-1.5">
+            <Link href="/privacy" className="text-sm text-muted hover:text-accent transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-sm text-muted hover:text-accent transition-colors">
+              Terms of Service
+            </Link>
+          </div>
+          <p className="text-sm text-muted mt-4">
+            All games run in your browser using HTML5. No plugins required.
           </p>
         </div>
       </div>
