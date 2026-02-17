@@ -215,6 +215,10 @@ export default function SymbiosisGame() {
     const onKeyDown = (e: KeyboardEvent) => {
       keys[e.key.toLowerCase()] = true;
       if (e.key === ' ') e.preventDefault();
+      // Toggle pause only during Playing state
+      if (state === 'Playing' && (e.key === 'p' || e.key === 'P' || e.key === 'Escape')) {
+        paused = !paused;
+      }
     };
     const onKeyUp = (e: KeyboardEvent) => {
       keys[e.key.toLowerCase()] = false;
@@ -257,10 +261,14 @@ export default function SymbiosisGame() {
     let animTime = 0;
     let running = true;
 
+    // pause
+    let paused = false;
+
     // space key debounce
     let spaceWasDown = false;
 
     function initGame() {
+      paused = false;
       host = {
         x: CANVAS_W / 2 - 60,
         y: CANVAS_H / 2,
@@ -425,6 +433,9 @@ export default function SymbiosisGame() {
 
     // -- UPDATE --
     function update(dt: number) {
+      // Skip all updates when paused
+      if (paused) return;
+
       const now = animTime * 1000;
 
       // Toggle tether with space
@@ -1135,6 +1146,28 @@ export default function SymbiosisGame() {
         // update() may have changed state to GameOver
         if ((state as GameState) === 'GameOver') {
           drawGameOver(ctx);
+        }
+
+        // Draw pause overlay
+        if (paused) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+          ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+          ctx.save();
+          ctx.shadowColor = FUCHSIA;
+          ctx.shadowBlur = 20;
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 48px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('PAUSED', CANVAS_W / 2, CANVAS_H / 2 - 20);
+          ctx.restore();
+
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.font = '18px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('Press P to resume', CANVAS_W / 2, CANVAS_H / 2 + 25);
         }
       } else if (state === 'GameOver') {
         drawPlaying(ctx);

@@ -97,6 +97,9 @@ export default function TerravoreGame() {
     let moveAnimProgress = 1; // 1 = arrived
     let moveCooldown = 0;
 
+    // pause
+    let paused = false;
+
     // dig animation
     let digging = false;
     let digTimer = 0;
@@ -251,6 +254,7 @@ export default function TerravoreGame() {
       level = 0;
       score = 0;
       totalScore = 0;
+      paused = false;
       generateLevel(0);
       state = 'Playing';
     }
@@ -534,6 +538,10 @@ export default function TerravoreGame() {
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(e.key.toLowerCase())) {
         e.preventDefault();
       }
+      // Toggle pause only during Playing state
+      if (state === 'Playing' && (e.key === 'p' || e.key === 'P' || e.key === 'Escape')) {
+        paused = !paused;
+      }
     }
     function onKeyUp(e: KeyboardEvent) {
       keys[e.key.toLowerCase()] = false;
@@ -570,6 +578,9 @@ export default function TerravoreGame() {
       }
 
       if (state !== 'Playing') return;
+
+      // Skip all updates when paused
+      if (paused) return;
 
       // Movement cooldown
       if (moveCooldown > 0) moveCooldown--;
@@ -1239,6 +1250,28 @@ export default function TerravoreGame() {
       }
 
       drawPlayfield();
+
+      // Draw pause overlay when paused
+      if (paused) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.save();
+        ctx.shadowColor = LIME;
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 48px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('PAUSED', W / 2, H / 2 - 20);
+        ctx.restore();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '18px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Press P to resume', W / 2, H / 2 + 25);
+      }
     }
 
     function drawPlayfield() {

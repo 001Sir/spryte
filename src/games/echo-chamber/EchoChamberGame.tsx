@@ -218,6 +218,7 @@ export default function EchoChamberGame() {
     /* ── state machine ──────────────────────────────────── */
     type GameState = 'menu' | 'playing' | 'gameover';
     let state: GameState = 'menu';
+    let paused = false;
     let animId = 0;
     let lastTime = 0;
 
@@ -322,6 +323,11 @@ export default function EchoChamberGame() {
 
     /* ── input handlers ─────────────────────────────────── */
     function onKeyDown(e: KeyboardEvent) {
+      // Pause toggle
+      if ((e.key === 'p' || e.key === 'P' || e.key === 'Escape') && state === 'playing') {
+        paused = !paused;
+        return;
+      }
       keys[e.key] = true;
       if (
         ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(
@@ -348,7 +354,7 @@ export default function EchoChamberGame() {
         state = 'menu';
         return;
       }
-      if (state === 'playing') {
+      if (state === 'playing' && !paused) {
         // send pulse
         if (pulsesLeft > 0) {
           pulsesLeft--;
@@ -849,6 +855,23 @@ export default function EchoChamberGame() {
       ctx.fillText('Click to Return to Menu', W / 2, H / 2 + 140);
     }
 
+    function drawPausedOverlay() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 48px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('PAUSED', W / 2, H / 2 - 20);
+
+      ctx.fillStyle = COL.title;
+      ctx.globalAlpha = 0.8;
+      ctx.font = '18px monospace';
+      ctx.fillText('Press P to resume', W / 2, H / 2 + 30);
+      ctx.globalAlpha = 1;
+    }
+
     /* ── main loop ──────────────────────────────────────── */
     function loop(timestamp: number) {
       const dt = lastTime ? (timestamp - lastTime) / 1000 : 0.016;
@@ -859,9 +882,17 @@ export default function EchoChamberGame() {
           drawMenu(timestamp / 1000);
           break;
         case 'playing':
-          updatePlaying(dt);
-          if (state === 'playing') drawPlaying();
-          else if (state === 'gameover') drawGameOver(timestamp / 1000);
+          if (!paused) {
+            updatePlaying(dt);
+          }
+          if (state === 'playing') {
+            drawPlaying();
+            if (paused) {
+              drawPausedOverlay();
+            }
+          } else if (state === 'gameover') {
+            drawGameOver(timestamp / 1000);
+          }
           break;
         case 'gameover':
           drawGameOver(timestamp / 1000);

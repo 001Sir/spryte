@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getAllCategories, getGamesByCategory } from '@/data/games';
 import CategoryGameGrid from '@/components/game/CategoryGameGrid';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 
 interface Props {
@@ -62,6 +63,17 @@ export default async function CategoryPage({ params }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-2 text-sm text-muted mb-5" aria-label="Breadcrumb">
+        <Link href="/" className="hover:text-foreground transition-colors">
+          Home
+        </Link>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40" aria-hidden="true">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+        <span className="text-foreground font-medium">{label} Games</span>
+      </nav>
+
       {/* Category header */}
       <div
         className="rounded-xl p-6 mb-8 border border-border relative overflow-hidden"

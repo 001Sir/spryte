@@ -13,6 +13,7 @@ const difficultyConfig = {
 export default function GameInfo({ game }: { game: Game }) {
   const [howToPlayOpen, setHowToPlayOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareFailed, setShareFailed] = useState(false);
   const diff = difficultyConfig[game.difficulty];
 
   const handleShare = async () => {
@@ -20,9 +21,21 @@ export default function GameInfo({ game }: { game: Game }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      setShareFailed(false);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback: do nothing
+      // Try native share API as fallback on mobile
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: game.title, url });
+          return;
+        } catch {
+          // User cancelled share - not an error
+          return;
+        }
+      }
+      setShareFailed(true);
+      setTimeout(() => setShareFailed(false), 2000);
     }
   };
 
@@ -40,6 +53,7 @@ export default function GameInfo({ game }: { game: Game }) {
             <span
               className="text-xs font-semibold px-2.5 py-1 rounded-full"
               style={{ color: diff.color, background: diff.bg }}
+              aria-label={`Difficulty: ${diff.label}`}
             >
               {diff.label}
             </span>
@@ -51,9 +65,10 @@ export default function GameInfo({ game }: { game: Game }) {
           {/* Back to game button */}
           <button
             onClick={scrollToGame}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 transition-colors"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 transition-colors min-h-[36px]"
+            aria-label="Scroll to game"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M8 5v14l11-7z" />
             </svg>
             Play
@@ -62,18 +77,21 @@ export default function GameInfo({ game }: { game: Game }) {
           {/* Share button */}
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground transition-colors min-h-[36px]"
+            aria-label="Share game link"
           >
             {copied ? (
               <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
                 Copied!
               </>
+            ) : shareFailed ? (
+              <span className="text-accent">Could not copy</span>
             ) : (
               <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
                   <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" />
                 </svg>
@@ -87,7 +105,7 @@ export default function GameInfo({ game }: { game: Game }) {
             <Link
               key={cat}
               href={`/category/${cat.toLowerCase()}`}
-              className="text-xs px-2.5 py-1 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground transition-colors"
+              className="text-xs px-2.5 py-1 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground transition-colors min-h-[36px] flex items-center"
             >
               {cat}
             </Link>
@@ -107,7 +125,9 @@ export default function GameInfo({ game }: { game: Game }) {
       <div className="mt-4 border-t border-border pt-4">
         <button
           onClick={() => setHowToPlayOpen(!howToPlayOpen)}
-          className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-colors w-full text-left"
+          className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-colors w-full text-left min-h-[44px]"
+          aria-expanded={howToPlayOpen}
+          aria-controls="how-to-play-content"
         >
           <svg
             width="16"
@@ -117,13 +137,14 @@ export default function GameInfo({ game }: { game: Game }) {
             stroke="currentColor"
             strokeWidth="2"
             className={`transition-transform duration-200 ${howToPlayOpen ? 'rotate-90' : ''}`}
+            aria-hidden="true"
           >
             <path d="M9 18l6-6-6-6" />
           </svg>
           How to Play
         </button>
         {howToPlayOpen && (
-          <div className="mt-3 pl-6 text-sm text-muted space-y-2">
+          <div id="how-to-play-content" className="mt-3 pl-6 text-sm text-muted space-y-2" role="region" aria-label="How to play instructions">
             <p><strong className="text-foreground">Controls:</strong> {game.controls}</p>
             <p><strong className="text-foreground">Difficulty:</strong>{' '}
               <span style={{ color: diff.color }}>{diff.label}</span>

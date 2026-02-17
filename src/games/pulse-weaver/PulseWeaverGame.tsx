@@ -238,6 +238,9 @@ export default function PulseWeaverGame() {
     let finalWave = 0;
     let finalMaxCombo = 0;
 
+    // Pause
+    let paused = false;
+
     // Input
     const keys: Record<string, boolean> = {};
     let mouseDown = false;
@@ -245,6 +248,10 @@ export default function PulseWeaverGame() {
     // ── Input Handlers ───────────────────────────────────────────────────
     function onKeyDown(e: KeyboardEvent) {
       keys[e.key.toLowerCase()] = true;
+      // Toggle pause only during playing state
+      if (state === 'playing' && (e.key === 'p' || e.key === 'P' || e.key === 'Escape')) {
+        paused = !paused;
+      }
     }
     function onKeyUp(e: KeyboardEvent) {
       keys[e.key.toLowerCase()] = false;
@@ -290,6 +297,7 @@ export default function PulseWeaverGame() {
     // ── Start / Reset Game ───────────────────────────────────────────────
     function startGame() {
       state = 'playing';
+      paused = false;
       px = W / 2;
       py = H - 80;
       playerHealth = 100;
@@ -414,6 +422,9 @@ export default function PulseWeaverGame() {
         updateParticles(dt);
         return;
       }
+
+      // Skip all updates when paused
+      if (paused) return;
 
       // Playing state
       beamTime += dt;
@@ -647,6 +658,28 @@ export default function PulseWeaverGame() {
         drawParticles();
         drawHUD();
         if (waveAnnounceTimer > 0) drawWaveAnnounce();
+
+        // Draw pause overlay
+        if (paused) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+          ctx.fillRect(0, 0, W, H);
+
+          ctx.save();
+          ctx.shadowColor = ROSE;
+          ctx.shadowBlur = 20;
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 48px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('PAUSED', W / 2, H / 2 - 20);
+          ctx.restore();
+
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.font = '18px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('Press P to resume', W / 2, H / 2 + 25);
+        }
       } else if (state === 'gameover') {
         drawGrid();
         drawParticles();

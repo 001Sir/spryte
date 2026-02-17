@@ -266,6 +266,7 @@ export default function GravityWellGame() {
     // ─── Game State ─────────────────────────────────────────────────────
 
     let state: GameState = 'menu';
+    let paused = false;
     let animId = 0;
     let time = 0;
     let levelIndex = 0;
@@ -1057,6 +1058,21 @@ export default function GravityWellGame() {
 
     // ─── Main Game Loop ──────────────────────────────────────────────────
 
+    function drawPausedOverlay() {
+      ctx!.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx!.fillRect(0, 0, W, H);
+
+      ctx!.fillStyle = '#ffffff';
+      ctx!.font = 'bold 48px monospace';
+      ctx!.textAlign = 'center';
+      ctx!.textBaseline = 'middle';
+      ctx!.fillText('PAUSED', W / 2, H / 2 - 20);
+
+      ctx!.fillStyle = 'rgba(167, 139, 250, 0.8)';
+      ctx!.font = '18px monospace';
+      ctx!.fillText('Press P to resume', W / 2, H / 2 + 30);
+    }
+
     function gameLoop() {
       time++;
       const dt = 1;
@@ -1064,32 +1080,37 @@ export default function GravityWellGame() {
       if (state === 'menu') {
         drawMenuScreen();
       } else if (state === 'playing') {
-        updateParticle(dt);
-        updateDebris(dt);
+        if (!paused) {
+          updateParticle(dt);
+          updateDebris(dt);
 
-        const collision = checkCollisions();
-        if (collision === 'debris') {
-          state = 'gameover';
-        } else if (collision === 'goal') {
-          // Calculate level score
-          const starsCollected = stars.filter((s) => s.collected).length;
-          const timeBonus = Math.max(0, 500 - Math.floor((time - levelStartTime) / 60));
-          const wellMultiplier = Math.max(1, 4 - wells.length);
-          levelScore = (1000 + starsCollected * 200 + timeBonus) * wellMultiplier;
-          score += levelScore;
-          state = 'levelComplete';
-        }
+          const collision = checkCollisions();
+          if (collision === 'debris') {
+            state = 'gameover';
+          } else if (collision === 'goal') {
+            // Calculate level score
+            const starsCollected = stars.filter((s) => s.collected).length;
+            const timeBonus = Math.max(0, 500 - Math.floor((time - levelStartTime) / 60));
+            const wellMultiplier = Math.max(1, 4 - wells.length);
+            levelScore = (1000 + starsCollected * 200 + timeBonus) * wellMultiplier;
+            score += levelScore;
+            state = 'levelComplete';
+          }
 
-        // Update hovered well
-        hoveredWellIndex = -1;
-        for (let i = 0; i < wells.length; i++) {
-          if (dist({ x: mouseX, y: mouseY }, wells[i]) < WELL_CLICK_RADIUS) {
-            hoveredWellIndex = i;
-            break;
+          // Update hovered well
+          hoveredWellIndex = -1;
+          for (let i = 0; i < wells.length; i++) {
+            if (dist({ x: mouseX, y: mouseY }, wells[i]) < WELL_CLICK_RADIUS) {
+              hoveredWellIndex = i;
+              break;
+            }
           }
         }
 
         drawPlayingScreen();
+        if (paused) {
+          drawPausedOverlay();
+        }
       } else if (state === 'levelComplete') {
         drawLevelCompleteScreen();
       } else if (state === 'gameover') {
@@ -1230,10 +1251,17 @@ export default function GravityWellGame() {
 
     // ─── Setup & Cleanup ─────────────────────────────────────────────────
 
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.key === 'p' || e.key === 'P' || e.key === 'Escape') && state === 'playing') {
+        paused = !paused;
+      }
+    }
+
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('contextmenu', handleContextMenu);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
 
     animId = requestAnimationFrame(gameLoop);
 
@@ -1243,6 +1271,7 @@ export default function GravityWellGame() {
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('contextmenu', handleContextMenu);
       canvas.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 

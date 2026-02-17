@@ -51,7 +51,7 @@ export default function Home() {
   const gameListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'Trending Games on Spryte Games',
+    name: 'All Games on Spryte Games',
     numberOfItems: games.length,
     itemListElement: games.map((game, i) => ({
       '@type': 'ListItem',
@@ -119,9 +119,10 @@ export default function Home() {
             <Link
               href={`/games/${featured.slug}`}
               className="animate-glow inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-7 py-3.5 rounded-xl font-semibold transition-all duration-300"
+              aria-label={`Play ${featured.title} now`}
             >
               Play Now
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </Link>
@@ -134,7 +135,7 @@ export default function Home() {
 
       {/* All Games / Trending */}
       <section className="mb-14" id="games">
-        <h2 className="text-2xl font-bold mb-6">Trending Games</h2>
+        <h2 className="text-2xl font-bold mb-6">All Games</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {games.map((game) => (
             <GameCard key={game.slug} game={game} />

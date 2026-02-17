@@ -124,6 +124,7 @@ export default function ChromaFloodGame() {
     // --- State machine -------------------------------------------------
     type GameState = 'menu' | 'playing' | 'gameover';
     let state: GameState = 'menu';
+    let paused = false;
 
     // --- Game variables ------------------------------------------------
     let currentLevel = 0;
@@ -833,6 +834,23 @@ export default function ChromaFloodGame() {
 
     // --- Main loop -----------------------------------------------------
 
+    const drawPausedOverlay = () => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 48px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('PAUSED', CANVAS_W / 2, CANVAS_H / 2 - 20);
+
+      ctx.fillStyle = CYAN;
+      ctx.globalAlpha = 0.8;
+      ctx.font = '18px system-ui, sans-serif';
+      ctx.fillText('Press P to resume', CANVAS_W / 2, CANVAS_H / 2 + 30);
+      ctx.globalAlpha = 1;
+    };
+
     const gameLoop = (timestamp: number) => {
       const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
       lastTime = timestamp;
@@ -845,7 +863,10 @@ export default function ChromaFloodGame() {
           drawMenu(dt);
           break;
         case 'playing':
-          drawPlaying(dt);
+          drawPlaying(paused ? 0 : dt);
+          if (paused) {
+            drawPausedOverlay();
+          }
           break;
         case 'gameover':
           drawGameOver();
@@ -880,6 +901,7 @@ export default function ChromaFloodGame() {
           break;
 
         case 'playing': {
+          if (paused) break;
           const cfg = LEVELS[currentLevel];
           const numColors = cfg.numColors;
           // Check palette clicks
@@ -973,8 +995,29 @@ export default function ChromaFloodGame() {
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Pause toggle
+      if ((e.key === 'p' || e.key === 'P' || e.key === 'Escape') && state === 'playing') {
+        paused = !paused;
+        return;
+      }
+
+      // Number key color shortcuts (1-6) during playing state
+      if (state === 'playing' && !paused && !won) {
+        const num = parseInt(e.key, 10);
+        if (num >= 1 && num <= 6) {
+          const colorIdx = num - 1;
+          const cfg = LEVELS[currentLevel];
+          if (colorIdx < cfg.numColors) {
+            doFlood(colorIdx);
+          }
+        }
+      }
+    };
+
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('keydown', handleKeyDown);
 
     // --- Cleanup -------------------------------------------------------
 
@@ -985,6 +1028,7 @@ export default function ChromaFloodGame() {
       }
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
