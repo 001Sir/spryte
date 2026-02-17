@@ -302,7 +302,9 @@ export default function DriftGame() {
     let kbCharging = false;
     let kbChargePower = 0;
     let kbDirX = 0;
-    let kbDirY = 0;
+    let kbDirY = -1; // default aim up
+    let kbAngle = -Math.PI / 2; // current smooth aim angle (starts up)
+    const KB_ROTATE_SPEED = 3.5; // radians per second
 
     // Trail & particles
     let trail: TrailDot[] = [];
@@ -389,6 +391,12 @@ export default function DriftGame() {
       scaleX = 1;
       scaleY = 1;
       isAiming = false;
+      kbAiming = false;
+      kbCharging = false;
+      kbChargePower = 0;
+      kbAngle = -Math.PI / 2;
+      kbDirX = 0;
+      kbDirY = -1;
       launches = 0;
       levelScore = 0;
       trail = [];
@@ -1000,19 +1008,48 @@ export default function DriftGame() {
       }
       if (windParticles.length > 60) windParticles.splice(0, windParticles.length - 60);
 
-      // Keyboard aim direction
+      // Keyboard aim direction — smooth rotation
       if (onSurface && !isAiming) {
-        let kdx = 0, kdy = 0;
-        if (keysDown['ArrowLeft'] || keysDown['a']) kdx -= 1;
-        if (keysDown['ArrowRight'] || keysDown['d']) kdx += 1;
-        if (keysDown['ArrowUp'] || keysDown['w']) kdy -= 1;
-        if (keysDown['ArrowDown'] || keysDown['s']) kdy += 1;
+        let rotateDir = 0;
+        if (keysDown['ArrowLeft'] || keysDown['a']) rotateDir -= 1;
+        if (keysDown['ArrowRight'] || keysDown['d']) rotateDir += 1;
 
-        if (kdx !== 0 || kdy !== 0) {
-          const len = Math.sqrt(kdx * kdx + kdy * kdy);
-          kbDirX = kdx / len;
-          kbDirY = kdy / len;
+        // Up/down also influence angle (steer toward target angle)
+        let targetAngle: number | null = null;
+        const hasLeft = keysDown['ArrowLeft'] || keysDown['a'];
+        const hasRight = keysDown['ArrowRight'] || keysDown['d'];
+        const hasUp = keysDown['ArrowUp'] || keysDown['w'];
+        const hasDown = keysDown['ArrowDown'] || keysDown['s'];
+
+        if (hasUp || hasDown || hasLeft || hasRight) {
+          // Compute target angle from key combo for initial direction
+          let kdx = 0, kdy = 0;
+          if (hasLeft) kdx -= 1;
+          if (hasRight) kdx += 1;
+          if (hasUp) kdy -= 1;
+          if (hasDown) kdy += 1;
+          if (kdx !== 0 || kdy !== 0) {
+            targetAngle = Math.atan2(kdy, kdx);
+          }
           kbAiming = true;
+        }
+
+        if (targetAngle !== null) {
+          // Smoothly rotate toward target angle
+          let diff = targetAngle - kbAngle;
+          // Normalize to [-PI, PI]
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+
+          const maxStep = KB_ROTATE_SPEED * dt;
+          if (Math.abs(diff) < maxStep) {
+            kbAngle = targetAngle;
+          } else {
+            kbAngle += Math.sign(diff) * maxStep;
+          }
+
+          kbDirX = Math.cos(kbAngle);
+          kbDirY = Math.sin(kbAngle);
         }
 
         if (kbCharging) {

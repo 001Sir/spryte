@@ -890,6 +890,16 @@ export default function ChromaFloodGame() {
       };
     };
 
+    const getTouchCanvasCoords = (touch: Touch): { cx: number; cy: number } => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = CANVAS_W / rect.width;
+      const scaleY = CANVAS_H / rect.height;
+      return {
+        cx: (touch.clientX - rect.left) * scaleX,
+        cy: (touch.clientY - rect.top) * scaleY,
+      };
+    };
+
     const handleClick = (e: MouseEvent) => {
       const { cx, cy } = getCanvasCoords(e);
 
@@ -995,6 +1005,75 @@ export default function ChromaFloodGame() {
       }
     };
 
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 0) return;
+      const { cx, cy } = getTouchCanvasCoords(e.touches[0]);
+
+      switch (state) {
+        case 'menu':
+          currentLevel = 0;
+          totalScore = 0;
+          startLevel(currentLevel);
+          break;
+
+        case 'playing': {
+          if (paused) break;
+          const cfg = LEVELS[currentLevel];
+          const numColors = cfg.numColors;
+          // Check palette touches
+          for (let i = 0; i < numColors; i++) {
+            const bx = paletteButtonX(i, numColors);
+            const by = PALETTE_Y;
+            const dist = Math.sqrt((cx - bx) ** 2 + (cy - by) ** 2);
+            if (dist <= PALETTE_RADIUS + 4) {
+              doFlood(i);
+              break;
+            }
+          }
+          break;
+        }
+
+        case 'gameover': {
+          const hasNextLevel = currentLevel < LEVELS.length - 1;
+          const panelH = 380;
+          const panelY = (CANVAS_H - panelH) / 2;
+          const btnY = panelY + 305;
+
+          if (hasNextLevel) {
+            // Next Level button
+            if (
+              cx >= CANVAS_W / 2 - 90 &&
+              cx <= CANVAS_W / 2 + 90 &&
+              cy >= btnY - 20 &&
+              cy <= btnY + 24
+            ) {
+              currentLevel++;
+              startLevel(currentLevel);
+            }
+            // Replay text
+            if (cy >= btnY + 30 && cy <= btnY + 60) {
+              startLevel(currentLevel);
+            }
+          } else {
+            // Play Again button
+            if (
+              cx >= CANVAS_W / 2 - 90 &&
+              cx <= CANVAS_W / 2 + 90 &&
+              cy >= btnY - 20 &&
+              cy <= btnY + 24
+            ) {
+              currentLevel = 0;
+              totalScore = 0;
+              state = 'menu';
+              initMenuBlocks();
+            }
+          }
+          break;
+        }
+      }
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       // Pause toggle
       if ((e.key === 'p' || e.key === 'P' || e.key === 'Escape') && state === 'playing') {
@@ -1017,6 +1096,7 @@ export default function ChromaFloodGame() {
 
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     window.addEventListener('keydown', handleKeyDown);
 
     // --- Cleanup -------------------------------------------------------
@@ -1028,6 +1108,7 @@ export default function ChromaFloodGame() {
       }
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);

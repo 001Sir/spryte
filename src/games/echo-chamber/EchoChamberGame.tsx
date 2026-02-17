@@ -370,6 +370,109 @@ export default function EchoChamberGame() {
       }
     }
 
+    /* ── touch handling (virtual joystick) ───────────────── */
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let touchIsMoving = false;
+
+    function getTouchCanvasPos(touch: Touch): { x: number; y: number } {
+      const rect = canvas!.getBoundingClientRect();
+      return {
+        x: (touch.clientX - rect.left) * (W / rect.width),
+        y: (touch.clientY - rect.top) * (H / rect.height),
+      };
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      e.preventDefault();
+      if (e.touches.length === 0) return;
+      const pos = getTouchCanvasPos(e.touches[0]);
+      touchStartX = pos.x;
+      touchStartY = pos.y;
+      touchStartTime = Date.now();
+      touchIsMoving = false;
+
+      if (state === 'menu') {
+        state = 'playing';
+        level = 1;
+        score = 0;
+        totalGemsCollected = 0;
+        initLevel(level);
+        return;
+      }
+      if (state === 'gameover') {
+        state = 'menu';
+        return;
+      }
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      e.preventDefault();
+      if (state !== 'playing' || paused) return;
+      if (e.touches.length === 0) return;
+      const pos = getTouchCanvasPos(e.touches[0]);
+      const dx = pos.x - touchStartX;
+      const dy = pos.y - touchStartY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 10) {
+        // Dead zone - stop movement
+        keys['ArrowLeft'] = false;
+        keys['ArrowRight'] = false;
+        keys['ArrowUp'] = false;
+        keys['ArrowDown'] = false;
+        return;
+      }
+
+      touchIsMoving = true;
+
+      // Calculate angle and map to cardinal + diagonal directions
+      const angle = Math.atan2(dy, dx);
+
+      // Determine horizontal and vertical components using thresholds
+      // Horizontal: active if |cos(angle)| > cos(67.5deg) ≈ 0.38
+      // Vertical:   active if |sin(angle)| > sin(67.5deg) ≈ 0.38
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      const threshold = 0.38;
+
+      keys['ArrowLeft'] = cosA < -threshold;
+      keys['ArrowRight'] = cosA > threshold;
+      keys['ArrowUp'] = sinA < -threshold;
+      keys['ArrowDown'] = sinA > threshold;
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      e.preventDefault();
+      const elapsed = Date.now() - touchStartTime;
+
+      // Stop all touch-driven movement
+      keys['ArrowLeft'] = false;
+      keys['ArrowRight'] = false;
+      keys['ArrowUp'] = false;
+      keys['ArrowDown'] = false;
+
+      // Quick tap = send pulse (same as click)
+      if (state === 'playing' && !paused && elapsed < 200 && !touchIsMoving) {
+        if (pulsesLeft > 0) {
+          pulsesLeft--;
+          waves.push({
+            cx: px,
+            cy: py,
+            radius: 0,
+            maxRadius: 500,
+            speed: 240,
+            alpha: 1,
+          });
+        }
+      }
+    }
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+
     canvas.addEventListener('click', onClick);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -908,6 +1011,9 @@ export default function EchoChamberGame() {
     return () => {
       cancelAnimationFrame(animId);
       canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };

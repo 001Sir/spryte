@@ -1130,6 +1130,19 @@ export default function GravityWellGame() {
       };
     }
 
+    function getTouchCanvasCoords(touch: Touch): Vec2 {
+      const rect = canvas!.getBoundingClientRect();
+      return {
+        x: ((touch.clientX - rect.left) / rect.width) * W,
+        y: ((touch.clientY - rect.top) / rect.height) * H,
+      };
+    }
+
+    // Double-tap detection state for repulsor placement
+    let lastTapTime = 0;
+    let lastTapX = 0;
+    let lastTapY = 0;
+
     function handleMouseMove(e: MouseEvent) {
       const coords = getCanvasCoords(e);
       mouseX = coords.x;
@@ -1249,6 +1262,120 @@ export default function GravityWellGame() {
       w.strength = isAttractor ? newAbs : -newAbs;
     }
 
+    // ─── Touch Handling ──────────────────────────────────────────────────
+
+    function handleTouchStart(e: TouchEvent) {
+      e.preventDefault();
+      if (e.touches.length === 0) return;
+      const coords = getTouchCanvasCoords(e.touches[0]);
+
+      // Update crosshair position
+      mouseX = coords.x;
+      mouseY = coords.y;
+
+      if (state === 'menu') {
+        state = 'playing';
+        score = 0;
+        levelIndex = 0;
+        loadLevel(0);
+        return;
+      }
+
+      if (state === 'gameover') {
+        state = 'playing';
+        score = 0;
+        levelIndex = 0;
+        loadLevel(0);
+        return;
+      }
+
+      if (state === 'levelComplete') {
+        levelIndex++;
+        if (levelIndex >= LEVELS.length) {
+          levelIndex = 0;
+          score = 0;
+        }
+        state = 'playing';
+        loadLevel(levelIndex);
+        return;
+      }
+
+      if (state === 'playing') {
+        // Check if tapping on existing well to remove it
+        for (let i = 0; i < wells.length; i++) {
+          if (dist(coords, wells[i]) < WELL_CLICK_RADIUS) {
+            wells.splice(i, 1);
+            hoveredWellIndex = -1;
+            return;
+          }
+        }
+
+        // Don't place wells in HUD areas
+        if (coords.y < 36 || coords.y > H - 24) return;
+
+        // Don't place if max wells reached
+        if (wells.length >= MAX_WELLS) return;
+
+        // Don't place wells on walls
+        for (const wall of walls) {
+          if (rectContains(wall, coords.x, coords.y, 10)) return;
+        }
+
+        // Double-tap detection for repulsor
+        const now = Date.now();
+        const tapDist = Math.sqrt(
+          (coords.x - lastTapX) ** 2 + (coords.y - lastTapY) ** 2
+        );
+        const isDoubleTap = now - lastTapTime < 300 && tapDist < 30;
+
+        lastTapTime = now;
+        lastTapX = coords.x;
+        lastTapY = coords.y;
+
+        if (isDoubleTap) {
+          // Remove the attractor that was just placed by the first tap
+          if (wells.length > 0) {
+            const lastWell = wells[wells.length - 1];
+            const lastWellDist = Math.sqrt(
+              (lastWell.x - coords.x) ** 2 + (lastWell.y - coords.y) ** 2
+            );
+            if (lastWellDist < 30 && lastWell.strength > 0) {
+              wells.pop();
+            }
+          }
+          // Place repulsor
+          wells.push({
+            x: coords.x,
+            y: coords.y,
+            strength: -WELL_STRENGTH_DEFAULT,
+            pulsePhase: 0,
+          });
+          // Reset to prevent triple-tap
+          lastTapTime = 0;
+        } else {
+          // Single tap: place attractor
+          wells.push({
+            x: coords.x,
+            y: coords.y,
+            strength: WELL_STRENGTH_DEFAULT,
+            pulsePhase: 0,
+          });
+        }
+      }
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      e.preventDefault();
+      if (e.touches.length === 0) return;
+      const coords = getTouchCanvasCoords(e.touches[0]);
+      mouseX = coords.x;
+      mouseY = coords.y;
+    }
+
+    function handleTouchEnd(e: TouchEvent) {
+      e.preventDefault();
+    }
+
     // ─── Setup & Cleanup ─────────────────────────────────────────────────
 
     function handleKeyDown(e: KeyboardEvent) {
@@ -1261,6 +1388,9 @@ export default function GravityWellGame() {
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('contextmenu', handleContextMenu);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     window.addEventListener('keydown', handleKeyDown);
 
     animId = requestAnimationFrame(gameLoop);
@@ -1271,6 +1401,9 @@ export default function GravityWellGame() {
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('contextmenu', handleContextMenu);
       canvas.removeEventListener('wheel', handleWheel);
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);

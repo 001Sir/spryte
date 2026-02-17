@@ -554,6 +554,92 @@ export default function TerravoreGame() {
       }
     }
 
+    /* ── touch handling (virtual joystick) ───────────────── */
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let touchIsMoving = false;
+
+    function getTouchCanvasPos(touch: Touch): { x: number; y: number } {
+      const rect = canvas!.getBoundingClientRect();
+      return {
+        x: (touch.clientX - rect.left) * (W / rect.width),
+        y: (touch.clientY - rect.top) * (H / rect.height),
+      };
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      e.preventDefault();
+      if (e.touches.length === 0) return;
+      const pos = getTouchCanvasPos(e.touches[0]);
+      touchStartX = pos.x;
+      touchStartY = pos.y;
+      touchStartTime = Date.now();
+      touchIsMoving = false;
+
+      if (state === 'Menu') {
+        startGame();
+        return;
+      }
+      if (state === 'GameOver') {
+        state = 'Menu';
+        return;
+      }
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      e.preventDefault();
+      if (state !== 'Playing' || paused) return;
+      if (e.touches.length === 0) return;
+      const pos = getTouchCanvasPos(e.touches[0]);
+      const dx = pos.x - touchStartX;
+      const dy = pos.y - touchStartY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 10) {
+        // Dead zone - stop movement
+        keys['arrowleft'] = false;
+        keys['arrowright'] = false;
+        keys['arrowup'] = false;
+        keys['arrowdown'] = false;
+        return;
+      }
+
+      touchIsMoving = true;
+
+      // Calculate angle and map to cardinal + diagonal directions
+      const angle = Math.atan2(dy, dx);
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      const threshold = 0.38;
+
+      keys['arrowleft'] = cosA < -threshold;
+      keys['arrowright'] = cosA > threshold;
+      keys['arrowup'] = sinA < -threshold;
+      keys['arrowdown'] = sinA > threshold;
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      e.preventDefault();
+      const elapsed = Date.now() - touchStartTime;
+
+      // Stop all touch-driven movement
+      keys['arrowleft'] = false;
+      keys['arrowright'] = false;
+      keys['arrowup'] = false;
+      keys['arrowdown'] = false;
+
+      // Quick tap = dig (same as spacebar)
+      if (state === 'Playing' && !paused && elapsed < 200 && !touchIsMoving) {
+        // Trigger dig by briefly setting spacebar key then calling tryDig
+        tryDig();
+      }
+    }
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+
     canvas.addEventListener('click', onClick);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -1359,6 +1445,9 @@ export default function TerravoreGame() {
     return () => {
       cancelAnimationFrame(animId);
       canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };

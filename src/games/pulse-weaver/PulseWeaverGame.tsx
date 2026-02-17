@@ -244,6 +244,7 @@ export default function PulseWeaverGame() {
     // Input
     const keys: Record<string, boolean> = {};
     let mouseDown = false;
+    let touchActive = false;
 
     // ── Input Handlers ───────────────────────────────────────────────────
     function onKeyDown(e: KeyboardEvent) {
@@ -286,11 +287,64 @@ export default function PulseWeaverGame() {
       e.preventDefault();
     }
 
+    // ── Touch Handlers ───────────────────────────────────────────────────
+    function getTouchCanvasPos(touch: Touch): { tx: number; ty: number } {
+      const rect = canvas!.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      return {
+        tx: (touch.clientX - rect.left) * scaleX,
+        ty: (touch.clientY - rect.top) * scaleY,
+      };
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      e.preventDefault();
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+      const { tx, ty } = getTouchCanvasPos(touch);
+
+      if (state === 'menu') {
+        startGame();
+        return;
+      }
+      if (state === 'gameover') {
+        startGame();
+        return;
+      }
+
+      // Playing state: touch = aim + fire + move toward touch
+      touchActive = true;
+      mouseX = tx;
+      mouseY = ty;
+      mouseDown = true;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      e.preventDefault();
+      if (!touchActive) return;
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+      const { tx, ty } = getTouchCanvasPos(touch);
+      mouseX = tx;
+      mouseY = ty;
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      e.preventDefault();
+      touchActive = false;
+      mouseDown = false;
+    }
+
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mousedown', onMouseDown);
     canvas.addEventListener('mouseup', onMouseUp);
     canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('contextmenu', onContextMenu);
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+    canvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
@@ -444,6 +498,22 @@ export default function PulseWeaverGame() {
         dx /= len;
         dy /= len;
       }
+
+      // Touch: player slowly moves toward touch point (when no keyboard input)
+      if (touchActive && dx === 0 && dy === 0) {
+        const toTouchX = mouseX - px;
+        const toTouchY = mouseY - py;
+        const touchDist = Math.hypot(toTouchX, toTouchY);
+        // Move toward touch if farther than 60px away (keeps some distance)
+        if (touchDist > 60) {
+          dx = toTouchX / touchDist;
+          dy = toTouchY / touchDist;
+          // Move at 60% speed for touch so it feels controlled
+          dx *= 0.6;
+          dy *= 0.6;
+        }
+      }
+
       px = clamp(px + dx * PLAYER_SPEED * (dt / 16), 20, W - 20);
       py = clamp(py + dy * PLAYER_SPEED * (dt / 16), 20, H - 20);
 
@@ -769,11 +839,11 @@ export default function PulseWeaverGame() {
         ctx.fillText(instructions[i], W / 2, H * 0.5 + i * 24);
       }
 
-      // Click to start
+      // Click/Tap to start
       const startAlpha = 0.5 + Math.sin(menuTime * 0.005) * 0.5;
       ctx.fillStyle = `rgba(244, 63, 94, ${startAlpha})`;
       ctx.font = 'bold 22px monospace';
-      ctx.fillText('Click to Start', W / 2, H * 0.85);
+      ctx.fillText('Click or Tap to Start', W / 2, H * 0.85);
     }
 
     function drawPlayer() {
@@ -1163,7 +1233,7 @@ export default function PulseWeaverGame() {
       const restartAlpha = 0.5 + Math.sin(menuTime * 0.005) * 0.5;
       ctx.fillStyle = `rgba(244, 63, 94, ${restartAlpha})`;
       ctx.font = 'bold 20px monospace';
-      ctx.fillText('Click to Restart', W / 2, H * 0.75);
+      ctx.fillText('Click or Tap to Restart', W / 2, H * 0.75);
     }
 
     function hexToRgb(hex: string): string {
@@ -1194,6 +1264,10 @@ export default function PulseWeaverGame() {
       canvas.removeEventListener('mouseup', onMouseUp);
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('contextmenu', onContextMenu);
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };

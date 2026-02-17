@@ -211,6 +211,8 @@ export default function SymbiosisGame() {
     let mouseX = CANVAS_W / 2;
     let mouseY = CANVAS_H / 2;
     let mouseClicked = false;
+    let touchActive = false;
+    let lastTapTime = 0;
 
     const onKeyDown = (e: KeyboardEvent) => {
       keys[e.key.toLowerCase()] = true;
@@ -232,8 +234,67 @@ export default function SymbiosisGame() {
       mouseClicked = true;
     };
 
+    // -- Touch handlers --
+    function getTouchCanvasPos(touch: Touch): { tx: number; ty: number } {
+      const rect = canvas!.getBoundingClientRect();
+      return {
+        tx: ((touch.clientX - rect.left) / rect.width) * CANVAS_W,
+        ty: ((touch.clientY - rect.top) / rect.height) * CANVAS_H,
+      };
+    }
+
+    const onTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+      const { tx, ty } = getTouchCanvasPos(touch);
+
+      if (state === 'Menu' || state === 'GameOver') {
+        mouseClicked = true;
+        return;
+      }
+
+      // Double-tap detection for tether toggle (Playing state)
+      const now = performance.now();
+      if (now - lastTapTime < 300) {
+        // Double-tap: toggle tether
+        if (state === 'Playing') {
+          parasite.linked = !parasite.linked;
+          if (parasite.linked) {
+            spawnParticles(parasite.x, parasite.y, FUCHSIA, 6);
+          }
+        }
+        lastTapTime = 0; // reset so triple-tap doesn't re-toggle
+      } else {
+        lastTapTime = now;
+      }
+
+      touchActive = true;
+      mouseX = tx;
+      mouseY = ty;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (!touchActive) return;
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+      const { tx, ty } = getTouchCanvasPos(touch);
+      mouseX = tx;
+      mouseY = ty;
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      touchActive = false;
+    };
+
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+    canvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
@@ -459,6 +520,20 @@ export default function SymbiosisGame() {
         hdx /= mag;
         hdy /= mag;
       }
+
+      // Touch: host auto-follows toward parasite when tethered and no keyboard input
+      if (touchActive && hdx === 0 && hdy === 0 && parasite.linked) {
+        const toParX = parasite.x - host.x;
+        const toParY = parasite.y - host.y;
+        const toParDist = Math.sqrt(toParX * toParX + toParY * toParY);
+        // Start following when beyond 50% of tether length
+        if (toParDist > TETHER_MAX_LENGTH * 0.5) {
+          const followStrength = clamp((toParDist - TETHER_MAX_LENGTH * 0.5) / (TETHER_MAX_LENGTH * 0.5), 0, 1);
+          hdx = (toParX / toParDist) * followStrength;
+          hdy = (toParY / toParDist) * followStrength;
+        }
+      }
+
       host.x += hdx * HOST_SPEED * dt * 60;
       host.y += hdy * HOST_SPEED * dt * 60;
       host.x = clamp(host.x, host.radius, CANVAS_W - host.radius);
@@ -1054,7 +1129,7 @@ export default function SymbiosisGame() {
       const pulse = 0.5 + Math.sin(animTime * 3) * 0.3;
       ctx.fillStyle = `rgba(217, 70, 239, ${pulse + 0.3})`;
       ctx.font = 'bold 20px monospace';
-      ctx.fillText('Click to Start', CANVAS_W / 2, CANVAS_H / 2 + 180);
+      ctx.fillText('Click or Tap to Start', CANVAS_W / 2, CANVAS_H / 2 + 180);
     }
 
     function drawGameOver(ctx: CanvasRenderingContext2D) {
@@ -1085,7 +1160,7 @@ export default function SymbiosisGame() {
       const pulse = 0.5 + Math.sin(animTime * 3) * 0.3;
       ctx.fillStyle = `rgba(217, 70, 239, ${pulse + 0.3})`;
       ctx.font = 'bold 20px monospace';
-      ctx.fillText('Click to Restart', CANVAS_W / 2, CANVAS_H / 2 + 120);
+      ctx.fillText('Click or Tap to Restart', CANVAS_W / 2, CANVAS_H / 2 + 120);
     }
 
     function drawPlaying(ctx: CanvasRenderingContext2D) {
@@ -1183,6 +1258,10 @@ export default function SymbiosisGame() {
       running = false;
       canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
