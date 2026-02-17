@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { SoundEngine } from '@/lib/sounds';
+import { getHighScore, setHighScore } from '@/lib/highscores';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -156,18 +157,6 @@ export default function OrbitKeeperGame() {
     let lastTime = 0;
     let paused = false;
 
-    // ── High Score helpers ──
-    function getHighScore(gameSlug: string): number {
-      try {
-        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
-        return val ? parseInt(val, 10) || 0 : 0;
-      } catch { return 0; }
-    }
-    function setHighScoreVal(gameSlug: string, s: number) {
-      try {
-        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
-      } catch { /* ignore */ }
-    }
     let highScore = getHighScore('orbit-keeper');
     let newHighScore = false;
 
@@ -1111,7 +1100,7 @@ export default function OrbitKeeperGame() {
       // Check game over
       if (alivePlanets.length === 0) {
         gameWon = false;
-        if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('orbit-keeper', score); }
+        if (score > highScore) { highScore = score; newHighScore = true; setHighScore('orbit-keeper', score); }
         state = 'gameover';
         SoundEngine.play('gameOver');
         return;
@@ -1134,7 +1123,7 @@ export default function OrbitKeeperGame() {
         if (level >= 8) {
           // Game won!
           gameWon = true;
-          if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('orbit-keeper', score); }
+          if (score > highScore) { highScore = score; newHighScore = true; setHighScore('orbit-keeper', score); }
           state = 'gameover';
           SoundEngine.play('levelComplete');
           return;

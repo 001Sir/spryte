@@ -82,7 +82,7 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-semibold mb-2">Contact Us</h2>
           <p>
             If you have questions about this Privacy Policy, please contact us at{' '}
-            <span className="text-accent">contact@sprytegames.com</span>.
+            <a href="mailto:contact@sprytegames.com" className="text-accent hover:underline">contact@sprytegames.com</a>.
           </p>
         </section>
       </div>

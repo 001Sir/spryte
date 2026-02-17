@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { SoundEngine } from '@/lib/sounds';
+import { getHighScore, setHighScore } from '@/lib/highscores';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const W = 800;
@@ -100,18 +101,6 @@ export default function TerravoreGame() {
     // pause
     let paused = false;
 
-    // ── High Score helpers ──
-    function getHighScore(gameSlug: string): number {
-      try {
-        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
-        return val ? parseInt(val, 10) || 0 : 0;
-      } catch { return 0; }
-    }
-    function setHighScoreVal(gameSlug: string, s: number) {
-      try {
-        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
-      } catch { /* ignore */ }
-    }
     let highScore = getHighScore('terravore');
     let newHighScore = false;
 
@@ -550,7 +539,7 @@ export default function TerravoreGame() {
         } else {
           // Won all levels!
           totalScore += health * 50; // bonus for remaining health
-          if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScoreVal('terravore', totalScore); }
+          if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('terravore', totalScore); }
           state = 'GameOver';
         }
       }
@@ -765,7 +754,7 @@ export default function TerravoreGame() {
       // Check death
       if (health <= 0) {
         totalScore += score;
-        if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScoreVal('terravore', totalScore); }
+        if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('terravore', totalScore); }
         state = 'GameOver';
         SoundEngine.play('gameOver');
       }

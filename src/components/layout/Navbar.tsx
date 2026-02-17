@@ -24,10 +24,10 @@ export default function Navbar() {
   }, []);
 
   // Close mobile menu on route change
-  if (pathname !== lastPathname) {
-    setLastPathname(pathname);
+  useEffect(() => {
     if (mobileOpen) setMobileOpen(false);
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to pathname changes
+  }, [pathname]);
 
   // Body scroll lock when mobile menu is open
   useEffect(() => {

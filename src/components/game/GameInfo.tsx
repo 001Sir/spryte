@@ -44,7 +44,10 @@ export default function GameInfo({ game }: { game: Game }) {
   };
 
   return (
-    <div className="bg-card border border-border rounded-xl p-6 mt-6">
+    <div
+      className="bg-card border border-border rounded-xl p-6 mt-6 border-l-3"
+      style={{ borderLeftColor: game.color, borderLeftWidth: '3px' }}
+    >
       {/* Header row */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="flex-1">
@@ -58,14 +61,14 @@ export default function GameInfo({ game }: { game: Game }) {
               {diff.label}
             </span>
           </div>
-          <p className="text-muted mt-2">{game.description}</p>
+          <p className="text-muted mt-2 leading-relaxed">{game.description}</p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
           {/* Back to game button */}
           <button
             onClick={scrollToGame}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 transition-colors min-h-[36px]"
+            className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 hover:shadow-[0_0_12px_rgba(233,69,96,0.2)] transition-all duration-200 min-h-[36px]"
             aria-label="Scroll to game"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -77,15 +80,15 @@ export default function GameInfo({ game }: { game: Game }) {
           {/* Share button */}
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground transition-colors min-h-[36px]"
+            className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground hover:bg-white/[0.03] transition-all duration-200 min-h-[36px]"
             aria-label="Share game link"
           >
             {copied ? (
               <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" aria-hidden="true">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
-                Copied!
+                <span className="text-green-400">Copied!</span>
               </>
             ) : shareFailed ? (
               <span className="text-accent">Could not copy</span>
@@ -105,7 +108,7 @@ export default function GameInfo({ game }: { game: Game }) {
             <Link
               key={cat}
               href={`/category/${cat.toLowerCase()}`}
-              className="text-xs px-2.5 py-1 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground transition-colors min-h-[36px] flex items-center"
+              className="text-xs px-3 py-1.5 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground hover:bg-white/[0.03] transition-all duration-200 min-h-[36px] flex items-center"
             >
               {cat}
             </Link>
@@ -115,7 +118,11 @@ export default function GameInfo({ game }: { game: Game }) {
 
       {/* Controls row */}
       <div className="mt-4 flex gap-6 text-sm">
-        <div>
+        <div className="flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted shrink-0" aria-hidden="true">
+            <rect x="2" y="6" width="20" height="12" rx="2" />
+            <path d="M6 12h4M8 10v4M15 11h.01M18 13h.01" />
+          </svg>
           <span className="text-muted">Controls:</span>{' '}
           <span className="text-foreground">{game.controls}</span>
         </div>
@@ -125,7 +132,7 @@ export default function GameInfo({ game }: { game: Game }) {
       <div className="mt-4 border-t border-border pt-4">
         <button
           onClick={() => setHowToPlayOpen(!howToPlayOpen)}
-          className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-colors w-full text-left min-h-[44px]"
+          className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-colors w-full text-left min-h-[44px] group/htp"
           aria-expanded={howToPlayOpen}
           aria-controls="how-to-play-content"
         >
@@ -136,7 +143,7 @@ export default function GameInfo({ game }: { game: Game }) {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className={`transition-transform duration-200 ${howToPlayOpen ? 'rotate-90' : ''}`}
+            className={`transition-transform duration-200 text-muted group-hover/htp:text-accent ${howToPlayOpen ? 'rotate-90' : ''}`}
             aria-hidden="true"
           >
             <path d="M9 18l6-6-6-6" />
@@ -144,14 +151,14 @@ export default function GameInfo({ game }: { game: Game }) {
           How to Play
         </button>
         {howToPlayOpen && (
-          <div id="how-to-play-content" className="mt-3 pl-6 text-sm text-muted space-y-4" role="region" aria-label="How to play instructions">
+          <div id="how-to-play-content" className="mt-3 pl-6 text-sm text-muted space-y-4 animate-fade-in" role="region" aria-label="How to play instructions">
             {/* Step-by-step instructions */}
             {game.howToPlay ? (
               <div>
                 <strong className="text-foreground block mb-2">Instructions:</strong>
                 <ol className="list-decimal list-inside space-y-1.5">
                   {game.howToPlay.map((step, i) => (
-                    <li key={i}>{step}</li>
+                    <li key={i} className="leading-relaxed">{step}</li>
                   ))}
                 </ol>
               </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
+import { getHighScore, setHighScore } from '@/lib/highscores';
 
 // ────────────────────────────────────────────────────────────────
 //  ECHO CHAMBER  –  Navigate darkness with sound-wave pulses
@@ -223,18 +224,6 @@ export default function EchoChamberGame() {
     let animId = 0;
     let lastTime = 0;
 
-    // ── High Score helpers ──
-    function getHighScore(gameSlug: string): number {
-      try {
-        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
-        return val ? parseInt(val, 10) || 0 : 0;
-      } catch { return 0; }
-    }
-    function setHighScoreVal(gameSlug: string, s: number) {
-      try {
-        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
-      } catch { /* ignore */ }
-    }
     let highScore = getHighScore('echo-chamber');
     let newHighScore = false;
 
@@ -682,7 +671,7 @@ export default function EchoChamberGame() {
           goMessage = 'Caught in the dark!';
           goScore = score;
           goLevel = level;
-          if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('echo-chamber', score); }
+          if (score > highScore) { highScore = score; newHighScore = true; setHighScore('echo-chamber', score); }
           SoundEngine.play('gameOver');
           return;
         }
@@ -718,7 +707,7 @@ export default function EchoChamberGame() {
           goMessage = 'You escaped all 10 levels!';
           goScore = score;
           goLevel = level - 1;
-          if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('echo-chamber', score); }
+          if (score > highScore) { highScore = score; newHighScore = true; setHighScore('echo-chamber', score); }
           return;
         }
         initLevel(level);

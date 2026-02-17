@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { SoundEngine } from '@/lib/sounds';
+import { getHighScore, setHighScore } from '@/lib/highscores';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const W = 800;
@@ -242,18 +243,6 @@ export default function PulseWeaverGame() {
     // Pause
     let paused = false;
 
-    // ── High Score helpers ──
-    function getHighScore(gameSlug: string): number {
-      try {
-        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
-        return val ? parseInt(val, 10) || 0 : 0;
-      } catch { return 0; }
-    }
-    function setHighScoreVal(gameSlug: string, s: number) {
-      try {
-        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
-      } catch { /* ignore */ }
-    }
     let highScore = getHighScore('pulse-weaver');
     let newHighScore = false;
 
@@ -730,7 +719,7 @@ export default function PulseWeaverGame() {
       finalScore = score;
       finalWave = wave;
       finalMaxCombo = maxCombo;
-      if (finalScore > highScore) { highScore = finalScore; newHighScore = true; setHighScoreVal('pulse-weaver', finalScore); }
+      if (finalScore > highScore) { highScore = finalScore; newHighScore = true; setHighScore('pulse-weaver', finalScore); }
       menuTime = 0;
       spawnParticles(px, py, ROSE, 40);
       SoundEngine.play('gameOver');

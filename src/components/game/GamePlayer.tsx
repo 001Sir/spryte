@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
 import { SoundEngine } from '@/lib/sounds';
 
@@ -45,26 +45,34 @@ export default function GamePlayer({ slug }: { slug: string }) {
     addPlayed(slug);
   }, [slug, addPlayed]);
 
-  const containerRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      containerElRef.current = node;
-      if (!node) return;
-      const onFSChange = () => {
-        setIsFullscreen(!!document.fullscreenElement);
-      };
-      document.addEventListener('fullscreenchange', onFSChange);
-      return () => document.removeEventListener('fullscreenchange', onFSChange);
-    },
-    []
-  );
+  // Track fullscreen state changes (with webkit fallback for Safari)
+  useEffect(() => {
+    const onFSChange = () => {
+      setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', onFSChange);
+    document.addEventListener('webkitfullscreenchange', onFSChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFSChange);
+      document.removeEventListener('webkitfullscreenchange', onFSChange);
+    };
+  }, []);
 
   const toggleFullscreen = () => {
-    const el = document.getElementById('game-container');
+    const el = containerElRef.current;
     if (!el) return;
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
+    if (document.fullscreenElement || (document as any).webkitFullscreenElement) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      }
     } else {
-      el.requestFullscreen();
+      if (el.requestFullscreen) {
+        el.requestFullscreen();
+      } else if ((el as any).webkitRequestFullscreen) {
+        (el as any).webkitRequestFullscreen();
+      }
     }
   };
 
@@ -106,7 +114,7 @@ export default function GamePlayer({ slug }: { slug: string }) {
     <div>
       <div
         id="game-container"
-        ref={containerRef}
+        ref={containerElRef}
         className="relative bg-black rounded-xl overflow-hidden border border-border"
         tabIndex={-1}
         onClick={() => SoundEngine.ensureResumed()}
@@ -158,7 +166,7 @@ export default function GamePlayer({ slug }: { slug: string }) {
         </button>
       </div>
       <p className="text-xs text-muted mt-2 text-center">
-        Press <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">F</kbd> fullscreen · <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">M</kbd> mute
+        Press <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">F</kbd> fullscreen · <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">M</kbd> mute · <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">P</kbd> pause
       </p>
     </div>
   );

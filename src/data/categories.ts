@@ -2,7 +2,6 @@ export const categoryColors: Record<string, string> = {
   Action: '#e94560',
   Arcade: '#f59e0b',
   Puzzle: '#06b6d4',
-  Racing: '#84cc16',
   Strategy: '#7c3aed',
 };
 
@@ -10,7 +9,6 @@ export const categoryIcons: Record<string, string> = {
   Action: '⚡',
   Arcade: '🕹️',
   Puzzle: '🧩',
-  Racing: '🏎️',
   Strategy: '♟️',
 };
 

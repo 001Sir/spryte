@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
+import { getHighScore, setHighScore } from '@/lib/highscores';
 
 // ---------------------------------------------------------------------------
 // Types & Constants
@@ -122,18 +123,6 @@ export default function ChromaFloodGame() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // --- High Score Helpers -------------------------------------------
-    function getHighScore(gameSlug: string): number {
-      try {
-        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
-        return val ? parseInt(val, 10) || 0 : 0;
-      } catch { return 0; }
-    }
-    function setHighScore(gameSlug: string, s: number) {
-      try {
-        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
-      } catch { /* ignore */ }
-    }
     let highScore = getHighScore('chroma-flood');
     let newHighScore = false;
 

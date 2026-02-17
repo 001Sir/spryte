@@ -17,5 +17,4 @@ export type Category =
   | 'Action'
   | 'Arcade'
   | 'Puzzle'
-  | 'Racing'
   | 'Strategy';

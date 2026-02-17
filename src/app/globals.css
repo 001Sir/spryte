@@ -116,6 +116,30 @@ canvas {
   image-rendering: auto !important;
 }
 
+/* Safari fullscreen fallback */
+#game-container:-webkit-full-screen {
+  display: flex;
+  flex-direction: column;
+  background: #000;
+}
+
+#game-container:-webkit-full-screen > div:first-child {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+#game-container:-webkit-full-screen canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: contain !important;
+  image-rendering: auto !important;
+}
+
 /* Play button glow */
 @keyframes glow-pulse {
   0%, 100% { box-shadow: 0 0 20px rgba(233, 69, 96, 0.3); }
@@ -171,4 +195,58 @@ canvas {
 
 .animate-slide-down {
   animation: slide-down 0.2s ease-out;
+}
+
+/* Card hover glow */
+.card-glow {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+}
+
+.card-glow:hover {
+  box-shadow: 0 4px 24px var(--glow-color, rgba(233, 69, 96, 0.15));
+}
+
+/* Subtle shimmer for premium feel */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Section header accent bar */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--color-border), transparent);
+}
+
+/* Smooth scrollbar */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #2a2a3e;
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #3a3a5e;
 }

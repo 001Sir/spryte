@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
+import { getHighScore, setHighScore } from '@/lib/highscores';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -330,22 +331,11 @@ export default function SymbiosisGame() {
     let lastTime = 0;
     let animTime = 0;
     let running = true;
+    let animId = 0;
 
     // pause
     let paused = false;
 
-    // ── High Score helpers ──
-    function getHighScore(gameSlug: string): number {
-      try {
-        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
-        return val ? parseInt(val, 10) || 0 : 0;
-      } catch { return 0; }
-    }
-    function setHighScoreVal(gameSlug: string, s: number) {
-      try {
-        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
-      } catch { /* ignore */ }
-    }
     let highScore = getHighScore('symbiosis');
     let newHighScore = false;
 
@@ -771,7 +761,7 @@ export default function SymbiosisGame() {
       // Check host death
       if (host.hp <= 0) {
         host.hp = 0;
-        if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('symbiosis', score); }
+        if (score > highScore) { highScore = score; newHighScore = true; setHighScore('symbiosis', score); }
         state = 'GameOver';
         spawnParticles(host.x, host.y, FUCHSIA, 30, 2);
         SoundEngine.play('gameOver');
@@ -1295,13 +1285,14 @@ export default function SymbiosisGame() {
         drawGameOver(ctx);
       }
 
-      requestAnimationFrame(loop);
+      animId = requestAnimationFrame(loop);
     }
 
-    requestAnimationFrame(loop);
+    animId = requestAnimationFrame(loop);
 
     return () => {
       running = false;
+      cancelAnimationFrame(animId);
       canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('mousedown', onMouseDown);
       canvas.removeEventListener('touchstart', onTouchStart);

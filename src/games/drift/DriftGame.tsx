@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
+import { getHighScore, setHighScore } from '@/lib/highscores';
 
 // ─── Constants ───────────────────────────────────────────────────────
 const W = 800;
@@ -284,18 +285,6 @@ export default function DriftGame() {
     let stars = 0;
     let paused = false;
 
-    // ── High Score helpers ──
-    function getHighScore(gameSlug: string): number {
-      try {
-        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
-        return val ? parseInt(val, 10) || 0 : 0;
-      } catch { return 0; }
-    }
-    function setHighScoreVal(gameSlug: string, s: number) {
-      try {
-        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
-      } catch { /* ignore */ }
-    }
     let highScore = getHighScore('drift');
     let newHighScore = false;
 
@@ -952,7 +941,7 @@ export default function DriftGame() {
         stars = launches <= lv.par ? 3 : launches <= lv.par + 2 ? 2 : 1;
         levelScore += 1000 + stars * 500;
         totalScore += levelScore;
-        if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScoreVal('drift', totalScore); }
+        if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('drift', totalScore); }
         state = 'levelComplete';
         spawnParticles(lv.exitX, lv.exitY, 25, '#51e2ff', 5);
         SoundEngine.playFile('/sounds/drift-level-complete.wav');

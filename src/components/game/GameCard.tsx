@@ -12,7 +12,8 @@ export default function GameCard({ game }: { game: Game }) {
   return (
     <Link
       href={`/games/${game.slug}`}
-      className="group block bg-card border border-border rounded-xl overflow-hidden hover:border-accent/50 hover:bg-card-hover transition-all duration-200 hover:scale-[1.02] focus-visible:scale-[1.02]"
+      className="group block bg-card border border-border rounded-xl overflow-hidden card-glow hover:border-accent/40 transition-all duration-200 hover:scale-[1.02] focus-visible:scale-[1.02]"
+      style={{ '--glow-color': `${game.color}20` } as React.CSSProperties}
       aria-label={`Play ${game.title} — ${game.difficulty} difficulty`}
     >
       <div
@@ -26,15 +27,17 @@ export default function GameCard({ game }: { game: Game }) {
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
           className="object-cover group-hover:scale-105 transition-transform duration-300"
         />
+        {/* Hover overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         {/* Badges - top left */}
         <div className="absolute top-2 left-2 flex gap-1">
           {game.featured && (
-            <span className="text-[10px] font-semibold px-2 py-1 rounded bg-accent/90 text-white">
+            <span className="text-[10px] font-semibold px-2 py-1 rounded bg-accent/90 text-white shadow-sm">
               Featured
             </span>
           )}
           {game.isNew && (
-            <span className="text-[10px] font-bold px-2 py-1 rounded bg-green-500 text-white uppercase tracking-wide">
+            <span className="text-[10px] font-bold px-2 py-1 rounded bg-green-500 text-white uppercase tracking-wide shadow-sm">
               New
             </span>
           )}
@@ -44,7 +47,7 @@ export default function GameCard({ game }: { game: Game }) {
           {game.categories.map((cat) => (
             <span
               key={cat}
-              className="text-[10px] px-2 py-1 rounded bg-black/40 text-white/80"
+              className="text-[10px] px-2 py-1 rounded bg-black/50 backdrop-blur-sm text-white/90"
             >
               {cat}
             </span>
@@ -65,7 +68,8 @@ export default function GameCard({ game }: { game: Game }) {
           </span>
         </div>
       </div>
-      <div className="p-3">
+      {/* Card content with colored top border */}
+      <div className="p-3 border-t-2" style={{ borderColor: `${game.color}40` }}>
         <h3 className="font-semibold text-sm text-foreground group-hover:text-accent transition-colors">
           {game.title}
         </h3>
