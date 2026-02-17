@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'spryte-recently-played';
 const MAX_RECENT = 6;
@@ -14,11 +14,13 @@ function getStoredRecent(): string[] {
   }
 }
 
-const subscribe = () => () => {};
-
 export function useRecentlyPlayed() {
-  const initial = useSyncExternalStore(subscribe, getStoredRecent, () => []);
-  const [recent, setRecent] = useState<string[]>(initial);
+  const [recent, setRecent] = useState<string[]>([]);
+
+  // Read from localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    setRecent(getStoredRecent());
+  }, []);
 
   const addPlayed = useCallback((slug: string) => {
     try {
