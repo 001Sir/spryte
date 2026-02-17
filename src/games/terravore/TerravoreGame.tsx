@@ -101,6 +101,21 @@ export default function TerravoreGame() {
     // pause
     let paused = false;
 
+    // ── High Score helpers ──
+    function getHighScore(gameSlug: string): number {
+      try {
+        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
+        return val ? parseInt(val, 10) || 0 : 0;
+      } catch { return 0; }
+    }
+    function setHighScoreVal(gameSlug: string, s: number) {
+      try {
+        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
+      } catch { /* ignore */ }
+    }
+    let highScore = getHighScore('terravore');
+    let newHighScore = false;
+
     // dig animation
     let digging = false;
     let digTimer = 0;
@@ -255,6 +270,7 @@ export default function TerravoreGame() {
       level = 0;
       score = 0;
       totalScore = 0;
+      newHighScore = false;
       paused = false;
       generateLevel(0);
       state = 'Playing';
@@ -535,6 +551,7 @@ export default function TerravoreGame() {
         } else {
           // Won all levels!
           totalScore += health * 50; // bonus for remaining health
+          if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScoreVal('terravore', totalScore); }
           state = 'GameOver';
         }
       }
@@ -742,6 +759,7 @@ export default function TerravoreGame() {
       // Check death
       if (health <= 0) {
         totalScore += score;
+        if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScoreVal('terravore', totalScore); }
         state = 'GameOver';
         SoundEngine.play('gameOver');
       }
@@ -1274,6 +1292,17 @@ export default function TerravoreGame() {
         ctx.textAlign = 'left';
         ctx.fillText(s.value, W / 2 + 10, y);
       });
+
+      // High score
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#888';
+      ctx.font = '14px monospace';
+      ctx.fillText(`Best: ${highScore}`, W / 2, 430);
+      if (newHighScore) {
+        ctx.fillStyle = LIME;
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText('New High Score!', W / 2, 448);
+      }
 
       // Click to restart
       ctx.fillStyle = LIME;

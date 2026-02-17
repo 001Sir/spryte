@@ -328,6 +328,21 @@ export default function SymbiosisGame() {
     // pause
     let paused = false;
 
+    // ── High Score helpers ──
+    function getHighScore(gameSlug: string): number {
+      try {
+        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
+        return val ? parseInt(val, 10) || 0 : 0;
+      } catch { return 0; }
+    }
+    function setHighScoreVal(gameSlug: string, s: number) {
+      try {
+        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
+      } catch { /* ignore */ }
+    }
+    let highScore = getHighScore('symbiosis');
+    let newHighScore = false;
+
     // space key debounce
     let spaceWasDown = false;
 
@@ -356,6 +371,7 @@ export default function SymbiosisGame() {
       particles = [];
       tetherParticles = [];
       score = 0;
+      newHighScore = false;
       wave = 0;
       waveEnemiesRemaining = 0;
       waveSpawnQueue = [];
@@ -749,6 +765,7 @@ export default function SymbiosisGame() {
       // Check host death
       if (host.hp <= 0) {
         host.hp = 0;
+        if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('symbiosis', score); }
         state = 'GameOver';
         spawnParticles(host.x, host.y, FUCHSIA, 30, 2);
         SoundEngine.play('gameOver');
@@ -1170,6 +1187,15 @@ export default function SymbiosisGame() {
 
       ctx.fillStyle = FUCHSIA;
       ctx.fillText(`Tether Kills: ${tetherKills} (3x bonus!)`, CANVAS_W / 2, CANVAS_H / 2 + 60);
+
+      ctx.fillStyle = '#888';
+      ctx.font = '14px monospace';
+      ctx.fillText(`Best: ${highScore}`, CANVAS_W / 2, CANVAS_H / 2 + 85);
+      if (newHighScore) {
+        ctx.fillStyle = FUCHSIA;
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText('New High Score!', CANVAS_W / 2, CANVAS_H / 2 + 102);
+      }
 
       const pulse = 0.5 + Math.sin(animTime * 3) * 0.3;
       ctx.fillStyle = `rgba(217, 70, 239, ${pulse + 0.3})`;

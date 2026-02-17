@@ -278,6 +278,21 @@ export default function DriftGame() {
     let stars = 0;
     let paused = false;
 
+    // ── High Score helpers ──
+    function getHighScore(gameSlug: string): number {
+      try {
+        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
+        return val ? parseInt(val, 10) || 0 : 0;
+      } catch { return 0; }
+    }
+    function setHighScoreVal(gameSlug: string, s: number) {
+      try {
+        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
+      } catch { /* ignore */ }
+    }
+    let highScore = getHighScore('drift');
+    let newHighScore = false;
+
     // Ghost
     let gx = 0, gy = 0, gvx = 0, gvy = 0;
     let onSurface = true;
@@ -931,6 +946,7 @@ export default function DriftGame() {
         stars = launches <= lv.par ? 3 : launches <= lv.par + 2 ? 2 : 1;
         levelScore += 1000 + stars * 500;
         totalScore += levelScore;
+        if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScoreVal('drift', totalScore); }
         state = 'levelComplete';
         spawnParticles(lv.exitX, lv.exitY, 25, '#51e2ff', 5);
         SoundEngine.play('levelComplete');
@@ -1168,6 +1184,15 @@ export default function DriftGame() {
       ctx.fillText(`Level Score: ${levelScore}`, W / 2, 300);
       ctx.fillText(`Total Score: ${totalScore}`, W / 2, 330);
 
+      ctx.fillStyle = '#888';
+      ctx.font = '14px monospace';
+      ctx.fillText(`Best: ${highScore}`, W / 2, 355);
+      if (newHighScore) {
+        ctx.fillStyle = '#51e2ff';
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText('New High Score!', W / 2, 373);
+      }
+
       // Next / Finish button
       const isLast = currentLevel >= levels.length - 1;
       const label = isLast ? 'FINISH' : 'NEXT LEVEL';
@@ -1199,9 +1224,22 @@ export default function DriftGame() {
       ctx.textAlign = 'center';
       ctx.fillText('DESTROYED', W / 2, 240);
 
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = '18px monospace';
+      ctx.fillText(`Score: ${totalScore}`, W / 2, 280);
+
+      ctx.fillStyle = '#888';
+      ctx.font = '14px monospace';
+      ctx.fillText(`Best: ${highScore}`, W / 2, 305);
+      if (newHighScore) {
+        ctx.fillStyle = '#51e2ff';
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText('New High Score!', W / 2, 323);
+      }
+
       ctx.fillStyle = 'rgba(255,150,100,0.7)';
       ctx.font = '18px monospace';
-      ctx.fillText('Click to retry', W / 2, 300);
+      ctx.fillText('Click to retry', W / 2, 360);
 
       // Draw remaining particles
       for (const p of particles) {
@@ -1357,6 +1395,7 @@ export default function DriftGame() {
           SoundEngine.play('menuSelect');
           currentLevel = 0;
           totalScore = 0;
+          newHighScore = false;
           initLevel(0);
         }
         return;
@@ -1374,6 +1413,7 @@ export default function DriftGame() {
           if (currentLevel >= levels.length - 1) {
             state = 'menu';
             totalScore = 0;
+            newHighScore = false;
           } else {
             currentLevel++;
             state = 'playing';
@@ -1485,6 +1525,7 @@ export default function DriftGame() {
           SoundEngine.play('menuSelect');
           currentLevel = 0;
           totalScore = 0;
+          newHighScore = false;
           initLevel(0);
         }
         return;
@@ -1503,6 +1544,7 @@ export default function DriftGame() {
           if (currentLevel >= levels.length - 1) {
             state = 'menu';
             totalScore = 0;
+            newHighScore = false;
           } else {
             currentLevel++;
             state = 'playing';

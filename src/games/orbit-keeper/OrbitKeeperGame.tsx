@@ -156,6 +156,21 @@ export default function OrbitKeeperGame() {
     let lastTime = 0;
     let paused = false;
 
+    // ── High Score helpers ──
+    function getHighScore(gameSlug: string): number {
+      try {
+        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
+        return val ? parseInt(val, 10) || 0 : 0;
+      } catch { return 0; }
+    }
+    function setHighScoreVal(gameSlug: string, s: number) {
+      try {
+        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
+      } catch { /* ignore */ }
+    }
+    let highScore = getHighScore('orbit-keeper');
+    let newHighScore = false;
+
     // Playing state
     let planets: Planet[] = [];
     let asteroids: Asteroid[] = [];
@@ -990,6 +1005,17 @@ export default function OrbitKeeperGame() {
         c.font = '16px monospace';
       }
 
+      // High score
+      c.fillStyle = '#888';
+      c.font = '14px monospace';
+      c.textAlign = 'center';
+      c.fillText(`Best: ${highScore}`, CX, CY + 100);
+      if (newHighScore) {
+        c.fillStyle = SKY_BLUE;
+        c.font = 'bold 14px monospace';
+        c.fillText('New High Score!', CX, CY + 118);
+      }
+
       // Restart prompt
       const pulse = 0.6 + 0.4 * Math.sin(time * 3);
       c.font = 'bold 20px monospace';
@@ -1085,6 +1111,7 @@ export default function OrbitKeeperGame() {
       // Check game over
       if (alivePlanets.length === 0) {
         gameWon = false;
+        if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('orbit-keeper', score); }
         state = 'gameover';
         SoundEngine.play('gameOver');
         return;
@@ -1107,6 +1134,7 @@ export default function OrbitKeeperGame() {
         if (level >= 8) {
           // Game won!
           gameWon = true;
+          if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('orbit-keeper', score); }
           state = 'gameover';
           SoundEngine.play('levelComplete');
           return;
@@ -1225,6 +1253,7 @@ export default function OrbitKeeperGame() {
       if (state === 'menu') {
         state = 'playing';
         score = 0;
+        newHighScore = false;
         totalOrbitsStabilized = 0;
         interventions = 0;
         gameWon = false;
@@ -1291,6 +1320,7 @@ export default function OrbitKeeperGame() {
       if (state === 'menu') {
         state = 'playing';
         score = 0;
+        newHighScore = false;
         totalOrbitsStabilized = 0;
         interventions = 0;
         gameWon = false;

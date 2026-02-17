@@ -223,6 +223,21 @@ export default function EchoChamberGame() {
     let animId = 0;
     let lastTime = 0;
 
+    // ── High Score helpers ──
+    function getHighScore(gameSlug: string): number {
+      try {
+        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
+        return val ? parseInt(val, 10) || 0 : 0;
+      } catch { return 0; }
+    }
+    function setHighScoreVal(gameSlug: string, s: number) {
+      try {
+        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
+      } catch { /* ignore */ }
+    }
+    let highScore = getHighScore('echo-chamber');
+    let newHighScore = false;
+
     /* ── menu animation state ───────────────────────────── */
     const menuRings: { radius: number; alpha: number }[] = [];
     let menuTimer = 0;
@@ -348,6 +363,7 @@ export default function EchoChamberGame() {
         SoundEngine.play('menuSelect');
         level = 1;
         score = 0;
+        newHighScore = false;
         totalGemsCollected = 0;
         initLevel(level);
         return;
@@ -400,6 +416,7 @@ export default function EchoChamberGame() {
         state = 'playing';
         level = 1;
         score = 0;
+        newHighScore = false;
         totalGemsCollected = 0;
         initLevel(level);
         return;
@@ -658,6 +675,7 @@ export default function EchoChamberGame() {
           goMessage = 'Caught in the dark!';
           goScore = score;
           goLevel = level;
+          if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('echo-chamber', score); }
           SoundEngine.play('gameOver');
           return;
         }
@@ -693,6 +711,7 @@ export default function EchoChamberGame() {
           goMessage = 'You escaped all 10 levels!';
           goScore = score;
           goLevel = level - 1;
+          if (score > highScore) { highScore = score; newHighScore = true; setHighScoreVal('echo-chamber', score); }
           return;
         }
         initLevel(level);
@@ -959,6 +978,15 @@ export default function EchoChamberGame() {
       ctx.fillText(`Level Reached: ${goLevel}`, W / 2, H / 2 + 20);
       ctx.fillText(`Final Score: ${goScore}`, W / 2, H / 2 + 50);
       ctx.fillText(`Gems Collected: ${totalGemsCollected}`, W / 2, H / 2 + 80);
+
+      ctx.fillStyle = '#888';
+      ctx.font = '14px monospace';
+      ctx.fillText(`Best: ${highScore}`, W / 2, H / 2 + 105);
+      if (newHighScore) {
+        ctx.fillStyle = COL.title;
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText('New High Score!', W / 2, H / 2 + 122);
+      }
 
       const blink = Math.sin(_t * 3) * 0.4 + 0.6;
       ctx.fillStyle = `rgba(234,179,8,${blink})`;

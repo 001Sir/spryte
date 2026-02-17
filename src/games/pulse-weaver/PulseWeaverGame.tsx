@@ -242,6 +242,21 @@ export default function PulseWeaverGame() {
     // Pause
     let paused = false;
 
+    // ── High Score helpers ──
+    function getHighScore(gameSlug: string): number {
+      try {
+        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
+        return val ? parseInt(val, 10) || 0 : 0;
+      } catch { return 0; }
+    }
+    function setHighScoreVal(gameSlug: string, s: number) {
+      try {
+        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
+      } catch { /* ignore */ }
+    }
+    let highScore = getHighScore('pulse-weaver');
+    let newHighScore = false;
+
     // Input
     const keys: Record<string, boolean> = {};
     let mouseDown = false;
@@ -364,6 +379,7 @@ export default function PulseWeaverGame() {
       particles = [];
       powerUps = [];
       score = 0;
+      newHighScore = false;
       wave = 0;
       combo = 0;
       maxCombo = 0;
@@ -708,6 +724,7 @@ export default function PulseWeaverGame() {
       finalScore = score;
       finalWave = wave;
       finalMaxCombo = maxCombo;
+      if (finalScore > highScore) { highScore = finalScore; newHighScore = true; setHighScoreVal('pulse-weaver', finalScore); }
       menuTime = 0;
       spawnParticles(px, py, ROSE, 40);
       SoundEngine.play('gameOver');
@@ -1240,6 +1257,16 @@ export default function PulseWeaverGame() {
       ctx.font = '18px monospace';
       for (let i = 0; i < stats.length; i++) {
         ctx.fillText(stats[i], W / 2, H * 0.45 + i * 32);
+      }
+
+      // High score
+      ctx.fillStyle = '#888';
+      ctx.font = '14px monospace';
+      ctx.fillText(`Best: ${highScore}`, W / 2, H * 0.45 + stats.length * 32 + 10);
+      if (newHighScore) {
+        ctx.fillStyle = ROSE;
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText('New High Score!', W / 2, H * 0.45 + stats.length * 32 + 28);
       }
 
       // Restart
