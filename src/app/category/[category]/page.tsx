@@ -62,15 +62,15 @@ export default async function CategoryPage({ params }: Props) {
       {/* Category header */}
       <div
         className="rounded-xl p-6 mb-8 border border-border relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${color}15, ${color}08, transparent)` }}
+        style={{ background: `linear-gradient(135deg, ${color}15, ${color}08, transparent)`, borderLeftWidth: '3px', borderLeftColor: color }}
       >
         <div
           className="absolute top-[-20px] right-[-20px] w-[120px] h-[120px] rounded-full opacity-10 blur-2xl"
           style={{ background: color }}
         />
         <div className="relative">
-          <span className="text-3xl mb-2 block">{icon}</span>
-          <h1 className="text-3xl font-bold">{label} Games</h1>
+          <span className="text-3xl mb-2 block" aria-hidden="true">{icon}</span>
+          <h1 className="text-3xl font-bold" style={{ textShadow: '0 1px 12px rgba(0,0,0,0.3)' }}>{label} Games</h1>
           <p className="text-muted mt-1">
             {catGames.length} game{catGames.length !== 1 ? 's' : ''} in this category
           </p>

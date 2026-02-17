@@ -32,12 +32,12 @@ export default function CategoryGameGrid({ games }: { games: Game[] }) {
             key={f}
             onClick={() => setDifficulty(f)}
             aria-pressed={difficulty === f}
-            className={`text-sm px-3 py-1.5 rounded-lg border transition-colors min-h-[36px] ${
+            className={`text-sm px-3.5 py-1.5 rounded-lg border transition-all duration-200 min-h-[36px] ${
               difficulty === f
-                ? 'border-current font-medium'
-                : 'border-border text-muted hover:text-foreground hover:border-border'
+                ? 'border-current font-medium shadow-sm'
+                : 'border-border text-muted hover:text-foreground hover:border-border hover:bg-white/[0.03]'
             }`}
-            style={difficulty === f ? { color: filterColors[f], borderColor: filterColors[f] + '40' } : undefined}
+            style={difficulty === f ? { color: filterColors[f], borderColor: filterColors[f] + '40', background: filterColors[f] + '10' } : undefined}
           >
             {f}
           </button>
@@ -57,9 +57,16 @@ export default function CategoryGameGrid({ games }: { games: Game[] }) {
           ))}
         </div>
       ) : (
-        <p className="text-muted text-center py-10">
-          No {difficulty.toLowerCase()} games in this category.
-        </p>
+        <div className="text-center py-16">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-3" style={{ color: filterColors[difficulty] + '40' }} aria-hidden="true">
+            <rect x="2" y="6" width="20" height="12" rx="2" />
+            <path d="M6 12h4M8 10v4M15 11h.01M18 13h.01" />
+          </svg>
+          <p className="text-foreground font-medium mb-1">No {difficulty.toLowerCase()} games</p>
+          <p className="text-muted text-sm">
+            Try a different difficulty filter.
+          </p>
+        </div>
       )}
     </>
   );

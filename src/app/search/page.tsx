@@ -40,11 +40,11 @@ function SearchResults() {
             placeholder="Search by name, description, or category..."
             aria-label="Search games"
             autoFocus={!query}
-            className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent transition-colors"
+            className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_12px_rgba(233,69,96,0.1)] transition-all duration-200"
           />
           <button
             type="submit"
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent hover:bg-accent-hover text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent hover:bg-accent-hover text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-200 hover:shadow-[0_0_8px_rgba(233,69,96,0.3)]"
           >
             Search
           </button>
@@ -52,7 +52,7 @@ function SearchResults() {
       </form>
 
       {query && (
-        <p className="text-muted mb-6">
+        <p className="text-muted mb-6 text-sm">
           {results.length} game{results.length !== 1 ? 's' : ''} found
         </p>
       )}
@@ -61,10 +61,10 @@ function SearchResults() {
       ) : query ? (
         /* No results state */
         <div className="text-center py-16">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-muted/40 mb-4" aria-hidden="true">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-muted/30 mb-4" aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
             <path d="M21 21l-4.35-4.35" />
-            <path d="M8 11h6M11 8v6" strokeOpacity="0.5" />
+            <path d="M8 11h6" strokeOpacity="0.5" />
           </svg>
           <p className="text-foreground font-medium mb-2">No games found</p>
           <p className="text-muted text-sm mb-6">
@@ -75,7 +75,7 @@ function SearchResults() {
               <Link
                 key={cat}
                 href={`/category/${cat.toLowerCase()}`}
-                className="text-sm px-4 py-2 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors"
+                className="text-sm px-4 py-2 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 hover:bg-white/[0.02] transition-all duration-200"
               >
                 {cat}
               </Link>
@@ -85,7 +85,7 @@ function SearchResults() {
       ) : (
         /* Empty search state */
         <div className="text-center py-16">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-muted/30 mb-4" aria-hidden="true">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-accent/20 mb-4" aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
             <path d="M21 21l-4.35-4.35" />
           </svg>
@@ -98,7 +98,7 @@ function SearchResults() {
               <Link
                 key={cat}
                 href={`/category/${cat.toLowerCase()}`}
-                className="text-sm px-4 py-2 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors"
+                className="text-sm px-4 py-2 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 hover:bg-white/[0.02] transition-all duration-200"
               >
                 {cat}
               </Link>

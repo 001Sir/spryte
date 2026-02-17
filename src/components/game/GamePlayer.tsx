@@ -48,6 +48,7 @@ export default function GamePlayer({ slug }: { slug: string }) {
   // Track fullscreen state changes (with webkit fallback for Safari)
   useEffect(() => {
     const onFSChange = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Safari webkit fullscreen API
       setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
     };
     document.addEventListener('fullscreenchange', onFSChange);
@@ -61,17 +62,21 @@ export default function GamePlayer({ slug }: { slug: string }) {
   const toggleFullscreen = () => {
     const el = containerElRef.current;
     if (!el) return;
-    if (document.fullscreenElement || (document as any).webkitFullscreenElement) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Safari webkit fullscreen API
+    const doc = document as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Safari webkit fullscreen API
+    const elem = el as any;
+    if (document.fullscreenElement || doc.webkitFullscreenElement) {
       if (document.exitFullscreen) {
         document.exitFullscreen();
-      } else if ((document as any).webkitExitFullscreen) {
-        (document as any).webkitExitFullscreen();
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
       }
     } else {
       if (el.requestFullscreen) {
         el.requestFullscreen();
-      } else if ((el as any).webkitRequestFullscreen) {
-        (el as any).webkitRequestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
       }
     }
   };
@@ -105,7 +110,12 @@ export default function GamePlayer({ slug }: { slug: string }) {
   if (!GameComponent) {
     return (
       <div className="bg-card border border-border rounded-xl p-10 text-center" role="alert">
-        <p className="text-muted">Game not found</p>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-muted/30 mb-3" aria-hidden="true">
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <path d="M6 12h4M8 10v4M15 11h.01M18 13h.01" />
+        </svg>
+        <p className="text-foreground font-medium mb-1">Game not found</p>
+        <p className="text-muted text-sm">This game may have been moved or removed.</p>
       </div>
     );
   }
@@ -125,7 +135,7 @@ export default function GamePlayer({ slug }: { slug: string }) {
         </div>
         <button
           onClick={toggleMute}
-          className="absolute top-3 right-14 bg-black/60 hover:bg-black/80 text-white px-3 py-2 rounded-lg transition-colors z-10 flex items-center gap-1.5 text-xs font-medium min-w-[44px] min-h-[44px]"
+          className="absolute top-3 right-14 bg-black/60 hover:bg-black/80 backdrop-blur-sm text-white px-3 py-2 rounded-lg transition-all duration-200 z-10 flex items-center gap-1.5 text-xs font-medium min-w-[44px] min-h-[44px] border border-white/10 hover:border-white/20"
           aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
           title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
         >
@@ -144,7 +154,7 @@ export default function GamePlayer({ slug }: { slug: string }) {
         </button>
         <button
           onClick={toggleFullscreen}
-          className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white px-3 py-2 rounded-lg transition-colors z-10 flex items-center gap-1.5 text-xs font-medium min-w-[44px] min-h-[44px]"
+          className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 backdrop-blur-sm text-white px-3 py-2 rounded-lg transition-all duration-200 z-10 flex items-center gap-1.5 text-xs font-medium min-w-[44px] min-h-[44px] border border-white/10 hover:border-white/20"
           aria-label={isFullscreen ? 'Exit fullscreen mode' : 'Enter fullscreen mode'}
           title={isFullscreen ? 'Exit fullscreen (F)' : 'Fullscreen (F)'}
         >

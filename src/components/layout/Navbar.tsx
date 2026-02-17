@@ -10,7 +10,6 @@ export default function Navbar() {
   const [query, setQuery] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [lastPathname, setLastPathname] = useState('');
   const router = useRouter();
   const pathname = usePathname();
   const categories = getAllCategories();
@@ -69,8 +68,8 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`sticky top-0 z-50 bg-[#0a0a0f]/90 backdrop-blur-md border-b transition-colors duration-300 ${
-        scrolled ? 'border-accent/30' : 'border-border'
+      className={`sticky top-0 z-50 bg-[#0a0a0f]/90 backdrop-blur-md border-b transition-all duration-300 ${
+        scrolled ? 'border-accent/30 shadow-[0_1px_12px_rgba(233,69,96,0.08)]' : 'border-border'
       }`}
       role="navigation"
       aria-label="Main navigation"
@@ -122,7 +121,7 @@ export default function Navbar() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search games..."
               aria-label="Search games"
-              className="w-full bg-card border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent transition-colors"
+              className="w-full bg-card border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_8px_rgba(233,69,96,0.1)] transition-all duration-200"
             />
           </div>
         </form>
