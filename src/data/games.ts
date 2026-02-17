@@ -71,16 +71,18 @@ export const games: Game[] = [
     difficulty: 'Medium',
     thumbnail: '/thumbnails/symbiosis.svg',
     color: '#d946ef',
+    isNew: true,
   },
   {
     slug: 'drift',
     title: 'Drift',
     description: 'A zero-friction momentum puzzle. Push off walls and drift through hazardous rooms. No legs, no brakes — just pure ghost momentum.',
     categories: ['Puzzle', 'Action'],
-    controls: 'Click & drag to aim, release to launch',
+    controls: 'Click & drag to aim, release to launch. Arrow Keys/WASD to aim, Space to charge & launch, R to restart',
     difficulty: 'Medium',
     thumbnail: '/thumbnails/drift.svg',
     color: '#51e2ff',
+    isNew: true,
   },
 ];
 

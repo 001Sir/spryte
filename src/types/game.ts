@@ -8,6 +8,7 @@ export interface Game {
   thumbnail: string;
   color: string;
   featured?: boolean;
+  isNew?: boolean;
 }
 
 export type Category =

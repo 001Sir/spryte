@@ -21,6 +21,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${game.title} — Spryte Games`,
     description: game.description,
+    openGraph: {
+      title: `${game.title} — Play Free on Spryte Games`,
+      description: game.description,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title: `${game.title} — Spryte Games`,
+      description: game.description,
+    },
   };
 }
 

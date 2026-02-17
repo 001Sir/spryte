@@ -22,6 +22,19 @@ export default function GameCard({ game }: { game: Game }) {
           alt={game.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
+        {/* Badges - top left */}
+        <div className="absolute top-2 left-2 flex gap-1">
+          {game.featured && (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-accent/90 text-white">
+              Featured
+            </span>
+          )}
+          {game.isNew && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500 text-white uppercase tracking-wide">
+              New
+            </span>
+          )}
+        </div>
         {/* Category badges - top right */}
         <div className="absolute top-2 right-2 flex gap-1">
           {game.categories.map((cat) => (

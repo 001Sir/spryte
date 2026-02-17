@@ -1,0 +1,16 @@
+{
+  "name": "Spryte Games",
+  "short_name": "Spryte",
+  "description": "Play free browser games instantly. No downloads, no installs — just fun.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#e94560",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

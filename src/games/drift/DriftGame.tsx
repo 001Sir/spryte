@@ -296,6 +296,14 @@ export default function DriftGame() {
     let _mouseX = 0, _mouseY = 0;
     let hoveringGhost = false;
 
+    // Keyboard state
+    const keysDown: Record<string, boolean> = {};
+    let kbAiming = false;
+    let kbCharging = false;
+    let kbChargePower = 0;
+    let kbDirX = 0;
+    let kbDirY = 0;
+
     // Trail & particles
     let trail: TrailDot[] = [];
     let particles: Particle[] = [];
@@ -556,6 +564,54 @@ export default function DriftGame() {
       ctx.strokeStyle = 'rgba(81,226,255,0.5)';
       ctx.lineWidth = 1;
       ctx.strokeRect(barX, barY, barW, barH);
+    };
+
+    const drawKeyboardAim = () => {
+      if (!kbAiming && !kbCharging) return;
+      if (!onSurface) return;
+      if (isAiming) return; // mouse aim takes priority
+
+      const power = kbCharging ? kbChargePower : 0.2;
+      const lineLen = 60 + power * 100;
+
+      // Dotted line
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = `rgba(81,226,255,${0.4 + power * 0.4})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx + kbDirX * lineLen, gy + kbDirY * lineLen);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Arrowhead
+      const tipX = gx + kbDirX * lineLen;
+      const tipY = gy + kbDirY * lineLen;
+      const aSize = 8 + power * 4;
+      const perpX = -kbDirY;
+      const perpY = kbDirX;
+      ctx.fillStyle = `rgba(81,226,255,${0.6 + power * 0.4})`;
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - kbDirX * aSize + perpX * aSize * 0.4, tipY - kbDirY * aSize + perpY * aSize * 0.4);
+      ctx.lineTo(tipX - kbDirX * aSize - perpX * aSize * 0.4, tipY - kbDirY * aSize - perpY * aSize * 0.4);
+      ctx.closePath();
+      ctx.fill();
+
+      // Power bar (only when charging)
+      if (kbCharging) {
+        const barW = 50;
+        const barH = 6;
+        const barX = gx - barW / 2;
+        const barY = gy + GHOST_R * 2.5;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(barX, barY, barW, barH);
+        ctx.fillStyle = `rgb(${Math.round(81 + 174 * power)},${Math.round(226 - 100 * power)},255)`;
+        ctx.fillRect(barX, barY, barW * power, barH);
+        ctx.strokeStyle = 'rgba(81,226,255,0.5)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barW, barH);
+      }
     };
 
     const drawWall = (r: Rect) => {
@@ -944,6 +1000,26 @@ export default function DriftGame() {
       }
       if (windParticles.length > 60) windParticles.splice(0, windParticles.length - 60);
 
+      // Keyboard aim direction
+      if (onSurface && !isAiming) {
+        let kdx = 0, kdy = 0;
+        if (keysDown['ArrowLeft'] || keysDown['a']) kdx -= 1;
+        if (keysDown['ArrowRight'] || keysDown['d']) kdx += 1;
+        if (keysDown['ArrowUp'] || keysDown['w']) kdy -= 1;
+        if (keysDown['ArrowDown'] || keysDown['s']) kdy += 1;
+
+        if (kdx !== 0 || kdy !== 0) {
+          const len = Math.sqrt(kdx * kdx + kdy * kdy);
+          kbDirX = kdx / len;
+          kbDirY = kdy / len;
+          kbAiming = true;
+        }
+
+        if (kbCharging) {
+          kbChargePower = Math.min(kbChargePower + dt * 1.2, 1);
+        }
+      }
+
       // Shake decay
       shakeX = (Math.random() - 0.5) * shakeIntensity * 2;
       shakeY = (Math.random() - 0.5) * shakeIntensity * 2;
@@ -1023,7 +1099,8 @@ export default function DriftGame() {
 
       ctx.fillStyle = 'rgba(81,226,255,0.4)';
       ctx.font = '13px monospace';
-      ctx.fillText('Click & drag to aim, release to launch', W / 2, 480);
+      ctx.fillText('Mouse: Click & drag to aim, release to launch', W / 2, 472);
+      ctx.fillText('Keyboard: Arrow Keys / WASD + Space to charge & launch', W / 2, 494);
       ctx.textAlign = 'left';
     };
 
@@ -1163,6 +1240,7 @@ export default function DriftGame() {
 
       // Aim indicator
       drawAimIndicator();
+      drawKeyboardAim();
 
       // HUD
       drawHUD(lv);
@@ -1337,6 +1415,101 @@ export default function DriftGame() {
       handleMouseUp();
     };
 
+    // Keyboard support
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key;
+      keysDown[key] = true;
+
+      // Prevent page scroll on arrow keys / space when canvas is focused
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(key)) {
+        e.preventDefault();
+      }
+
+      if (state === 'menu') {
+        if (key === ' ' || key === 'Enter') {
+          state = 'playing';
+          currentLevel = 0;
+          totalScore = 0;
+          initLevel(0);
+        }
+        return;
+      }
+
+      if (state === 'gameover') {
+        if (key === ' ' || key === 'Enter') {
+          state = 'playing';
+          initLevel(currentLevel);
+        }
+        return;
+      }
+
+      if (state === 'levelComplete') {
+        if (key === ' ' || key === 'Enter') {
+          if (currentLevel >= levels.length - 1) {
+            state = 'menu';
+            totalScore = 0;
+          } else {
+            currentLevel++;
+            state = 'playing';
+            initLevel(currentLevel);
+          }
+        }
+        return;
+      }
+
+      if (state === 'playing') {
+        // R to restart level
+        if (key === 'r' || key === 'R') {
+          initLevel(currentLevel);
+          state = 'playing';
+          return;
+        }
+
+        // Space starts charging when aiming with keyboard
+        if (key === ' ' && onSurface && kbAiming && !kbCharging) {
+          kbCharging = true;
+          kbChargePower = 0;
+        }
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key;
+      keysDown[key] = false;
+
+      // Launch on space release while charging
+      if (state === 'playing' && key === ' ' && kbCharging) {
+        const power = Math.max(kbChargePower, 0.15);
+        const speed = power * MAX_LAUNCH;
+        gvx = kbDirX * speed;
+        gvy = kbDirY * speed;
+        onSurface = false;
+        launches++;
+
+        // Launch stretch
+        if (Math.abs(gvx) > Math.abs(gvy)) {
+          scaleX = 1.3;
+          scaleY = 0.7;
+        } else {
+          scaleX = 0.7;
+          scaleY = 1.3;
+        }
+
+        spawnParticles(gx, gy, 6, '#51e2ff', 2);
+        kbCharging = false;
+        kbAiming = false;
+        kbChargePower = 0;
+      }
+
+      // Stop aiming if no direction keys held
+      const hasDir = keysDown['ArrowLeft'] || keysDown['ArrowRight'] ||
+        keysDown['ArrowUp'] || keysDown['ArrowDown'] ||
+        keysDown['a'] || keysDown['d'] || keysDown['w'] || keysDown['s'];
+      if (!hasDir && !kbCharging) {
+        kbAiming = false;
+      }
+    };
+
     // ── Attach events ──
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mousemove', handleMouseMove);
@@ -1345,6 +1518,8 @@ export default function DriftGame() {
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
     // Start
     rafId = requestAnimationFrame(gameLoop);
@@ -1358,6 +1533,8 @@ export default function DriftGame() {
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 

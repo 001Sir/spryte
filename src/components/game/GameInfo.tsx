@@ -26,6 +26,10 @@ export default function GameInfo({ game }: { game: Game }) {
     }
   };
 
+  const scrollToGame = () => {
+    document.getElementById('game-container')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="bg-card border border-border rounded-xl p-6 mt-6">
       {/* Header row */}
@@ -43,7 +47,18 @@ export default function GameInfo({ game }: { game: Game }) {
           <p className="text-muted mt-2">{game.description}</p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {/* Back to game button */}
+          <button
+            onClick={scrollToGame}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            Play
+          </button>
+
           {/* Share button */}
           <button
             onClick={handleShare}

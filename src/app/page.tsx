@@ -1,5 +1,6 @@
 import { games, getAllCategories, getGamesByCategory } from '@/data/games';
 import GameCard from '@/components/game/GameCard';
+import RecentlyPlayed from '@/components/game/RecentlyPlayed';
 import Link from 'next/link';
 
 const categoryIcons: Record<string, string> = {
@@ -77,6 +78,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Recently Played */}
+      <RecentlyPlayed />
 
       {/* All Games / Trending */}
       <section className="mb-14" id="games">
