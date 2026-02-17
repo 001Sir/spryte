@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
+import { SoundEngine } from '@/lib/sounds';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const W = 800;
@@ -257,6 +258,7 @@ export default function TerravoreGame() {
       paused = false;
       generateLevel(0);
       state = 'Playing';
+      SoundEngine.play('menuSelect');
     }
 
     // ── Spawn particles ─────────────────────────────────────────────────────
@@ -328,6 +330,7 @@ export default function TerravoreGame() {
         digging = true;
         digTimer = DIG_DURATION;
         spawnDigParticles(nx, ny, cell);
+        SoundEngine.play('dig');
         return;
       }
 
@@ -337,6 +340,7 @@ export default function TerravoreGame() {
       const wasGem = cell === GEM;
       grid[ny][nx] = EMPTY;
       spawnDigParticles(nx, ny, cell);
+      SoundEngine.play('dig');
       blocksEaten++;
       creatureSize = 1.0 + Math.min(blocksEaten * 0.001, 0.3);
 
@@ -346,6 +350,7 @@ export default function TerravoreGame() {
         const gemScore = 100 + depthBonus * 10;
         score += gemScore;
         spawnGemParticles(nx, ny);
+        SoundEngine.play('collectGem');
       } else {
         score += 5;
       }
@@ -508,10 +513,12 @@ export default function TerravoreGame() {
           health -= 2;
           damageCooldown = 10;
           spawnDamageParticles();
+          SoundEngine.play('waterDamage');
         }
       } else if (cell === LAVA) {
         health = 0;
         spawnDamageParticles();
+        SoundEngine.play('lavaDeath');
       }
     }
 
@@ -523,6 +530,7 @@ export default function TerravoreGame() {
         if (level < LEVELS.length - 1) {
           level++;
           state = 'LevelComplete';
+          SoundEngine.play('levelComplete');
           levelTransitionTimer = 120;
         } else {
           // Won all levels!
@@ -735,6 +743,7 @@ export default function TerravoreGame() {
       if (health <= 0) {
         totalScore += score;
         state = 'GameOver';
+        SoundEngine.play('gameOver');
       }
 
       // Check level complete

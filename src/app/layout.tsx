@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     title: "Spryte Games — Free Browser Games",
     description:
       "Play free browser games instantly. No downloads, no installs — just fun.",
-    site: "@SpriteGames",
+    site: "@SpryteGames",
   },
   alternates: {
     canonical: "https://sprytegames.com",
@@ -82,8 +82,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="canonical" href="https://sprytegames.com" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#e94560" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Spryte Games" />

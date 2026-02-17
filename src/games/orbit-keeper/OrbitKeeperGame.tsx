@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
+import { SoundEngine } from '@/lib/sounds';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -341,10 +342,12 @@ export default function OrbitKeeperGame() {
       if (d < SUN_RADIUS + p.radius) {
         p.alive = false;
         spawnExplosion(p.x, p.y, p.color, 30);
+        SoundEngine.play('planetCrash');
         showEvent(`${p.name} crashed into the sun!`);
       } else if (p.x < -100 || p.x > W + 100 || p.y < -100 || p.y > H + 100) {
         p.alive = false;
         showEvent(`${p.name} escaped the system!`);
+        SoundEngine.play('planetEscape');
       }
     }
 
@@ -434,6 +437,7 @@ export default function OrbitKeeperGame() {
         vertices: createIrregularShape(randomRange(4, 8), 7),
       });
       showEvent('Rogue asteroid incoming!');
+      SoundEngine.play('asteroidSpawn');
     }
 
     function spawnSolarFlare() {
@@ -445,6 +449,7 @@ export default function OrbitKeeperGame() {
         strength: randomRange(1, 2 + level * 0.3),
       });
       showEvent('Solar flare eruption!');
+      SoundEngine.play('solarFlare');
       // Spawn visual particles
       for (let i = 0; i < 20; i++) {
         const a = angle + randomRange(-0.4, 0.4);
@@ -494,6 +499,7 @@ export default function OrbitKeeperGame() {
       };
       planets.push(planet);
       showEvent(`New planet ${template.name} appeared! Stabilize it!`);
+      SoundEngine.play('eventWarning');
     }
 
     function triggerPerturbation() {
@@ -1080,6 +1086,7 @@ export default function OrbitKeeperGame() {
       if (alivePlanets.length === 0) {
         gameWon = false;
         state = 'gameover';
+        SoundEngine.play('gameOver');
         return;
       }
 
@@ -1101,12 +1108,14 @@ export default function OrbitKeeperGame() {
           // Game won!
           gameWon = true;
           state = 'gameover';
+          SoundEngine.play('levelComplete');
           return;
         }
 
         // Next level
         initLevel(level + 1);
         showEvent(`Level ${level} - More chaos ahead!`);
+        SoundEngine.play('levelComplete');
       }
     }
 
@@ -1221,6 +1230,7 @@ export default function OrbitKeeperGame() {
         gameWon = false;
         scoreAccumTimer = 0;
         initLevel(1);
+        SoundEngine.play('menuSelect');
         return;
       }
 

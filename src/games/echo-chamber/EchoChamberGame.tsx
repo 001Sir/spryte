@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { SoundEngine } from '@/lib/sounds';
 
 // ────────────────────────────────────────────────────────────────
 //  ECHO CHAMBER  –  Navigate darkness with sound-wave pulses
@@ -344,6 +345,7 @@ export default function EchoChamberGame() {
     function onClick(_e: MouseEvent) {
       if (state === 'menu') {
         state = 'playing';
+        SoundEngine.play('menuSelect');
         level = 1;
         score = 0;
         totalGemsCollected = 0;
@@ -366,6 +368,7 @@ export default function EchoChamberGame() {
             speed: 240,
             alpha: 1,
           });
+          SoundEngine.play('pulse');
         }
       }
     }
@@ -465,6 +468,7 @@ export default function EchoChamberGame() {
             speed: 240,
             alpha: 1,
           });
+          SoundEngine.play('pulse');
         }
       }
     }
@@ -517,6 +521,7 @@ export default function EchoChamberGame() {
       if (br > 0.3) {
         en.frozen = true;
         en.frozenTimer = 0.8; // stay frozen 0.8s after light fades
+        SoundEngine.play('enemyFreeze');
         return;
       }
       if (en.frozenTimer > 0) {
@@ -653,6 +658,7 @@ export default function EchoChamberGame() {
           goMessage = 'Caught in the dark!';
           goScore = score;
           goLevel = level;
+          SoundEngine.play('gameOver');
           return;
         }
       }
@@ -667,6 +673,7 @@ export default function EchoChamberGame() {
           g.collected = true;
           score += 100;
           totalGemsCollected++;
+          SoundEngine.play('collectGem');
         }
       }
 
@@ -678,6 +685,7 @@ export default function EchoChamberGame() {
         // level complete
         const pulseBonus = pulsesLeft * 50;
         score += 200 + pulseBonus;
+        SoundEngine.play('levelComplete');
         level++;
         if (level > 10) {
           // win

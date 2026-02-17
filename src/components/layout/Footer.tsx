@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getAllCategories, games } from '@/data/games';
 
 export default function Footer() {
@@ -9,11 +10,15 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
         {/* Branding */}
         <div className="col-span-2 md:col-span-1">
-          <Link href="/" className="inline-block">
-            <span className="text-2xl font-black bg-gradient-to-r from-accent to-[#ff7eb3] bg-clip-text text-transparent">
-              Spryte
-            </span>
-            <span className="text-lg font-semibold text-foreground ml-1.5">Games</span>
+          <Link href="/" className="inline-flex items-center gap-2">
+            <Image
+              src="/logo.png"
+              alt="Spryte Games"
+              width={48}
+              height={48}
+              className="rounded-full"
+            />
+            <span className="text-lg font-bold text-foreground">Spryte Games</span>
           </Link>
           <p className="text-muted text-sm mt-3 max-w-xs">
             Free browser games. No downloads, no installs — just play.

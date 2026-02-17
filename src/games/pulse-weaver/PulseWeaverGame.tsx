@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
+import { SoundEngine } from '@/lib/sounds';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const W = 800;
@@ -383,6 +384,7 @@ export default function PulseWeaverGame() {
     function spawnWave() {
       wave++;
       waveAnnounceTimer = 2000;
+      SoundEngine.play('waveStart');
       waveActive = true;
       waveCleared = false;
 
@@ -483,6 +485,7 @@ export default function PulseWeaverGame() {
       // Playing state
       beamTime += dt;
       firing = mouseDown;
+      if (firing) { SoundEngine.startLoop('beamFire'); } else { SoundEngine.stopLoop('beamFire'); }
 
       // Frequency hold: while firing, slowly increase frequency (alternative to scroll)
       // Removed to let scroll be primary control
@@ -543,6 +546,7 @@ export default function PulseWeaverGame() {
             playerHealth -= CONTACT_DAMAGE;
             lastContactTime = now;
             spawnParticles(px, py, '#ff4444', 8);
+            SoundEngine.play('playerDamage');
             if (playerHealth <= 0) {
               gameOver();
               return;
@@ -582,6 +586,7 @@ export default function PulseWeaverGame() {
                 const damage = damageBase * (0.5 + matchQuality * 0.5) * perfectBonus;
                 e.health -= damage;
                 e.flashTimer = 100;
+                SoundEngine.play('frequencyMatch');
 
                 if (e.health <= 0) {
                   e.dead = true;
@@ -590,7 +595,9 @@ export default function PulseWeaverGame() {
                   combo++;
                   lastComboTime = performance.now();
                   if (combo > maxCombo) maxCombo = combo;
+                  SoundEngine.play('comboUp');
                   spawnParticles(e.x, e.y, e.color, 20 + e.sides * 3);
+                  SoundEngine.play('enemyDeath');
 
                   if (Math.random() < POWERUP_DROP_CHANCE) {
                     spawnPowerUp(e.x, e.y);
@@ -628,16 +635,19 @@ export default function PulseWeaverGame() {
             case 'health':
               playerHealth = Math.min(playerMaxHealth, playerHealth + 30);
               spawnParticles(pu.x, pu.y, '#34d399', 12);
+              SoundEngine.play('heal');
               break;
             case 'multibeam':
               hasMultibeam = true;
               multibeamTimer = POWERUP_DURATION;
               spawnParticles(pu.x, pu.y, '#38bdf8', 12);
+              SoundEngine.play('collectPowerup');
               break;
             case 'scanner':
               hasScanner = true;
               scannerTimer = POWERUP_DURATION;
               spawnParticles(pu.x, pu.y, '#e879f9', 12);
+              SoundEngine.play('collectPowerup');
               break;
           }
           powerUps.splice(i, 1);
@@ -662,6 +672,7 @@ export default function PulseWeaverGame() {
       if (waveActive && enemies.length === 0 && !waveCleared) {
         waveCleared = true;
         waveTimer = waveDelay;
+        SoundEngine.play('waveClear');
       }
 
       if (waveCleared) {
@@ -699,6 +710,8 @@ export default function PulseWeaverGame() {
       finalMaxCombo = maxCombo;
       menuTime = 0;
       spawnParticles(px, py, ROSE, 40);
+      SoundEngine.play('gameOver');
+      SoundEngine.stopAllLoops();
     }
 
     // ── Drawing ──────────────────────────────────────────────────────────
@@ -1280,8 +1293,9 @@ export default function PulseWeaverGame() {
       height={H}
       style={{
         width: '100%',
-        maxWidth: W,
+        maxWidth: `${W}px`,
         height: 'auto',
+        aspectRatio: `${W}/${H}`,
         display: 'block',
         cursor: 'crosshair',
         background: BG,

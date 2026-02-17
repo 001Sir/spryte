@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getAllCategories } from '@/data/games';
@@ -75,11 +76,16 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0" onClick={closeMobile}>
-          <span className="text-2xl font-black bg-gradient-to-r from-accent to-[#ff7eb3] bg-clip-text text-transparent">
-            Spryte
-          </span>
-          <span className="text-lg font-semibold text-foreground hidden sm:block">
-            Games
+          <Image
+            src="/logo.png"
+            alt="Spryte Games"
+            width={40}
+            height={40}
+            className="rounded-full"
+            priority
+          />
+          <span className="text-lg font-bold text-foreground hidden sm:block">
+            Spryte Games
           </span>
         </Link>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { SoundEngine } from '@/lib/sounds';
 
 // ─── Constants ───────────────────────────────────────────────────────
 const W = 800;
@@ -275,12 +276,11 @@ export default function DriftGame() {
     let levelScore = 0;
     let launches = 0;
     let stars = 0;
+    let paused = false;
 
     // Ghost
     let gx = 0, gy = 0, gvx = 0, gvy = 0;
     let onSurface = true;
-    let _surfaceNormal: Vec = { x: 0, y: -1 };
-
     // Squash/stretch
     let scaleX = 1, scaleY = 1;
 
@@ -293,7 +293,6 @@ export default function DriftGame() {
     let isAiming = false;
     let aimStartX = 0, aimStartY = 0;
     let aimX = 0, aimY = 0;
-    let _mouseX = 0, _mouseY = 0;
     let hoveringGhost = false;
 
     // Keyboard state
@@ -330,8 +329,6 @@ export default function DriftGame() {
 
     // Menu hover
     let menuHover = false;
-    const _levelSelectHover = -1;
-
     // Level complete button hover
     let nextBtnHover = false;
 
@@ -342,9 +339,6 @@ export default function DriftGame() {
     const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-    const _rectContains = (r: Rect, px: number, py: number) =>
-      px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
 
     const circleRect = (cx: number, cy: number, cr: number, rx: number, ry: number, rw: number, rh: number): { hit: boolean; nx: number; ny: number; pen: number } => {
       const nearX = clamp(cx, rx, rx + rw);
@@ -387,10 +381,10 @@ export default function DriftGame() {
       gvx = 0;
       gvy = 0;
       onSurface = true;
-      _surfaceNormal = { x: 0, y: -1 };
       scaleX = 1;
       scaleY = 1;
       isAiming = false;
+      paused = false;
       kbAiming = false;
       kbCharging = false;
       kbChargePower = 0;
@@ -838,6 +832,7 @@ export default function DriftGame() {
             const impactSpeed = Math.abs(dot);
             if (impactSpeed > 0.5) {
               shakeIntensity = Math.min(impactSpeed * 0.5, 8);
+              SoundEngine.play('wallHit');
               spawnParticles(gx, gy, Math.floor(impactSpeed * 2), '#51e2ff', impactSpeed * 0.5);
               // squash in impact direction
               if (Math.abs(col.nx) > Math.abs(col.ny)) {
@@ -859,7 +854,7 @@ export default function DriftGame() {
             gvx = gvx * 0.0;
             gvy = gvy * 0.0;
             onSurface = true;
-            _surfaceNormal = { x: col.nx, y: col.ny };
+
           }
         }
       }
@@ -872,7 +867,9 @@ export default function DriftGame() {
           spawnParticles(gx, gy, 30, '#ef4444', 5);
           spawnParticles(gx, gy, 20, '#f97316', 4);
           shakeIntensity = 12;
+          SoundEngine.play('spikeHit');
           state = 'gameover';
+          SoundEngine.play('gameOver');
           return;
         }
       }
@@ -892,6 +889,7 @@ export default function DriftGame() {
             spawnParticles(gx, gy, 10, '#51e2ff', 3);
             scaleX = Math.abs(col.nx) > 0.5 ? 0.6 : 1.4;
             scaleY = Math.abs(col.ny) > 0.5 ? 0.6 : 1.4;
+            SoundEngine.play('bounce');
           }
           onSurface = false;
         }
@@ -904,6 +902,7 @@ export default function DriftGame() {
           gy = p.y2 + (gy - p.y1);
           spawnParticles(p.x1, p.y1, 8, '#51e2ff', 3);
           spawnParticles(p.x2, p.y2, 8, '#5196ff', 3);
+          SoundEngine.play('portalEnter');
           break;
         }
         if (dist(gx, gy, p.x2, p.y2) < p.r + GHOST_R) {
@@ -911,6 +910,7 @@ export default function DriftGame() {
           gy = p.y1 + (gy - p.y2);
           spawnParticles(p.x2, p.y2, 8, '#5196ff', 3);
           spawnParticles(p.x1, p.y1, 8, '#51e2ff', 3);
+          SoundEngine.play('portalEnter');
           break;
         }
       }
@@ -921,6 +921,7 @@ export default function DriftGame() {
           o.collected = true;
           levelScore += 200;
           spawnParticles(o.x, o.y, 12, '#51e2ff', 4);
+          SoundEngine.play('collectOrb');
         }
       }
 
@@ -932,12 +933,14 @@ export default function DriftGame() {
         totalScore += levelScore;
         state = 'levelComplete';
         spawnParticles(lv.exitX, lv.exitY, 25, '#51e2ff', 5);
+        SoundEngine.play('levelComplete');
       }
     };
 
     // ── Update ──
     const update = (dt: number) => {
       if (state !== 'playing') return;
+      if (paused) return;
       const lv = levels[currentLevel];
 
       // Gravity wells
@@ -1296,8 +1299,24 @@ export default function DriftGame() {
           break;
         case 'playing':
           update(dt);
-          if (state === 'playing') drawPlaying(dt);
-          else if (state === 'gameover') drawGameOver();
+          if (state === 'playing') {
+            drawPlaying(dt);
+            if (paused) {
+              ctx.fillStyle = 'rgba(0,0,0,0.5)';
+              ctx.fillRect(0, 0, W, H);
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 48px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.shadowColor = '#51e2ff';
+              ctx.shadowBlur = 20;
+              ctx.fillText('PAUSED', W / 2, H / 2 - 20);
+              ctx.shadowBlur = 0;
+              ctx.fillStyle = '#9ca3af';
+              ctx.font = '16px sans-serif';
+              ctx.fillText('Press P to resume', W / 2, H / 2 + 25);
+            }
+          } else if (state === 'gameover') drawGameOver();
           else if (state === 'levelComplete') drawLevelComplete();
           break;
         case 'levelComplete':
@@ -1330,13 +1349,12 @@ export default function DriftGame() {
     // ── Input ──
     const handleMouseDown = (e: MouseEvent) => {
       const pos = getMousePos(e);
-      _mouseX = pos.x;
-      _mouseY = pos.y;
 
       if (state === 'menu') {
         // Check play button
         if (pos.x >= W / 2 - 80 && pos.x <= W / 2 + 80 && pos.y >= 400 && pos.y <= 448) {
           state = 'playing';
+          SoundEngine.play('menuSelect');
           currentLevel = 0;
           totalScore = 0;
           initLevel(0);
@@ -1379,8 +1397,6 @@ export default function DriftGame() {
 
     const handleMouseMove = (e: MouseEvent) => {
       const pos = getMousePos(e);
-      _mouseX = pos.x;
-      _mouseY = pos.y;
 
       if (state === 'menu') {
         menuHover = pos.x >= W / 2 - 80 && pos.x <= W / 2 + 80 && pos.y >= 400 && pos.y <= 448;
@@ -1424,6 +1440,7 @@ export default function DriftGame() {
           }
 
           spawnParticles(gx, gy, 6, '#51e2ff', 2);
+          SoundEngine.play('launch');
         }
         isAiming = false;
         canvas.style.cursor = 'default';
@@ -1465,6 +1482,7 @@ export default function DriftGame() {
       if (state === 'menu') {
         if (key === ' ' || key === 'Enter') {
           state = 'playing';
+          SoundEngine.play('menuSelect');
           currentLevel = 0;
           totalScore = 0;
           initLevel(0);
@@ -1495,6 +1513,13 @@ export default function DriftGame() {
       }
 
       if (state === 'playing') {
+        // Pause toggle
+        if (key === 'p' || key === 'P' || key === 'Escape') {
+          paused = !paused;
+          return;
+        }
+        if (paused) return;
+
         // R to restart level
         if (key === 'r' || key === 'R') {
           initLevel(currentLevel);
@@ -1505,6 +1530,7 @@ export default function DriftGame() {
         // Space starts charging when aiming with keyboard
         if (key === ' ' && onSurface && kbAiming && !kbCharging) {
           kbCharging = true;
+          SoundEngine.startLoop('charge');
           kbChargePower = 0;
         }
       }
@@ -1515,7 +1541,7 @@ export default function DriftGame() {
       keysDown[key] = false;
 
       // Launch on space release while charging
-      if (state === 'playing' && key === ' ' && kbCharging) {
+      if (state === 'playing' && !paused && key === ' ' && kbCharging) {
         const power = Math.max(kbChargePower, 0.15);
         const speed = power * MAX_LAUNCH;
         gvx = kbDirX * speed;
@@ -1533,7 +1559,9 @@ export default function DriftGame() {
         }
 
         spawnParticles(gx, gy, 6, '#51e2ff', 2);
+        SoundEngine.play('launch');
         kbCharging = false;
+        SoundEngine.stopLoop('charge');
         kbAiming = false;
         kbChargePower = 0;
       }

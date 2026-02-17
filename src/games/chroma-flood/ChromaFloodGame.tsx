@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { SoundEngine } from '@/lib/sounds';
 
 // ---------------------------------------------------------------------------
 // Types & Constants
@@ -120,6 +121,21 @@ export default function ChromaFloodGame() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // --- High Score Helpers -------------------------------------------
+    function getHighScore(gameSlug: string): number {
+      try {
+        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
+        return val ? parseInt(val, 10) || 0 : 0;
+      } catch { return 0; }
+    }
+    function setHighScore(gameSlug: string, s: number) {
+      try {
+        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
+      } catch { /* ignore */ }
+    }
+    let highScore = getHighScore('chroma-flood');
+    let newHighScore = false;
 
     // --- State machine -------------------------------------------------
     type GameState = 'menu' | 'playing' | 'gameover';
@@ -316,6 +332,7 @@ export default function ChromaFloodGame() {
       if (chosenColor === currentColor) return; // no-op
 
       moves++;
+      SoundEngine.play('flood');
 
       // Set all owned cells to the new color
       for (let y = 0; y < gs; y++) {
@@ -348,6 +365,7 @@ export default function ChromaFloodGame() {
           if (locked[y][x] && unlockColor[y][x] !== -1) {
             if (absorbedColors.has(unlockColor[y][x])) {
               locked[y][x] = false;
+              SoundEngine.play('cellUnlock');
             }
           }
         }
@@ -412,12 +430,15 @@ export default function ChromaFloodGame() {
 
       if (allOwned) {
         won = true;
+        SoundEngine.play('levelComplete');
         if (moves <= par - 3) stars = 3;
         else if (moves <= par) stars = 2;
         else stars = 1;
+        SoundEngine.play('starRating');
 
         const movesSaved = Math.max(0, par - moves);
         totalScore += stars * 100 + movesSaved * 25;
+        if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('chroma-flood', totalScore); }
 
         winTimeoutId = setTimeout(() => {
           state = 'gameover';
@@ -771,6 +792,15 @@ export default function ChromaFloodGame() {
       ctx.font = '18px system-ui, sans-serif';
       ctx.fillText(`Total Score: ${totalScore}`, CANVAS_W / 2, panelY + 245);
 
+      ctx.fillStyle = '#888';
+      ctx.font = '14px system-ui, sans-serif';
+      ctx.fillText(`Best: ${highScore}`, CANVAS_W / 2, panelY + 270);
+      if (newHighScore) {
+        ctx.fillStyle = CYAN;
+        ctx.font = 'bold 14px system-ui, sans-serif';
+        ctx.fillText('New High Score!', CANVAS_W / 2, panelY + 290);
+      }
+
       // Buttons
       const btnY = panelY + 305;
       const hasNextLevel = currentLevel < LEVELS.length - 1;
@@ -907,7 +937,9 @@ export default function ChromaFloodGame() {
         case 'menu':
           currentLevel = 0;
           totalScore = 0;
+          newHighScore = false;
           startLevel(currentLevel);
+          SoundEngine.play('menuSelect');
           break;
 
         case 'playing': {
@@ -958,6 +990,7 @@ export default function ChromaFloodGame() {
             ) {
               currentLevel = 0;
               totalScore = 0;
+              newHighScore = false;
               state = 'menu';
               initMenuBlocks();
             }
@@ -1014,6 +1047,7 @@ export default function ChromaFloodGame() {
         case 'menu':
           currentLevel = 0;
           totalScore = 0;
+          newHighScore = false;
           startLevel(currentLevel);
           break;
 
@@ -1065,6 +1099,7 @@ export default function ChromaFloodGame() {
             ) {
               currentLevel = 0;
               totalScore = 0;
+              newHighScore = false;
               state = 'menu';
               initMenuBlocks();
             }

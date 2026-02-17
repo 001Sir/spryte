@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
+import { SoundEngine } from '@/lib/sounds';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -262,6 +263,24 @@ export default function GravityWellGame() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // ─── High Score Helpers ─────────────────────────────────────────────
+
+    function getHighScore(gameSlug: string): number {
+      try {
+        const val = localStorage.getItem(`spryte-highscore-${gameSlug}`);
+        return val ? parseInt(val, 10) || 0 : 0;
+      } catch { return 0; }
+    }
+
+    function setHighScore(gameSlug: string, s: number) {
+      try {
+        localStorage.setItem(`spryte-highscore-${gameSlug}`, String(s));
+      } catch { /* ignore */ }
+    }
+
+    let highScore = getHighScore('gravity-well');
+    let newHighScore = false;
 
     // ─── Game State ─────────────────────────────────────────────────────
 
@@ -540,6 +559,7 @@ export default function GravityWellGame() {
       for (const s of stars) {
         if (!s.collected && dist(particle, s) < PARTICLE_RADIUS + 14) {
           s.collected = true;
+          SoundEngine.play('collectStar');
         }
       }
       return null;
@@ -964,6 +984,15 @@ export default function GravityWellGame() {
       ctx!.fillText(`Level Score: ${levelScore}`, W / 2, 390);
       ctx!.fillText(`Total Score: ${score}`, W / 2, 425);
 
+      ctx!.fillStyle = '#aaaaaa';
+      ctx!.font = '16px monospace';
+      ctx!.fillText(`Best: ${highScore}`, W / 2, 458);
+      if (newHighScore) {
+        ctx!.fillStyle = PURPLE_LIGHT;
+        ctx!.font = 'bold 16px monospace';
+        ctx!.fillText('New High Score!', W / 2, 478);
+      }
+
       const nextAlpha = 0.5 + 0.5 * Math.sin(time * 0.005);
       ctx!.fillStyle = `rgba(167, 139, 250, ${nextAlpha})`;
       ctx!.font = 'bold 18px monospace';
@@ -1015,10 +1044,19 @@ export default function GravityWellGame() {
       ctx!.fillText(`Final Score: ${score}`, W / 2, 300);
       ctx!.fillText(`Reached Level: ${levelIndex + 1}`, W / 2, 335);
 
+      ctx!.fillStyle = '#aaaaaa';
+      ctx!.font = '18px monospace';
+      ctx!.fillText(`Best: ${highScore}`, W / 2, 370);
+      if (newHighScore) {
+        ctx!.fillStyle = PURPLE_LIGHT;
+        ctx!.font = 'bold 18px monospace';
+        ctx!.fillText('New High Score!', W / 2, 395);
+      }
+
       const restartAlpha = 0.5 + 0.5 * Math.sin(time * 0.005);
       ctx!.fillStyle = `rgba(255, 255, 255, ${restartAlpha})`;
       ctx!.font = 'bold 20px monospace';
-      ctx!.fillText('[ CLICK TO RESTART ]', W / 2, 430);
+      ctx!.fillText('[ CLICK TO RESTART ]', W / 2, 450);
     }
 
     function drawPlayingScreen() {
@@ -1086,7 +1124,9 @@ export default function GravityWellGame() {
 
           const collision = checkCollisions();
           if (collision === 'debris') {
+            if (score > highScore) { highScore = score; newHighScore = true; setHighScore('gravity-well', score); }
             state = 'gameover';
+            SoundEngine.play('gameOver');
           } else if (collision === 'goal') {
             // Calculate level score
             const starsCollected = stars.filter((s) => s.collected).length;
@@ -1095,6 +1135,7 @@ export default function GravityWellGame() {
             levelScore = (1000 + starsCollected * 200 + timeBonus) * wellMultiplier;
             score += levelScore;
             state = 'levelComplete';
+            SoundEngine.play('levelComplete');
           }
 
           // Update hovered well
@@ -1156,14 +1197,17 @@ export default function GravityWellGame() {
       if (state === 'menu') {
         state = 'playing';
         score = 0;
+        newHighScore = false;
         levelIndex = 0;
         loadLevel(0);
+        SoundEngine.play('menuSelect');
         return;
       }
 
       if (state === 'gameover') {
         state = 'playing';
         score = 0;
+        newHighScore = false;
         levelIndex = 0;
         loadLevel(0);
         return;
@@ -1172,8 +1216,10 @@ export default function GravityWellGame() {
       if (state === 'levelComplete') {
         levelIndex++;
         if (levelIndex >= LEVELS.length) {
+          if (score > highScore) { highScore = score; newHighScore = true; setHighScore('gravity-well', score); }
           levelIndex = 0;
           score = 0;
+          newHighScore = false;
         }
         state = 'playing';
         loadLevel(levelIndex);
@@ -1185,6 +1231,7 @@ export default function GravityWellGame() {
         for (let i = 0; i < wells.length; i++) {
           if (dist(coords, wells[i]) < WELL_CLICK_RADIUS) {
             wells.splice(i, 1);
+            SoundEngine.play('wellRemove');
             hoveredWellIndex = -1;
             return;
           }
@@ -1208,6 +1255,7 @@ export default function GravityWellGame() {
           strength: WELL_STRENGTH_DEFAULT,
           pulsePhase: 0,
         });
+        SoundEngine.play('wellPlace');
       }
     }
 
@@ -1222,6 +1270,7 @@ export default function GravityWellGame() {
       for (let i = 0; i < wells.length; i++) {
         if (dist(coords, wells[i]) < WELL_CLICK_RADIUS) {
           wells.splice(i, 1);
+          SoundEngine.play('wellRemove');
           hoveredWellIndex = -1;
           return;
         }
@@ -1245,6 +1294,7 @@ export default function GravityWellGame() {
         strength: -WELL_STRENGTH_DEFAULT,
         pulsePhase: 0,
       });
+      SoundEngine.play('wellPlace');
     }
 
     function handleWheel(e: WheelEvent) {
@@ -1260,6 +1310,7 @@ export default function GravityWellGame() {
       let newAbs = currentAbs + direction * WELL_STRENGTH_STEP;
       newAbs = Math.max(WELL_STRENGTH_MIN, Math.min(WELL_STRENGTH_MAX, newAbs));
       w.strength = isAttractor ? newAbs : -newAbs;
+      SoundEngine.play('wellAdjust');
     }
 
     // ─── Touch Handling ──────────────────────────────────────────────────
@@ -1276,6 +1327,7 @@ export default function GravityWellGame() {
       if (state === 'menu') {
         state = 'playing';
         score = 0;
+        newHighScore = false;
         levelIndex = 0;
         loadLevel(0);
         return;
@@ -1284,6 +1336,7 @@ export default function GravityWellGame() {
       if (state === 'gameover') {
         state = 'playing';
         score = 0;
+        newHighScore = false;
         levelIndex = 0;
         loadLevel(0);
         return;
@@ -1292,8 +1345,10 @@ export default function GravityWellGame() {
       if (state === 'levelComplete') {
         levelIndex++;
         if (levelIndex >= LEVELS.length) {
+          if (score > highScore) { highScore = score; newHighScore = true; setHighScore('gravity-well', score); }
           levelIndex = 0;
           score = 0;
+          newHighScore = false;
         }
         state = 'playing';
         loadLevel(levelIndex);
@@ -1305,6 +1360,7 @@ export default function GravityWellGame() {
         for (let i = 0; i < wells.length; i++) {
           if (dist(coords, wells[i]) < WELL_CLICK_RADIUS) {
             wells.splice(i, 1);
+            SoundEngine.play('wellRemove');
             hoveredWellIndex = -1;
             return;
           }
@@ -1350,6 +1406,7 @@ export default function GravityWellGame() {
             strength: -WELL_STRENGTH_DEFAULT,
             pulsePhase: 0,
           });
+          SoundEngine.play('wellPlace');
           // Reset to prevent triple-tap
           lastTapTime = 0;
         } else {
@@ -1360,6 +1417,7 @@ export default function GravityWellGame() {
             strength: WELL_STRENGTH_DEFAULT,
             pulsePhase: 0,
           });
+          SoundEngine.play('wellPlace');
         }
       }
     }

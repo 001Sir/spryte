@@ -3,10 +3,13 @@
 import dynamic from 'next/dynamic';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
+import { SoundEngine } from '@/lib/sounds';
 
 function LoadingSkeleton() {
   return (
-    <div className="flex items-center justify-center min-h-[400px] w-full" role="status" aria-label="Loading game">
+    <div className="flex flex-col items-center justify-center min-h-[400px] w-full" role="status" aria-label="Loading game">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.png" alt="" width={48} height={48} className="rounded-full opacity-30 animate-pulse mb-4" aria-hidden="true" />
       <div className="w-full max-w-[800px] space-y-3 p-6">
         <div className="animate-skeleton-pulse bg-white/5 rounded-lg h-[300px] w-full" />
         <div className="flex gap-3">
@@ -32,6 +35,7 @@ const gameComponents: Record<string, ReturnType<typeof dynamic>> = {
 
 export default function GamePlayer({ slug }: { slug: string }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => SoundEngine.muted);
   const { addPlayed } = useRecentlyPlayed();
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const GameComponent = gameComponents[slug];
@@ -39,7 +43,8 @@ export default function GamePlayer({ slug }: { slug: string }) {
   // Track this game as recently played
   useEffect(() => {
     addPlayed(slug);
-  }, [slug]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- addPlayed is stable from useRef-backed hook
+  }, [slug, addPlayed]);
 
   const containerRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -64,18 +69,26 @@ export default function GamePlayer({ slug }: { slug: string }) {
     }
   };
 
-  // Keyboard shortcut: F to toggle fullscreen — only when game container or body is focused
+  const toggleMute = () => {
+    const muted = SoundEngine.toggleMute();
+    setIsMuted(muted);
+  };
+
+  // Keyboard shortcuts: F = fullscreen, M = mute — only when game container or body is focused
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // Only trigger if focus is within the game container or on the body (not in nav/search)
+      const container = containerElRef.current;
+      if (!container) return;
+      const targetNode = e.target as Node;
+      if (!container.contains(targetNode) && e.target !== document.body) return;
+
       if (e.key === 'f' || e.key === 'F') {
-        // Don't trigger if user is typing in an input
-        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-        // Only trigger if focus is within the game container or on the body (not in nav/search)
-        const container = containerElRef.current;
-        if (!container) return;
-        const targetNode = e.target as Node;
-        if (!container.contains(targetNode) && e.target !== document.body) return;
         toggleFullscreen();
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleMute();
       }
     };
     window.addEventListener('keydown', handleKey);
@@ -97,10 +110,31 @@ export default function GamePlayer({ slug }: { slug: string }) {
         ref={containerRef}
         className="relative bg-black rounded-xl overflow-hidden border border-border"
         tabIndex={-1}
+        onClick={() => SoundEngine.ensureResumed()}
+        onTouchStart={() => SoundEngine.ensureResumed()}
       >
         <div className="flex items-center justify-center min-h-[400px]">
           <GameComponent />
         </div>
+        <button
+          onClick={toggleMute}
+          className="absolute top-3 right-14 bg-black/60 hover:bg-black/80 text-white px-3 py-2 rounded-lg transition-colors z-10 flex items-center gap-1.5 text-xs font-medium min-w-[44px] min-h-[44px]"
+          aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
+          title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
+        >
+          {isMuted ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M11 5L6 9H2v6h4l5 4V5z" />
+              <line x1="23" y1="9" x2="17" y2="15" />
+              <line x1="17" y1="9" x2="23" y2="15" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M11 5L6 9H2v6h4l5 4V5z" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+            </svg>
+          )}
+        </button>
         <button
           onClick={toggleFullscreen}
           className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white px-3 py-2 rounded-lg transition-colors z-10 flex items-center gap-1.5 text-xs font-medium min-w-[44px] min-h-[44px]"
@@ -125,7 +159,7 @@ export default function GamePlayer({ slug }: { slug: string }) {
         </button>
       </div>
       <p className="text-xs text-muted mt-2 text-center">
-        Press <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">F</kbd> to toggle fullscreen when game is focused
+        Press <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">F</kbd> fullscreen · <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">M</kbd> mute
       </p>
     </div>
   );

@@ -2,6 +2,7 @@ import { games, getAllCategories, getGamesByCategory } from '@/data/games';
 import GameCard from '@/components/game/GameCard';
 import RecentlyPlayed from '@/components/game/RecentlyPlayed';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const categoryIcons: Record<string, string> = {
   Action: '⚡',
@@ -45,7 +46,7 @@ export default function Home() {
     '@type': 'Organization',
     name: 'Spryte Games',
     url: 'https://sprytegames.com',
-    logo: 'https://sprytegames.com/favicon.ico',
+    logo: 'https://sprytegames.com/logo.png',
   };
 
   const gameListJsonLd = {
@@ -95,6 +96,15 @@ export default function Home() {
           />
 
           <div className="relative max-w-lg">
+            <Image
+              src="/logo.png"
+              alt=""
+              width={64}
+              height={64}
+              className="rounded-full mb-4"
+              aria-hidden="true"
+              priority
+            />
             <span className="text-xs font-medium uppercase tracking-wider text-accent">
               Featured Game
             </span>

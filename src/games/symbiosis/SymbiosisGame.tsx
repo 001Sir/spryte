@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { SoundEngine } from '@/lib/sounds';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -260,8 +261,10 @@ export default function SymbiosisGame() {
         // Double-tap: toggle tether
         if (state === 'Playing') {
           parasite.linked = !parasite.linked;
+          if (!parasite.linked) SoundEngine.play('tetherUnlink');
           if (parasite.linked) {
             spawnParticles(parasite.x, parasite.y, FUCHSIA, 6);
+            SoundEngine.play('tetherLink');
           }
         }
         lastTapTime = 0; // reset so triple-tap doesn't re-toggle
@@ -449,6 +452,7 @@ export default function SymbiosisGame() {
       waveEnemiesRemaining = waveSpawnQueue.length;
       waveSpawnTimer = 0;
       waveActive = true;
+      SoundEngine.play('waveStart');
       // wave survival bonus
       if (wave > 1) {
         score += (wave - 1) * 150;
@@ -502,9 +506,11 @@ export default function SymbiosisGame() {
       // Toggle tether with space
       if (keys[' '] && !spaceWasDown) {
         parasite.linked = !parasite.linked;
+        if (!parasite.linked) SoundEngine.play('tetherUnlink');
         if (parasite.linked) {
           // snap back effect
           spawnParticles(parasite.x, parasite.y, FUCHSIA, 6);
+          SoundEngine.play('tetherLink');
         }
       }
       spaceWasDown = !!keys[' '];
@@ -688,8 +694,10 @@ export default function SymbiosisGame() {
             e.hp -= TETHER_DAMAGE;
             e.lastTetherHit = now;
             spawnParticles(e.x, e.y, FUCHSIA, 4);
+            SoundEngine.play('enemyHit');
             if (e.hp <= 0) {
               killEnemy(e, true);
+              SoundEngine.play('tetherKill');
               enemies.splice(i, 1);
               waveEnemiesRemaining--;
               continue;
@@ -704,6 +712,7 @@ export default function SymbiosisGame() {
             host.hp -= e.damage;
             host.invulnTimer = 0.3;
             spawnParticles(host.x, host.y, '#ff6666', 4);
+            SoundEngine.play('playerDamage');
           }
           // Host deals contact damage back
           e.hp -= HOST_CONTACT_DAMAGE * dt * 2;
@@ -714,6 +723,7 @@ export default function SymbiosisGame() {
 
           if (e.hp <= 0) {
             killEnemy(e, false);
+            SoundEngine.play('enemyDeath');
             enemies.splice(i, 1);
             waveEnemiesRemaining--;
             continue;
@@ -727,6 +737,7 @@ export default function SymbiosisGame() {
             parasite.hp -= e.damage * 0.8;
             parasite.invulnTimer = 0.25;
             spawnParticles(parasite.x, parasite.y, MAGENTA, 3);
+            SoundEngine.play('playerDamage');
           }
           // Push enemy away
           const pushAngle = Math.atan2(e.y - parasite.y, e.x - parasite.x);
@@ -740,6 +751,7 @@ export default function SymbiosisGame() {
         host.hp = 0;
         state = 'GameOver';
         spawnParticles(host.x, host.y, FUCHSIA, 30, 2);
+        SoundEngine.play('gameOver');
         return;
       }
 
@@ -759,6 +771,7 @@ export default function SymbiosisGame() {
           host.hp = Math.min(host.maxHp, host.hp + 3); // small host heal too
           score += RESOURCE_SCORE;
           spawnParticles(r.x, r.y, RESOURCE_CYAN, 6);
+          SoundEngine.play('collectResource');
           resources.splice(i, 1);
         }
       }
@@ -778,6 +791,7 @@ export default function SymbiosisGame() {
       if (waveActive && waveEnemiesRemaining <= 0 && waveSpawnQueue.length === 0) {
         waveActive = false;
         wavePauseTimer = WAVE_PAUSE / 1000;
+        SoundEngine.play('waveClear');
       }
       if (!waveActive && wavePauseTimer > 0) {
         wavePauseTimer -= dt;
@@ -1275,8 +1289,9 @@ export default function SymbiosisGame() {
       style={{
         display: 'block',
         width: '100%',
-        height: '100%',
-        objectFit: 'contain',
+        maxWidth: `${CANVAS_W}px`,
+        height: 'auto',
+        aspectRatio: `${CANVAS_W}/${CANVAS_H}`,
         background: '#0a0a0f',
         cursor: 'none',
       }}

@@ -32,7 +32,7 @@ export default function PrivacyPage() {
           <ul className="list-disc list-inside space-y-1 text-muted">
             <li><strong className="text-foreground/90">Usage Data:</strong> Pages visited, games played, time spent, browser type, device type, and referring URL.</li>
             <li><strong className="text-foreground/90">Local Storage:</strong> Game preferences and recently played games are stored locally on your device and are not transmitted to our servers.</li>
-            <li><strong className="text-foreground/90">Cookies:</strong> We use essential cookies for site functionality and analytics cookies to understand how visitors use our site.</li>
+            <li><strong className="text-foreground/90">Cookies:</strong> We use essential cookies for site functionality, such as remembering your preferences.</li>
           </ul>
         </section>
 
@@ -40,7 +40,6 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-semibold mb-2">How We Use Information</h2>
           <ul className="list-disc list-inside space-y-1 text-muted">
             <li>To provide, maintain, and improve our games and website</li>
-            <li>To analyze usage patterns and optimize performance</li>
             <li>To detect and prevent technical issues</li>
           </ul>
         </section>
@@ -48,10 +47,8 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold mb-2">Third-Party Services</h2>
           <p>
-            We may use third-party services such as Google Analytics to help us understand how
-            our website is used. These services may collect information sent by your browser as
-            part of a web page request, such as cookies or your IP address. Please refer to
-            their respective privacy policies for information on how they handle data.
+            We do not currently use third-party analytics services. If this changes in the
+            future, we will update this policy accordingly.
           </p>
         </section>
 

@@ -1,28 +1,20 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function NotFound() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        {/* Ghost icon */}
-        <div className="animate-ghost-float mb-8 inline-block">
-          <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M40 8C23.4 8 10 21.4 10 38v28c0 2 1.6 3.2 3.2 2.4L20 64l6.8 4.4c1.2.8 2.8.8 4 0L40 62l9.2 6.4c1.2.8 2.8.8 4 0L60 64l6.8 4.4c1.6.8 3.2-.4 3.2-2.4V38C70 21.4 56.6 8 40 8z"
-              fill="#1c1c2e"
-              stroke="#2a2a3e"
-              strokeWidth="2"
-            />
-            <circle cx="30" cy="36" r="4" fill="#e94560" />
-            <circle cx="50" cy="36" r="4" fill="#e94560" />
-            <path
-              d="M32 48c0 0 4 4 8 4s8-4 8-4"
-              stroke="#e94560"
-              strokeWidth="2"
-              strokeLinecap="round"
-              fill="none"
-            />
-          </svg>
+        {/* Logo */}
+        <div className="mb-8 inline-block opacity-40">
+          <Image
+            src="/logo.png"
+            alt=""
+            width={80}
+            height={80}
+            className="rounded-full"
+            aria-hidden="true"
+          />
         </div>
 
         <h1 className="text-6xl font-black mb-3">
