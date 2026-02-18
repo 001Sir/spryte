@@ -199,6 +199,31 @@ export const games: Game[] = [
     color: '#f97316',
     isNew: true,
   },
+  {
+    slug: 'deja-vu',
+    title: 'Déjà Vu',
+    description: 'Shapes appear one at a time — answer "New" or "Seen before." Decoy shapes that differ by just one property add psychological challenge. Rewards speed, accuracy, and streaks.',
+    categories: ['Puzzle', 'Arcade'],
+    controls: 'N / Left Arrow = New, S / Right Arrow = Seen, Enter to start',
+    howToPlay: [
+      'Shapes appear one at a time — decide if you\'ve seen each one before',
+      'Press N or Left Arrow to answer "New", S or Right Arrow for "Seen"',
+      'Beware of decoys: shapes that look similar but differ by one property are still NEW',
+      'Faster correct answers earn speed bonuses — the timer shrinks each round',
+      'Build streaks for score multipliers up to 2x — wrong answers reset your streak',
+      'You have 3 lives — losing all lives or surviving 30 rounds ends the game',
+    ],
+    controlsList: [
+      { key: 'N / ←', action: 'Answer "New"' },
+      { key: 'S / →', action: 'Answer "Seen"' },
+      { key: 'Enter / Space', action: 'Start / Play again' },
+      { key: 'Click / Tap', action: 'Press buttons' },
+    ],
+    difficulty: 'Medium',
+    thumbnail: '/thumbnails/deja-vu.svg',
+    color: '#14b8a6',
+    isNew: true,
+  },
 ];
 
 export function getGameBySlug(slug: string): Game | undefined {

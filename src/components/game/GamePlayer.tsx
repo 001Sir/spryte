@@ -32,6 +32,7 @@ const gameComponents: Record<string, ReturnType<typeof dynamic>> = {
   'symbiosis': dynamic(() => import('@/games/symbiosis/SymbiosisGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
   'drift': dynamic(() => import('@/games/drift/DriftGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
   'spectrum': dynamic(() => import('@/games/spectrum/SpectrumGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
+  'deja-vu': dynamic(() => import('@/games/deja-vu/DejaVuGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
 };
 
 export default function GamePlayer({ slug }: { slug: string }) {

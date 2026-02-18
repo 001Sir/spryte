@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#021a17"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="35%">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="50%" cy="45%" r="20%">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <rect width="400" height="300" fill="url(#glow)"/>
+
+  <!-- Subtle ring -->
+  <circle cx="200" cy="120" r="65" fill="none" stroke="#14b8a6" stroke-opacity="0.12" stroke-width="1"/>
+  <circle cx="200" cy="120" r="85" fill="none" stroke="#14b8a6" stroke-opacity="0.06" stroke-width="1"/>
+
+  <!-- Center glow -->
+  <rect width="400" height="300" fill="url(#glow2)"/>
+
+  <!-- Main shape: star -->
+  <polygon points="200,65 212,100 250,100 220,120 230,155 200,135 170,155 180,120 150,100 188,100" fill="#f87171" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+
+  <!-- Ghost shapes (faded, representing memory) -->
+  <g opacity="0.15">
+    <!-- Triangle -->
+    <polygon points="85,90 65,125 105,125" fill="#38bdf8" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <!-- Square -->
+    <rect x="300" y="80" width="40" height="40" fill="#fbbf24" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <!-- Circle -->
+    <circle cx="330" cy="170" r="18" fill="#a78bfa" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <!-- Diamond -->
+    <polygon points="75,175 90,155 105,175 90,195" fill="#34d399" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <!-- Hexagon -->
+    <polygon points="140,200 155,188 175,188 185,200 175,212 155,212" fill="#f472b6" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  </g>
+
+  <!-- Timer bar -->
+  <rect x="120" y="185" width="160" height="4" rx="2" fill="#222"/>
+  <rect x="120" y="185" width="110" height="4" rx="2" fill="#14b8a6"/>
+
+  <!-- Question marks (deja vu theme) -->
+  <text x="155" y="145" font-family="system-ui" font-size="16" fill="#14b8a6" opacity="0.3">?</text>
+  <text x="240" y="100" font-family="system-ui" font-size="12" fill="#14b8a6" opacity="0.2">?</text>
+
+  <!-- NEW / SEEN buttons -->
+  <rect x="110" y="210" width="80" height="30" rx="8" fill="#3b82f6" opacity="0.85"/>
+  <text x="150" y="230" font-family="system-ui" font-size="13" font-weight="bold" fill="white" text-anchor="middle">NEW</text>
+
+  <rect x="210" y="210" width="80" height="30" rx="8" fill="#f59e0b" opacity="0.85"/>
+  <text x="250" y="230" font-family="system-ui" font-size="13" font-weight="bold" fill="white" text-anchor="middle">SEEN</text>
+
+  <!-- Title -->
+  <text x="200" y="278" font-family="system-ui, sans-serif" font-size="18" font-weight="bold" fill="#14b8a6" text-anchor="middle" opacity="0.9">Déjà Vu</text>
+</svg>
