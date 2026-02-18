@@ -148,6 +148,12 @@ export default function OrbitKeeperGame() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Scale for high-DPI displays
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
     // -----------------------------------------------------------------------
     // Game State Variables (all inside useEffect closure)
     // -----------------------------------------------------------------------
@@ -1428,6 +1434,7 @@ export default function OrbitKeeperGame() {
         height: 'auto',
         aspectRatio: `${W} / ${H}`,
         display: 'block',
+        imageRendering: 'auto',
         cursor: 'crosshair',
       }}
     />

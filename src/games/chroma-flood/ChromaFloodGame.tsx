@@ -123,6 +123,12 @@ export default function ChromaFloodGame() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Scale for high-DPI displays
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = CANVAS_W * dpr;
+    canvas.height = CANVAS_H * dpr;
+    ctx.scale(dpr, dpr);
+
     let highScore = getHighScore('chroma-flood');
     let newHighScore = false;
 
@@ -1145,8 +1151,10 @@ export default function ChromaFloodGame() {
       style={{
         display: 'block',
         width: '100%',
-        maxWidth: CANVAS_W,
+        maxWidth: `${CANVAS_W}px`,
         height: 'auto',
+        aspectRatio: `${CANVAS_W}/${CANVAS_H}`,
+        imageRendering: 'auto' as const,
         margin: '0 auto',
         borderRadius: 12,
         boxShadow: '0 0 40px rgba(6, 182, 212, 0.15)',

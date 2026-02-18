@@ -176,6 +176,12 @@ export default function PulseWeaverGame() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
 
+    // Scale for high-DPI displays
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
     // ── Game State ────────────────────────────────────────────────────────
     let state: GameState = 'menu';
     let animId = 0;
@@ -1323,6 +1329,7 @@ export default function PulseWeaverGame() {
         height: 'auto',
         aspectRatio: `${W}/${H}`,
         display: 'block',
+        imageRendering: 'auto',
         cursor: 'crosshair',
         background: BG,
       }}

@@ -214,8 +214,12 @@ export default function EchoChamberGame() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
-    canvas.width = W;
-    canvas.height = H;
+
+    // Scale for high-DPI displays
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
 
     /* ── state machine ──────────────────────────────────── */
     type GameState = 'menu' | 'playing' | 'gameover';
@@ -1063,7 +1067,7 @@ export default function EchoChamberGame() {
       ref={canvasRef}
       width={W}
       height={H}
-      style={{ width: '100%', height: 'auto', display: 'block' }}
+      style={{ width: '100%', maxWidth: `${W}px`, height: 'auto', aspectRatio: `${W}/${H}`, display: 'block', imageRendering: 'auto' as const }}
     />
   );
 }

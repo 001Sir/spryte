@@ -207,6 +207,12 @@ export default function SymbiosisGame() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
 
+    // Scale for high-DPI displays
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = CANVAS_W * dpr;
+    canvas.height = CANVAS_H * dpr;
+    ctx.scale(dpr, dpr);
+
     // -- Input state --
     const keys: Record<string, boolean> = {};
     let mouseX = CANVAS_W / 2;
@@ -1321,6 +1327,7 @@ export default function SymbiosisGame() {
         maxWidth: `${CANVAS_W}px`,
         height: 'auto',
         aspectRatio: `${CANVAS_W}/${CANVAS_H}`,
+        imageRendering: 'auto',
         background: '#0a0a0f',
         cursor: 'none',
       }}

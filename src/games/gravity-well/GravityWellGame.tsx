@@ -265,6 +265,12 @@ export default function GravityWellGame() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Scale for high-DPI displays
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
     let highScore = getHighScore('gravity-well');
     let newHighScore = false;
 
@@ -1474,7 +1480,9 @@ export default function GravityWellGame() {
         width: '100%',
         maxWidth: `${W}px`,
         height: 'auto',
+        aspectRatio: `${W}/${H}`,
         display: 'block',
+        imageRendering: 'auto',
         cursor: 'crosshair',
       }}
     />

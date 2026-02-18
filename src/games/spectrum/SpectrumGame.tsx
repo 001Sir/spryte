@@ -219,9 +219,6 @@ export default function SpectrumGame() {
     }
     initAmbientParticles();
 
-    // Reveal score counter animation
-    let revealScoreDisplay = 0;
-    let revealScoreTarget = 0;
 
     // ── Layout constants ────────────────────────────────────────────────────
     const NL_X = 100;       // number line left
@@ -284,6 +281,8 @@ export default function SpectrumGame() {
       hoveredConfidence = 0;
       hoverContinue = false;
       hoverLockIn = false;
+      revealScoreDisplay = 0;
+      revealScoreTarget = 0;
       state = 'playing';
       SoundEngine.play('waveStart');
     }
@@ -319,6 +318,11 @@ export default function SpectrumGame() {
         }
       }
       // Safe play (1x-2x) doesn't affect chain
+
+      // Track stats
+      totalAccuracy += roundAccuracy;
+      if (roundAccuracy >= 0.98) perfectCount++;
+      revealScoreTarget = roundMultipliedScore;
 
       totalScore += roundMultipliedScore;
 
@@ -572,6 +576,25 @@ export default function SpectrumGame() {
         }
       }
 
+      // Chain accuracy zone (shown during betting phase)
+      if (state === 'betting' && confidence >= HIGH_CONF_MIN) {
+        const range = currentQ.max - currentQ.min;
+        const zonePixels = (CHAIN_THRESHOLD * range / range) * NL_W;
+        const estX = NL_X + estimate * NL_W;
+        const zoneLeft = Math.max(NL_X, estX - zonePixels);
+        const zoneRight = Math.min(NL_RIGHT, estX + zonePixels);
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = CONF_COLORS[confidence - 1];
+        ctx.fillRect(zoneLeft, NL_Y - 18, zoneRight - zoneLeft, 36);
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = CONF_COLORS[confidence - 1];
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(zoneLeft, NL_Y - 18, zoneRight - zoneLeft, 36);
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
+
       // Player estimate marker
       const estX = NL_X + estimate * NL_W;
       if (!showAnswer || animT < 1) {
@@ -588,13 +611,35 @@ export default function SpectrumGame() {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Value label on marker
+      // Floating value tooltip above marker
       const estValue = normToValue(estimate, currentQ);
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#000';
-      ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
       const displayVal = formatNumber(Math.round(estValue * 10) / 10);
-      ctx.fillText(displayVal, estX, NL_Y + 4);
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+      const tooltipW = ctx.measureText(displayVal + (currentQ.unit ? currentQ.unit : '')).width + 16;
+      const tooltipH = 26;
+      const tooltipX = estX - tooltipW / 2;
+      const tooltipY = NL_Y - MARKER_R - tooltipH - 8;
+
+      // Tooltip background
+      drawRoundedRect(tooltipX, tooltipY, tooltipW, tooltipH, 6);
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fill();
+      ctx.strokeStyle = estimateLocked ? ORANGE_DIM : ORANGE;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Tooltip arrow
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath();
+      ctx.moveTo(estX - 5, tooltipY + tooltipH);
+      ctx.lineTo(estX, tooltipY + tooltipH + 5);
+      ctx.lineTo(estX + 5, tooltipY + tooltipH);
+      ctx.fill();
+
+      // Tooltip text
+      ctx.fillStyle = estimateLocked ? ORANGE_DIM : '#f5f5f5';
+      ctx.fillText(displayVal + (currentQ.unit ? currentQ.unit : ''), estX, tooltipY + 18);
 
       // If showing answer, draw distance line between estimate and answer
       if (showAnswer && animT > 0.6) {
@@ -782,10 +827,10 @@ export default function SpectrumGame() {
           ctx.fillText(`Chain +${chainBonus}`, W / 2 + 130, centerY);
         }
 
-        // Total round score
+        // Total round score (animated counter)
         ctx.fillStyle = '#f5f5f5';
         ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
-        ctx.fillText(`+${roundMultipliedScore}`, W / 2, centerY + 40);
+        ctx.fillText(`+${Math.round(revealScoreDisplay).toLocaleString()}`, W / 2, centerY + 40);
 
         ctx.globalAlpha = 1;
       }
@@ -848,18 +893,40 @@ export default function SpectrumGame() {
         ctx.fillText(`High Score: ${highScore.toLocaleString()}`, W / 2, 290);
       }
 
-      // Stats
-      const statsY = 330;
-      ctx.fillStyle = '#a3a3a3';
-      ctx.font = '14px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`Avg per round: ${Math.round(totalScore / TOTAL_ROUNDS)}`, W / 2 - 100, statsY);
-      if (bestChain > 0) {
-        ctx.fillStyle = '#ef4444';
-        ctx.fillText(`Best chain: x${bestChain}`, W / 2 + 100, statsY);
-      }
+      // Accuracy grade
+      const avgAcc = totalAccuracy / TOTAL_ROUNDS;
+      let grade = 'F';
+      let gradeColor = '#ef4444';
+      if (avgAcc >= 0.95) { grade = 'S'; gradeColor = '#eab308'; }
+      else if (avgAcc >= 0.85) { grade = 'A'; gradeColor = '#22c55e'; }
+      else if (avgAcc >= 0.70) { grade = 'B'; gradeColor = '#84cc16'; }
+      else if (avgAcc >= 0.55) { grade = 'C'; gradeColor = '#eab308'; }
+      else if (avgAcc >= 0.40) { grade = 'D'; gradeColor = '#f97316'; }
+
+      ctx.fillStyle = gradeColor;
+      ctx.font = 'bold 36px system-ui, -apple-system, sans-serif';
+      ctx.fillText(grade, W / 2, 340);
+      ctx.fillStyle = '#525252';
+      ctx.font = '11px system-ui, -apple-system, sans-serif';
+      ctx.fillText('ACCURACY GRADE', W / 2, 356);
+
+      // Stats row
+      const statsY = 385;
+      ctx.font = '13px system-ui, -apple-system, sans-serif';
+      const stats = [
+        { label: `Avg: ${Math.round(totalScore / TOTAL_ROUNDS)}`, color: '#a3a3a3' },
+        { label: `${perfectCount} Perfect${perfectCount !== 1 ? 's' : ''}`, color: '#22c55e' },
+        { label: bestChain > 0 ? `Chain x${bestChain}` : 'No chains', color: bestChain > 0 ? '#ef4444' : '#525252' },
+      ];
+      const statsSpacing = 130;
+      const statsStartX = W / 2 - ((stats.length - 1) * statsSpacing) / 2;
+      stats.forEach((s, i) => {
+        ctx.fillStyle = s.color;
+        ctx.fillText(s.label, statsStartX + i * statsSpacing, statsY);
+      });
 
       // Play again button
-      const btnW = 200, btnH = 56, btnX = W / 2 - btnW / 2, btnY = 400;
+      const btnW = 200, btnH = 56, btnX = W / 2 - btnW / 2, btnY = 420;
       drawRoundedRect(btnX, btnY, btnW, btnH, 12);
       ctx.fillStyle = hoverPlayAgain ? '#fb923c' : ORANGE;
       ctx.fill();
@@ -951,8 +1018,51 @@ export default function SpectrumGame() {
       ctx.fillStyle = '#0a0a0a';
       ctx.fillRect(-10, -10, W + 20, H + 20);
 
+      // Ambient background particles (during gameplay states)
+      if (state !== 'menu' && state !== 'gameover') {
+        const now = Date.now() / 1000;
+        for (const ap of ambientParticles) {
+          ap.x += ap.vx * dt;
+          ap.y += ap.vy * dt;
+          if (ap.x < -10) ap.x = W + 10;
+          if (ap.x > W + 10) ap.x = -10;
+          if (ap.y < -10) ap.y = H + 10;
+          if (ap.y > H + 10) ap.y = -10;
+          const pulse = 0.5 + 0.5 * Math.sin(now * 1.5 + ap.phase);
+          ctx.globalAlpha = ap.alpha * pulse;
+          ctx.fillStyle = ap.color;
+          ctx.beginPath();
+          ctx.arc(ap.x, ap.y, ap.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // Confidence escalation overlay (subtle tint during betting)
+      if (state === 'betting' && confidence >= 3) {
+        const intensity = (confidence - 2) / 3; // 0.33 at 3x, 0.67 at 4x, 1.0 at 5x
+        ctx.globalAlpha = intensity * 0.04;
+        ctx.fillStyle = CONF_COLORS[confidence - 1];
+        ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = 1;
+
+        // Subtle edge vignette at high confidence
+        if (confidence >= 4) {
+          const vGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.7);
+          vGrad.addColorStop(0, 'transparent');
+          vGrad.addColorStop(1, CONF_COLORS[confidence - 1] + '12');
+          ctx.fillStyle = vGrad;
+          ctx.fillRect(0, 0, W, H);
+        }
+      }
+
       // Smooth score display
       displayScore = lerp(displayScore, totalScore, Math.min(dt * 6, 1));
+
+      // Animated reveal score counter
+      if (state === 'reveal') {
+        revealScoreDisplay = lerp(revealScoreDisplay, revealScoreTarget, Math.min(dt * 4, 1));
+      }
 
       switch (state) {
         case 'menu':
@@ -1097,7 +1207,7 @@ export default function SpectrumGame() {
       }
 
       if (state === 'gameover') {
-        const btnW = 200, btnH = 56, btnX = W / 2 - btnW / 2, btnY = 400;
+        const btnW = 200, btnH = 56, btnX = W / 2 - btnW / 2, btnY = 420;
         if (isInRect(cx, cy, btnX, btnY, btnW, btnH)) {
           SoundEngine.play('menuSelect');
           startGame();
@@ -1135,7 +1245,7 @@ export default function SpectrumGame() {
       }
 
       if (state === 'gameover') {
-        const btnW = 200, btnH = 56, btnX = W / 2 - btnW / 2, btnY = 400;
+        const btnW = 200, btnH = 56, btnX = W / 2 - btnW / 2, btnY = 420;
         hoverPlayAgain = isInRect(cx, cy, btnX, btnY, btnW, btnH);
       }
 
@@ -1168,6 +1278,11 @@ export default function SpectrumGame() {
       if (dragging && (state === 'playing') && !estimateLocked) {
         estimate = xToNorm(cx);
       }
+
+      // Cursor styling
+      const isPointer = hoverStartBtn || hoverPlayAgain || hoverContinue || hoverLockIn || hoveredConfidence > 0;
+      const isGrab = !estimateLocked && state === 'playing' && cy > NL_Y - 30 && cy < NL_Y + 30 && cx >= NL_X - 20 && cx <= NL_RIGHT + 20;
+      canvas.style.cursor = dragging ? 'grabbing' : isPointer ? 'pointer' : isGrab ? 'grab' : 'default';
     }
 
     function handleMouseDown(e: MouseEvent) {
