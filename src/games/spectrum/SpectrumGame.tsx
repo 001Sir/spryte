@@ -134,6 +134,12 @@ export default function SpectrumGame() {
     const ctx = canvas.getContext('2d')!;
     if (!ctx) return;
 
+    // Scale canvas for high-DPI displays to prevent pixelation
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
     // ── Game state ──────────────────────────────────────────────────────────
     type GameState = 'menu' | 'playing' | 'betting' | 'reveal' | 'roundEnd' | 'gameover';
     let state: GameState = 'menu';
@@ -185,6 +191,38 @@ export default function SpectrumGame() {
     let hoverContinue = false;
     let hoverLockIn = false;
 
+    // Per-round tracking for game over stats
+    let perfectCount = 0;
+    let totalAccuracy = 0;
+
+    // Background ambient particles
+    interface AmbientParticle {
+      x: number; y: number; vx: number; vy: number;
+      size: number; color: string; alpha: number; phase: number;
+    }
+    const ambientParticles: AmbientParticle[] = [];
+    function initAmbientParticles() {
+      ambientParticles.length = 0;
+      const colors = ['#f9731620', '#22c55e15', '#eab30815', '#ef444415', '#84cc1615'];
+      for (let i = 0; i < 25; i++) {
+        ambientParticles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          vx: (Math.random() - 0.5) * 12,
+          vy: (Math.random() - 0.5) * 8,
+          size: 2 + Math.random() * 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          alpha: 0.1 + Math.random() * 0.25,
+          phase: Math.random() * Math.PI * 2,
+        });
+      }
+    }
+    initAmbientParticles();
+
+    // Reveal score counter animation
+    let revealScoreDisplay = 0;
+    let revealScoreTarget = 0;
+
     // ── Layout constants ────────────────────────────────────────────────────
     const NL_X = 100;       // number line left
     const NL_RIGHT = 700;   // number line right
@@ -221,9 +259,12 @@ export default function SpectrumGame() {
       displayScore = 0;
       chainLength = 0;
       bestChain = 0;
+      perfectCount = 0;
+      totalAccuracy = 0;
       newHighScore = false;
       scorePopups = [];
       particles = [];
+      initAmbientParticles();
       startRound();
     }
 
@@ -772,7 +813,7 @@ export default function SpectrumGame() {
     }
 
     // ── Draw Game Over ──────────────────────────────────────────────────────
-    function drawGameOver(dt: number) {
+    function drawGameOver() {
       const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
       bgGrad.addColorStop(0, '#0a0a0a');
       bgGrad.addColorStop(1, '#1a0a00');
@@ -961,7 +1002,7 @@ export default function SpectrumGame() {
           break;
 
         case 'gameover':
-          drawGameOver(dt);
+          drawGameOver();
           break;
       }
 
@@ -1268,7 +1309,14 @@ export default function SpectrumGame() {
       ref={canvasRef}
       width={W}
       height={H}
-      style={{ width: '100%', height: '100%' }}
+      style={{
+        width: '100%',
+        maxWidth: `${W}px`,
+        height: 'auto',
+        aspectRatio: `${W}/${H}`,
+        display: 'block',
+        imageRendering: 'auto',
+      }}
     />
   );
 }
