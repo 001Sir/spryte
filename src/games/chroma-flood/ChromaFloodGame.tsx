@@ -186,6 +186,9 @@ export default function ChromaFloodGame() {
     // Hover tracking
     let hoveredPaletteIdx = -1;
 
+    // Cached bounding rect (avoid layout thrashing on every mouse/touch event)
+    let cachedRect = canvas.getBoundingClientRect();
+
     // --- Helpers -------------------------------------------------------
 
     const hexToRgb = (hex: string) => {
@@ -890,22 +893,20 @@ export default function ChromaFloodGame() {
     // --- Input handling ------------------------------------------------
 
     const getCanvasCoords = (e: MouseEvent): { cx: number; cy: number } => {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = CANVAS_W / rect.width;
-      const scaleY = CANVAS_H / rect.height;
+      const scaleX = CANVAS_W / cachedRect.width;
+      const scaleY = CANVAS_H / cachedRect.height;
       return {
-        cx: (e.clientX - rect.left) * scaleX,
-        cy: (e.clientY - rect.top) * scaleY,
+        cx: (e.clientX - cachedRect.left) * scaleX,
+        cy: (e.clientY - cachedRect.top) * scaleY,
       };
     };
 
     const getTouchCanvasCoords = (touch: Touch): { cx: number; cy: number } => {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = CANVAS_W / rect.width;
-      const scaleY = CANVAS_H / rect.height;
+      const scaleX = CANVAS_W / cachedRect.width;
+      const scaleY = CANVAS_H / cachedRect.height;
       return {
-        cx: (touch.clientX - rect.left) * scaleX,
-        cy: (touch.clientY - rect.top) * scaleY,
+        cx: (touch.clientX - cachedRect.left) * scaleX,
+        cy: (touch.clientY - cachedRect.top) * scaleY,
       };
     };
 
@@ -1105,6 +1106,9 @@ export default function ChromaFloodGame() {
       }
     };
 
+    const onResize = () => { cachedRect = canvas.getBoundingClientRect(); };
+    window.addEventListener('resize', onResize);
+
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -1124,6 +1128,7 @@ export default function ChromaFloodGame() {
       if (winTimeoutId !== null) {
         clearTimeout(winTimeoutId);
       }
+      window.removeEventListener('resize', onResize);
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('touchstart', handleTouchStart);

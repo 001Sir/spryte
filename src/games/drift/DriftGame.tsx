@@ -332,6 +332,9 @@ export default function DriftGame() {
     // Wind particles
     const windParticles: { x: number; y: number; vx: number; vy: number; life: number }[] = [];
 
+    // Cached bounding rect (avoid layout thrashing on every mouse/touch event)
+    let cachedRect = canvas.getBoundingClientRect();
+
     // Timing
     let lastTime = 0;
     let rafId = 0;
@@ -412,8 +415,7 @@ export default function DriftGame() {
 
     // ── Get mouse pos ──
     const getMousePos = (e: MouseEvent | Touch): Vec => {
-      const rect = canvas.getBoundingClientRect();
-      return { x: (e.clientX - rect.left) * (W / rect.width), y: (e.clientY - rect.top) * (H / rect.height) };
+      return { x: (e.clientX - cachedRect.left) * (W / cachedRect.width), y: (e.clientY - cachedRect.top) * (H / cachedRect.height) };
     };
 
     // ── Drawing helpers ──
@@ -1620,6 +1622,9 @@ export default function DriftGame() {
     };
 
     // ── Attach events ──
+    const onResize = () => { cachedRect = canvas.getBoundingClientRect(); };
+    window.addEventListener('resize', onResize);
+
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseup', handleMouseUp);
@@ -1643,6 +1648,7 @@ export default function DriftGame() {
     return () => {
       cancelAnimationFrame(rafId);
       SoundEngine.stopMusic();
+      window.removeEventListener('resize', onResize);
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseup', handleMouseUp);

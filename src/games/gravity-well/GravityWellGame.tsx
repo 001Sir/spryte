@@ -293,6 +293,9 @@ export default function GravityWellGame() {
     let mouseY = 0;
     let hoveredWellIndex = -1;
 
+    // Cached bounding rect (avoid layout thrashing on every mouse/touch event)
+    let cachedRect = canvas.getBoundingClientRect();
+
     // Background stars (visual only)
     const bgStars: BackgroundStar[] = [];
     for (let i = 0; i < 120; i++) {
@@ -1150,18 +1153,16 @@ export default function GravityWellGame() {
     // ─── Input Handling ──────────────────────────────────────────────────
 
     function getCanvasCoords(e: MouseEvent): Vec2 {
-      const rect = canvas!.getBoundingClientRect();
       return {
-        x: ((e.clientX - rect.left) / rect.width) * W,
-        y: ((e.clientY - rect.top) / rect.height) * H,
+        x: ((e.clientX - cachedRect.left) / cachedRect.width) * W,
+        y: ((e.clientY - cachedRect.top) / cachedRect.height) * H,
       };
     }
 
     function getTouchCanvasCoords(touch: Touch): Vec2 {
-      const rect = canvas!.getBoundingClientRect();
       return {
-        x: ((touch.clientX - rect.left) / rect.width) * W,
-        y: ((touch.clientY - rect.top) / rect.height) * H,
+        x: ((touch.clientX - cachedRect.left) / cachedRect.width) * W,
+        y: ((touch.clientY - cachedRect.top) / cachedRect.height) * H,
       };
     }
 
@@ -1428,6 +1429,9 @@ export default function GravityWellGame() {
       }
     }
 
+    const onResize = () => { cachedRect = canvas.getBoundingClientRect(); };
+    window.addEventListener('resize', onResize);
+
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('contextmenu', handleContextMenu);
@@ -1448,6 +1452,7 @@ export default function GravityWellGame() {
 
     return () => {
       cancelAnimationFrame(animId);
+      window.removeEventListener('resize', onResize);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('contextmenu', handleContextMenu);

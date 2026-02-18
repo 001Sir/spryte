@@ -23,7 +23,7 @@ const HOST_CONTACT_DAMAGE = 15;
 
 const PARASITE_RADIUS = 10;
 const PARASITE_MAX_HP = 50;
-const PARASITE_LERP = 0.08;
+const PARASITE_LERP = 0.18;
 const PARASITE_DETACH_DRAIN = 2; // HP per second
 
 const TETHER_MAX_LENGTH = 220;
@@ -226,10 +226,15 @@ export default function SymbiosisGame() {
     const onKeyUp = (e: KeyboardEvent) => {
       keys[e.key.toLowerCase()] = false;
     };
+
+    // Cache canvas rect to avoid layout thrashing on every mouse/touch event
+    let cachedRect = canvas.getBoundingClientRect();
+    const onResize = () => { cachedRect = canvas.getBoundingClientRect(); };
+    window.addEventListener('resize', onResize);
+
     const onMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouseX = ((e.clientX - rect.left) / rect.width) * CANVAS_W;
-      mouseY = ((e.clientY - rect.top) / rect.height) * CANVAS_H;
+      mouseX = ((e.clientX - cachedRect.left) / cachedRect.width) * CANVAS_W;
+      mouseY = ((e.clientY - cachedRect.top) / cachedRect.height) * CANVAS_H;
     };
     const onMouseDown = () => {
       mouseClicked = true;
@@ -237,10 +242,9 @@ export default function SymbiosisGame() {
 
     // -- Touch handlers --
     function getTouchCanvasPos(touch: Touch): { tx: number; ty: number } {
-      const rect = canvas!.getBoundingClientRect();
       return {
-        tx: ((touch.clientX - rect.left) / rect.width) * CANVAS_W,
-        ty: ((touch.clientY - rect.top) / rect.height) * CANVAS_H,
+        tx: ((touch.clientX - cachedRect.left) / cachedRect.width) * CANVAS_W,
+        ty: ((touch.clientY - cachedRect.top) / cachedRect.height) * CANVAS_H,
       };
     }
 
@@ -1301,6 +1305,7 @@ export default function SymbiosisGame() {
       canvas.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('resize', onResize);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);

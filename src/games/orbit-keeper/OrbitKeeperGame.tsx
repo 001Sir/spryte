@@ -181,6 +181,9 @@ export default function OrbitKeeperGame() {
     let mousePos: Vec2 = { x: 0, y: 0 };
     let isDragging = false;
 
+    // Cached bounding rect (avoid layout thrashing on every mouse/touch event)
+    let cachedRect = canvas.getBoundingClientRect();
+
     // Stars (static background)
     const stars: Star[] = [];
     for (let i = 0; i < 200; i++) {
@@ -1216,9 +1219,8 @@ export default function OrbitKeeperGame() {
     // -----------------------------------------------------------------------
 
     function getCanvasPos(e: MouseEvent | TouchEvent): Vec2 {
-      const rect = canvas!.getBoundingClientRect();
-      const scaleX = W / rect.width;
-      const scaleY = H / rect.height;
+      const scaleX = W / cachedRect.width;
+      const scaleY = H / cachedRect.height;
 
       let clientX: number, clientY: number;
       if ('touches' in e) {
@@ -1230,8 +1232,8 @@ export default function OrbitKeeperGame() {
       }
 
       return {
-        x: (clientX - rect.left) * scaleX,
-        y: (clientY - rect.top) * scaleY,
+        x: (clientX - cachedRect.left) * scaleX,
+        y: (clientY - cachedRect.top) * scaleY,
       };
     }
 
@@ -1375,6 +1377,9 @@ export default function OrbitKeeperGame() {
     // Attach events & start
     // -----------------------------------------------------------------------
 
+    const onResize = () => { cachedRect = canvas.getBoundingClientRect(); };
+    window.addEventListener('resize', onResize);
+
     canvas.addEventListener('mousedown', onMouseDown);
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mouseup', onMouseUp);
@@ -1399,6 +1404,7 @@ export default function OrbitKeeperGame() {
     // Cleanup
     return () => {
       cancelAnimationFrame(animId);
+      window.removeEventListener('resize', onResize);
       canvas.removeEventListener('mousedown', onMouseDown);
       canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('mouseup', onMouseUp);

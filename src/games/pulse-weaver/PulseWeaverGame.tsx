@@ -262,12 +262,16 @@ export default function PulseWeaverGame() {
     function onKeyUp(e: KeyboardEvent) {
       keys[e.key.toLowerCase()] = false;
     }
+    // Cache canvas rect to avoid layout thrashing on every mousemove
+    let cachedRect = canvas!.getBoundingClientRect();
+    const onResize = () => { cachedRect = canvas!.getBoundingClientRect(); };
+    window.addEventListener('resize', onResize);
+
     function onMouseMove(e: MouseEvent) {
-      const rect = canvas!.getBoundingClientRect();
-      const scaleX = W / rect.width;
-      const scaleY = H / rect.height;
-      mouseX = (e.clientX - rect.left) * scaleX;
-      mouseY = (e.clientY - rect.top) * scaleY;
+      const scaleX = W / cachedRect.width;
+      const scaleY = H / cachedRect.height;
+      mouseX = (e.clientX - cachedRect.left) * scaleX;
+      mouseY = (e.clientY - cachedRect.top) * scaleY;
     }
     function onMouseDown(e: MouseEvent) {
       if (e.button !== 0) return;
@@ -294,12 +298,11 @@ export default function PulseWeaverGame() {
 
     // ── Touch Handlers ───────────────────────────────────────────────────
     function getTouchCanvasPos(touch: Touch): { tx: number; ty: number } {
-      const rect = canvas!.getBoundingClientRect();
-      const scaleX = W / rect.width;
-      const scaleY = H / rect.height;
+      const scaleX = W / cachedRect.width;
+      const scaleY = H / cachedRect.height;
       return {
-        tx: (touch.clientX - rect.left) * scaleX,
-        ty: (touch.clientY - rect.top) * scaleY,
+        tx: (touch.clientX - cachedRect.left) * scaleX,
+        ty: (touch.clientY - cachedRect.top) * scaleY,
       };
     }
 
@@ -1304,6 +1307,7 @@ export default function PulseWeaverGame() {
       canvas.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('resize', onResize);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);

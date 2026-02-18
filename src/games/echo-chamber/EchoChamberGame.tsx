@@ -285,6 +285,9 @@ export default function EchoChamberGame() {
     // keys
     const keys: Record<string, boolean> = {};
 
+    // Cached bounding rect (avoid layout thrashing on every mouse/touch event)
+    let cachedRect = canvas.getBoundingClientRect();
+
     // gameover data
     let goMessage = '';
     let goScore = 0;
@@ -385,10 +388,9 @@ export default function EchoChamberGame() {
     let touchIsMoving = false;
 
     function getTouchCanvasPos(touch: Touch): { x: number; y: number } {
-      const rect = canvas!.getBoundingClientRect();
       return {
-        x: (touch.clientX - rect.left) * (W / rect.width),
-        y: (touch.clientY - rect.top) * (H / rect.height),
+        x: (touch.clientX - cachedRect.left) * (W / cachedRect.width),
+        y: (touch.clientY - cachedRect.top) * (H / cachedRect.height),
       };
     }
 
@@ -478,6 +480,9 @@ export default function EchoChamberGame() {
         }
       }
     }
+
+    const onResize = () => { cachedRect = canvas.getBoundingClientRect(); };
+    window.addEventListener('resize', onResize);
 
     canvas.addEventListener('touchstart', onTouchStart, { passive: false });
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
@@ -1042,6 +1047,7 @@ export default function EchoChamberGame() {
     /* ── cleanup ─────────────────────────────────────────── */
     return () => {
       cancelAnimationFrame(animId);
+      window.removeEventListener('resize', onResize);
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('touchstart', onTouchStart);
       canvas.removeEventListener('touchmove', onTouchMove);
