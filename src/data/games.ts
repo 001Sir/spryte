@@ -5,7 +5,7 @@ export const games: Game[] = [
     slug: 'gravity-well',
     title: 'Gravity Well',
     description: 'Place gravity attractors and repulsors to guide a drifting particle to the goal. Careful — your wells also pull hazard debris into the path.',
-    categories: ['Puzzle', 'Strategy'],
+    categories: ['Puzzle', 'Physics'],
     controls: 'Mouse click to place/remove wells, Scroll to adjust strength',
     howToPlay: [
       'Click to place gravity wells that attract or repel particles',
@@ -68,7 +68,7 @@ export const games: Game[] = [
     slug: 'terravore',
     title: 'Terravore',
     description: 'Play as a creature that devours terrain. Dig tunnels to reach buried treasure while avoiding water floods and lava flows.',
-    categories: ['Action', 'Strategy'],
+    categories: ['Action', 'Arcade'],
     controls: 'Arrow Keys / WASD to move, Space to dig',
     howToPlay: [
       'Move your creature with Arrow Keys or WASD',
@@ -112,7 +112,7 @@ export const games: Game[] = [
     slug: 'orbit-keeper',
     title: 'Orbit Keeper',
     description: 'Keep planets in stable orbits by adjusting their velocity vectors as rogue asteroids and solar flares create chaos.',
-    categories: ['Strategy', 'Puzzle'],
+    categories: ['Strategy', 'Physics'],
     controls: 'Click and drag planets to adjust velocity, Space to pause',
     howToPlay: [
       'Click and drag planets to adjust their velocity vectors',
@@ -154,7 +154,7 @@ export const games: Game[] = [
     slug: 'drift',
     title: 'Drift',
     description: 'A zero-friction momentum puzzle. Push off walls and drift through hazardous rooms. No legs, no brakes — just pure ghost momentum.',
-    categories: ['Puzzle', 'Action'],
+    categories: ['Puzzle', 'Arcade'],
     controls: 'Click & drag to aim, release to launch. Arrow Keys/WASD to aim, Space to charge & launch, R to restart',
     howToPlay: [
       'Click and drag to aim your launch direction, then release',

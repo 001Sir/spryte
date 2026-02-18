@@ -16,5 +16,6 @@ export interface Game {
 export type Category =
   | 'Action'
   | 'Arcade'
+  | 'Physics'
   | 'Puzzle'
   | 'Strategy';
