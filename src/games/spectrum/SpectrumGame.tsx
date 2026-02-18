@@ -219,6 +219,9 @@ export default function SpectrumGame() {
     }
     initAmbientParticles();
 
+    // Reveal score counter animation
+    let revealScoreDisplay = 0;
+    let revealScoreTarget = 0;
 
     // ── Layout constants ────────────────────────────────────────────────────
     const NL_X = 100;       // number line left
@@ -1282,7 +1285,7 @@ export default function SpectrumGame() {
       // Cursor styling
       const isPointer = hoverStartBtn || hoverPlayAgain || hoverContinue || hoverLockIn || hoveredConfidence > 0;
       const isGrab = !estimateLocked && state === 'playing' && cy > NL_Y - 30 && cy < NL_Y + 30 && cx >= NL_X - 20 && cx <= NL_RIGHT + 20;
-      canvas.style.cursor = dragging ? 'grabbing' : isPointer ? 'pointer' : isGrab ? 'grab' : 'default';
+      canvas!.style.cursor = dragging ? 'grabbing' : isPointer ? 'pointer' : isGrab ? 'grab' : 'default';
     }
 
     function handleMouseDown(e: MouseEvent) {
