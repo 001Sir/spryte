@@ -1,28 +1,20 @@
 'use client';
 
-import { useCallback, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'spryte-recently-played';
 const MAX_RECENT = 6;
 
-function getStoredRecent(): string[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-// No-op subscribe for useSyncExternalStore (localStorage doesn't emit events for same-tab writes)
-function subscribe() {
-  return () => {};
-}
-
 export function useRecentlyPlayed() {
-  // Use useSyncExternalStore for SSR-safe initial state from localStorage
-  const initial = useSyncExternalStore(subscribe, getStoredRecent, () => []);
-  const [recent, setRecent] = useState<string[]>(initial);
+  const [recent, setRecent] = useState<string[]>([]);
+
+  // Read from localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) setRecent(JSON.parse(stored));
+    } catch {}
+  }, []);
 
   const addPlayed = useCallback((slug: string) => {
     try {
