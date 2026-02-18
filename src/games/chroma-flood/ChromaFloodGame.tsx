@@ -129,6 +129,7 @@ export default function ChromaFloodGame() {
     canvas.height = CANVAS_H * dpr;
     ctx.scale(dpr, dpr);
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     let highScore = getHighScore('chroma-flood');
     let newHighScore = false;
 
@@ -494,7 +495,7 @@ export default function ChromaFloodGame() {
       ctx.globalAlpha = pulse;
       ctx.fillStyle = '#ffffff';
       ctx.font = '24px system-ui, sans-serif';
-      ctx.fillText('Click to Start', CANVAS_W / 2, 430);
+      ctx.fillText(isTouchDevice ? 'Tap to Start' : 'Click to Start', CANVAS_W / 2, 430);
       ctx.globalAlpha = 1;
 
       // Level info
@@ -808,7 +809,7 @@ export default function ChromaFloodGame() {
       const playAgainY = hasNextLevel ? btnY + 45 : btnY;
       ctx.fillStyle = '#666';
       ctx.font = '16px system-ui, sans-serif';
-      ctx.fillText(hasNextLevel ? 'or click here to Replay' : '', CANVAS_W / 2, playAgainY + 2);
+      ctx.fillText(hasNextLevel ? (isTouchDevice ? 'or tap here to Replay' : 'or click here to Replay') : '', CANVAS_W / 2, playAgainY + 2);
 
       if (!hasNextLevel) {
         ctx.fillStyle = CYAN;

@@ -213,6 +213,8 @@ export default function SymbiosisGame() {
     canvas.height = CANVAS_H * dpr;
     ctx.scale(dpr, dpr);
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     // -- Input state --
     const keys: Record<string, boolean> = {};
     let mouseX = CANVAS_W / 2;
@@ -1159,7 +1161,11 @@ export default function SymbiosisGame() {
 
       ctx.font = '13px monospace';
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.fillText('WASD = Move Host  |  Mouse = Move Parasite  |  Space = Link/Unlink', CANVAS_W / 2, CANVAS_H / 2 + 115);
+      if (isTouchDevice) {
+        ctx.fillText('Touch = Move Parasite  |  Double-tap = Link/Unlink', CANVAS_W / 2, CANVAS_H / 2 + 115);
+      } else {
+        ctx.fillText('WASD = Move Host  |  Mouse = Move Parasite  |  Space = Link/Unlink', CANVAS_W / 2, CANVAS_H / 2 + 115);
+      }
       ctx.fillText('Tether damages enemies on contact (3x score!)  |  Collect cyan orbs to heal', CANVAS_W / 2, CANVAS_H / 2 + 137);
 
       // Click to start

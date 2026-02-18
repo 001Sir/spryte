@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#dc2626" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0a0a0f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="spikeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="400" height="300" fill="#0a0a0f"/>
+  <!-- Stars -->
+  <circle cx="50" cy="40" r="1" fill="#dc2626" opacity="0.4"/>
+  <circle cx="120" cy="80" r="1.2" fill="#dc2626" opacity="0.3"/>
+  <circle cx="300" cy="30" r="0.8" fill="#dc2626" opacity="0.5"/>
+  <circle cx="350" cy="70" r="1" fill="#dc2626" opacity="0.3"/>
+  <circle cx="200" cy="20" r="1.5" fill="#dc2626" opacity="0.2"/>
+  <circle cx="80" cy="120" r="0.7" fill="#dc2626" opacity="0.4"/>
+  <circle cx="370" cy="150" r="1" fill="#dc2626" opacity="0.3"/>
+  <!-- Glow behind player -->
+  <circle cx="140" cy="180" r="60" fill="url(#glow)"/>
+  <!-- Platforms -->
+  <rect x="40" y="220" width="120" height="8" fill="#1a1a2e" stroke="#dc2626" stroke-width="1.5" rx="1"/>
+  <rect x="200" y="190" width="80" height="8" fill="#1a1a2e" stroke="#dc2626" stroke-width="1.5" rx="1" opacity="0.5" stroke-dasharray="4 2"/>
+  <rect x="310" y="160" width="70" height="8" fill="#1a1a2e" stroke="#dc2626" stroke-width="1.5" rx="1"/>
+  <!-- Crumbling particles from fading platform -->
+  <rect x="215" y="200" width="3" height="3" fill="#dc2626" opacity="0.6" transform="rotate(15 216 201)"/>
+  <rect x="245" y="205" width="2" height="2" fill="#dc2626" opacity="0.4" transform="rotate(30 246 206)"/>
+  <rect x="260" y="210" width="3" height="3" fill="#dc2626" opacity="0.5" transform="rotate(-20 261 211)"/>
+  <!-- Spikes at bottom -->
+  <g fill="url(#spikeGrad)">
+    <polygon points="40,280 50,260 60,280"/>
+    <polygon points="60,280 70,260 80,280"/>
+    <polygon points="80,280 90,260 100,280"/>
+    <polygon points="100,280 110,260 120,280"/>
+    <polygon points="120,280 130,260 140,280"/>
+    <polygon points="200,280 210,260 220,280"/>
+    <polygon points="220,280 230,260 240,280"/>
+    <polygon points="300,280 310,260 320,280"/>
+    <polygon points="320,280 330,260 340,280"/>
+    <polygon points="340,280 350,260 360,280"/>
+  </g>
+  <!-- Player (white square with devil horns) -->
+  <g transform="translate(140, 180)">
+    <!-- Red glow -->
+    <rect x="-14" y="-14" width="28" height="28" fill="#dc2626" opacity="0.15" rx="14"/>
+    <!-- Body -->
+    <rect x="-10" y="-10" width="20" height="20" fill="#ffffff" rx="1"/>
+    <!-- Devil horns -->
+    <polygon points="-8,-10 -5,-20 -2,-10" fill="#dc2626"/>
+    <polygon points="2,-10 5,-20 8,-10" fill="#dc2626"/>
+    <!-- Eyes -->
+    <circle cx="-4" cy="-2" r="2.5" fill="#000"/>
+    <circle cx="4" cy="-2" r="2.5" fill="#000"/>
+    <circle cx="-4" cy="-2" r="1" fill="#dc2626"/>
+    <circle cx="4" cy="-2" r="1" fill="#dc2626"/>
+  </g>
+  <!-- Exit door -->
+  <g transform="translate(345, 140)">
+    <rect x="-10" y="-14" width="20" height="28" fill="none" stroke="#22c55e" stroke-width="2.5" rx="2" opacity="0.8"/>
+    <circle cx="0" cy="0" r="18" fill="#22c55e" opacity="0.08"/>
+  </g>
+  <!-- Motion lines showing sliding -->
+  <line x1="100" y1="205" x2="125" y2="205" stroke="white" stroke-width="1" opacity="0.3"/>
+  <line x1="105" y1="210" x2="120" y2="210" stroke="white" stroke-width="0.8" opacity="0.2"/>
+  <line x1="108" y1="200" x2="118" y2="200" stroke="white" stroke-width="0.6" opacity="0.15"/>
+</svg>

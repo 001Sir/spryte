@@ -271,6 +271,7 @@ export default function GravityWellGame() {
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     let highScore = getHighScore('gravity-well');
     let newHighScore = false;
 
@@ -859,7 +860,9 @@ export default function GravityWellGame() {
       ctx!.fillStyle = 'rgba(255, 255, 255, 0.4)';
       ctx!.font = '11px monospace';
       ctx!.textAlign = 'center';
-      ctx!.fillText('LEFT-CLICK: Place Attractor | RIGHT-CLICK: Place Repulsor | SCROLL: Adjust Strength | CLICK Well: Remove', W / 2, H - 10);
+      ctx!.fillText(isTouchDevice
+        ? 'TAP: Attractor | DOUBLE-TAP: Repulsor | TAP Well: Remove'
+        : 'LEFT-CLICK: Place Attractor | RIGHT-CLICK: Place Repulsor | SCROLL: Adjust Strength | CLICK Well: Remove', W / 2, H - 10);
     }
 
     // ─── Screen Renderers ────────────────────────────────────────────────
@@ -920,7 +923,12 @@ export default function GravityWellGame() {
       ctx!.fillText('A cosmic puzzle of attraction and repulsion', W / 2, 290);
 
       // Instructions
-      const instructions = [
+      const instructions = isTouchDevice ? [
+        'Guide the particle to the golden goal',
+        'Tap to place attractors, Double-tap for repulsors',
+        'Avoid red debris — wells affect them too!',
+        'Collect stars for bonus points',
+      ] : [
         'Guide the particle to the golden goal',
         'Left-click to place attractors, Right-click for repulsors',
         'Scroll to adjust well strength',
@@ -938,7 +946,7 @@ export default function GravityWellGame() {
       const startAlpha = 0.5 + 0.5 * Math.sin(time * 0.005);
       ctx!.fillStyle = `rgba(255, 255, 255, ${startAlpha})`;
       ctx!.font = 'bold 20px monospace';
-      ctx!.fillText('[ CLICK TO START ]', W / 2, 530);
+      ctx!.fillText(isTouchDevice ? '[ TAP TO START ]' : '[ CLICK TO START ]', W / 2, 530);
     }
 
     function drawLevelCompleteScreen() {
@@ -992,9 +1000,9 @@ export default function GravityWellGame() {
       ctx!.fillStyle = `rgba(167, 139, 250, ${nextAlpha})`;
       ctx!.font = 'bold 18px monospace';
       if (levelIndex + 1 < LEVELS.length) {
-        ctx!.fillText('[ CLICK FOR NEXT LEVEL ]', W / 2, 500);
+        ctx!.fillText(isTouchDevice ? '[ TAP FOR NEXT LEVEL ]' : '[ CLICK FOR NEXT LEVEL ]', W / 2, 500);
       } else {
-        ctx!.fillText('[ ALL LEVELS COMPLETE — CLICK TO PLAY AGAIN ]', W / 2, 500);
+        ctx!.fillText(isTouchDevice ? '[ ALL LEVELS COMPLETE — TAP TO PLAY AGAIN ]' : '[ ALL LEVELS COMPLETE — CLICK TO PLAY AGAIN ]', W / 2, 500);
       }
     }
 
@@ -1051,7 +1059,7 @@ export default function GravityWellGame() {
       const restartAlpha = 0.5 + 0.5 * Math.sin(time * 0.005);
       ctx!.fillStyle = `rgba(255, 255, 255, ${restartAlpha})`;
       ctx!.font = 'bold 20px monospace';
-      ctx!.fillText('[ CLICK TO RESTART ]', W / 2, 450);
+      ctx!.fillText(isTouchDevice ? '[ TAP TO RESTART ]' : '[ CLICK TO RESTART ]', W / 2, 450);
     }
 
     function drawPlayingScreen() {

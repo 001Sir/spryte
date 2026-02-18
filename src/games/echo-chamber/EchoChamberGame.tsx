@@ -221,6 +221,8 @@ export default function EchoChamberGame() {
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     /* ── state machine ──────────────────────────────────── */
     type GameState = 'menu' | 'playing' | 'gameover';
     let state: GameState = 'menu';
@@ -760,7 +762,12 @@ export default function EchoChamberGame() {
       // instructions
       ctx.fillStyle = COL.dimText;
       ctx.font = '14px monospace';
-      const instructions = [
+      const instructions = isTouchDevice ? [
+        'Swipe  -  Move',
+        'Tap  -  Send sound pulse',
+        'Find gems, avoid enemies, reach the exit',
+        'Enemies FREEZE when illuminated, but hunt in darkness',
+      ] : [
         'Arrow Keys / WASD  -  Move',
         'Mouse Click  -  Send sound pulse',
         'Find gems, avoid enemies, reach the exit',
@@ -774,7 +781,7 @@ export default function EchoChamberGame() {
       const blink = Math.sin(t * 3) * 0.4 + 0.6;
       ctx.fillStyle = `rgba(234,179,8,${blink})`;
       ctx.font = 'bold 20px monospace';
-      ctx.fillText('Click to Start', W / 2, H / 2 + 180);
+      ctx.fillText(isTouchDevice ? 'Tap to Start' : 'Click to Start', W / 2, H / 2 + 180);
     }
 
     function drawPlaying() {
@@ -996,7 +1003,7 @@ export default function EchoChamberGame() {
       const blink = Math.sin(_t * 3) * 0.4 + 0.6;
       ctx.fillStyle = `rgba(234,179,8,${blink})`;
       ctx.font = 'bold 18px monospace';
-      ctx.fillText('Click to Return to Menu', W / 2, H / 2 + 140);
+      ctx.fillText(isTouchDevice ? 'Tap to Return to Menu' : 'Click to Return to Menu', W / 2, H / 2 + 140);
     }
 
     function drawPausedOverlay() {

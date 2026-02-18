@@ -285,6 +285,7 @@ export default function DriftGame() {
     let stars = 0;
     let paused = false;
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     let highScore = getHighScore('drift');
     let newHighScore = false;
 
@@ -1149,8 +1150,12 @@ export default function DriftGame() {
 
       ctx.fillStyle = 'rgba(81,226,255,0.4)';
       ctx.font = '13px monospace';
-      ctx.fillText('Mouse: Click & drag to aim, release to launch', W / 2, 472);
-      ctx.fillText('Keyboard: Arrow Keys / WASD + Space to charge & launch', W / 2, 494);
+      if (isTouchDevice) {
+        ctx.fillText('Touch & drag to aim, release to launch', W / 2, 483);
+      } else {
+        ctx.fillText('Mouse: Click & drag to aim, release to launch', W / 2, 472);
+        ctx.fillText('Keyboard: Arrow Keys / WASD + Space to charge & launch', W / 2, 494);
+      }
       ctx.textAlign = 'left';
     };
 
@@ -1233,7 +1238,7 @@ export default function DriftGame() {
 
       ctx.fillStyle = 'rgba(255,150,100,0.7)';
       ctx.font = '18px monospace';
-      ctx.fillText('Click to retry', W / 2, 360);
+      ctx.fillText(isTouchDevice ? 'Tap to retry' : 'Click to retry', W / 2, 360);
 
       // Draw remaining particles
       for (const p of particles) {
@@ -1670,8 +1675,9 @@ export default function DriftGame() {
       style={{
         display: 'block',
         width: '100%',
-        maxWidth: W,
+        maxWidth: `${W}px`,
         height: 'auto',
+        aspectRatio: `${W}/${H}`,
         imageRendering: 'pixelated',
       }}
     />

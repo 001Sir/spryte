@@ -33,6 +33,8 @@ const gameComponents: Record<string, ReturnType<typeof dynamic>> = {
   'drift': dynamic(() => import('@/games/drift/DriftGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
   'spectrum': dynamic(() => import('@/games/spectrum/SpectrumGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
   'deja-vu': dynamic(() => import('@/games/deja-vu/DejaVuGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
+  'slide-devil': dynamic(() => import('@/games/slide-devil/SlideDevilGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
+  'whats-missing': dynamic(() => import('@/games/whats-missing/WhatsMissingGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
 };
 
 export default function GamePlayer({ slug }: { slug: string }) {

@@ -132,6 +132,8 @@ export default function TerravoreGame() {
     // menu terrain art animation
     let menuTime = 0;
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     // keys
     const keys: Record<string, boolean> = {};
 
@@ -1216,7 +1218,14 @@ export default function TerravoreGame() {
       // Instructions
       ctx.fillStyle = '#94a3b8';
       ctx.font = '14px monospace';
-      const instructions = [
+      const instructions = isTouchDevice ? [
+        'Swipe  -  Move',
+        'Tap  -  Dig in facing direction',
+        '',
+        'Collect gems buried in the earth',
+        'Avoid water floods and lava flows',
+        'Return to surface once target is met',
+      ] : [
         'Arrow Keys / WASD  -  Move',
         'Space  -  Dig in facing direction',
         '',
@@ -1232,7 +1241,7 @@ export default function TerravoreGame() {
       ctx.fillStyle = LIME;
       ctx.globalAlpha = 0.6 + Math.sin(menuTime * 0.06) * 0.4;
       ctx.font = 'bold 22px monospace';
-      ctx.fillText('[ Click to Start ]', W / 2, H - 50);
+      ctx.fillText(isTouchDevice ? '[ Tap to Start ]' : '[ Click to Start ]', W / 2, H - 50);
       ctx.globalAlpha = 1;
     }
 
@@ -1309,7 +1318,7 @@ export default function TerravoreGame() {
       ctx.textAlign = 'center';
       ctx.globalAlpha = 0.6 + Math.sin(frameCount * 0.06) * 0.4;
       ctx.font = 'bold 20px monospace';
-      ctx.fillText('[ Click to Restart ]', W / 2, H - 60);
+      ctx.fillText(isTouchDevice ? '[ Tap to Restart ]' : '[ Click to Restart ]', W / 2, H - 60);
       ctx.globalAlpha = 1;
     }
 

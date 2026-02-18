@@ -312,42 +312,85 @@ export default function PulseWeaverGame() {
       };
     }
 
+    // Frequency bar touch zone (expanded hit area)
+    const FREQ_BAR_X = W / 2 - 100;
+    const FREQ_BAR_W = 200;
+    const FREQ_BAR_Y = H - 60; // expanded from H-40 for easier touching
+    let freqTouchId: number | null = null;
+
+    function isInFreqZone(tx: number, ty: number): boolean {
+      return tx >= FREQ_BAR_X - 20 && tx <= FREQ_BAR_X + FREQ_BAR_W + 20 && ty >= FREQ_BAR_Y;
+    }
+
+    function touchToFreq(tx: number): number {
+      const t = clamp((tx - FREQ_BAR_X) / FREQ_BAR_W, 0, 1);
+      return MIN_FREQ + t * (MAX_FREQ - MIN_FREQ);
+    }
+
     function onTouchStart(e: TouchEvent) {
       e.preventDefault();
-      const touch = e.changedTouches[0];
-      if (!touch) return;
-      const { tx, ty } = getTouchCanvasPos(touch);
 
-      if (state === 'menu') {
-        startGame();
-        return;
-      }
-      if (state === 'gameover') {
-        startGame();
-        return;
-      }
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+        const { tx, ty } = getTouchCanvasPos(touch);
 
-      // Playing state: touch = aim + fire + move toward touch
-      touchActive = true;
-      mouseX = tx;
-      mouseY = ty;
-      mouseDown = true;
+        if (state === 'menu') {
+          startGame();
+          return;
+        }
+        if (state === 'gameover') {
+          startGame();
+          return;
+        }
+
+        // Check if touching the frequency bar area
+        if (state === 'playing' && freqTouchId === null && isInFreqZone(tx, ty)) {
+          freqTouchId = touch.identifier;
+          frequency = touchToFreq(tx);
+          continue;
+        }
+
+        // Normal aim/fire touch
+        touchActive = true;
+        mouseX = tx;
+        mouseY = ty;
+        mouseDown = true;
+      }
     }
 
     function onTouchMove(e: TouchEvent) {
       e.preventDefault();
-      if (!touchActive) return;
-      const touch = e.changedTouches[0];
-      if (!touch) return;
-      const { tx, ty } = getTouchCanvasPos(touch);
-      mouseX = tx;
-      mouseY = ty;
+
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+        const { tx, ty } = getTouchCanvasPos(touch);
+
+        if (touch.identifier === freqTouchId) {
+          frequency = touchToFreq(tx);
+          continue;
+        }
+
+        if (touchActive) {
+          mouseX = tx;
+          mouseY = ty;
+        }
+      }
     }
 
     function onTouchEnd(e: TouchEvent) {
       e.preventDefault();
-      touchActive = false;
-      mouseDown = false;
+
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+
+        if (touch.identifier === freqTouchId) {
+          freqTouchId = null;
+          continue;
+        }
+
+        touchActive = false;
+        mouseDown = false;
+      }
     }
 
     canvas.addEventListener('mousemove', onMouseMove);
@@ -857,7 +900,13 @@ export default function PulseWeaverGame() {
       ctx.fillText('Tune your beam to destroy geometric enemies', W / 2, H * 0.3 + 50);
 
       // Instructions
-      const instructions = [
+      const instructions = isTouchDevice ? [
+        'Touch & hold  -  Aim, fire & move',
+        'Drag freq bar  -  Adjust frequency',
+        '',
+        'Match your beam frequency to enemy resonance',
+        'to deal damage. Closer match = more damage!',
+      ] : [
         'WASD  -  Move ship',
         'Mouse  -  Aim beam',
         'Left Click (hold)  -  Fire beam',
@@ -1160,11 +1209,13 @@ export default function PulseWeaverGame() {
       }
     }
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     function drawFrequencyHUD() {
       const fhX = W / 2 - 100;
       const fhY = H - 40;
       const fhW = 200;
-      const fhH = 8;
+      const fhH = isTouchDevice ? 14 : 8;
 
       // Background bar
       ctx.fillStyle = 'rgba(255,255,255,0.1)';

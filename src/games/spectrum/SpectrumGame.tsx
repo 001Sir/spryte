@@ -140,6 +140,8 @@ export default function SpectrumGame() {
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     // ── Game state ──────────────────────────────────────────────────────────
     type GameState = 'menu' | 'playing' | 'betting' | 'reveal' | 'roundEnd' | 'gameover';
     let state: GameState = 'menu';
@@ -456,7 +458,9 @@ export default function SpectrumGame() {
       // Controls hint
       ctx.fillStyle = '#525252';
       ctx.font = '12px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Drag marker \u2022 Arrow keys to nudge \u2022 1-5 for confidence \u2022 Enter to confirm', W / 2, 560);
+      ctx.fillText(isTouchDevice
+        ? 'Drag marker \u2022 Tap buttons to set confidence & confirm'
+        : 'Drag marker \u2022 Arrow keys to nudge \u2022 1-5 for confidence \u2022 Enter to confirm', W / 2, 560);
     }
 
     // ── Draw HUD ────────────────────────────────────────────────────────────
@@ -1093,7 +1097,9 @@ export default function SpectrumGame() {
             // Instruction text
             ctx.fillStyle = '#525252';
             ctx.font = '12px system-ui, -apple-system, sans-serif';
-            ctx.fillText('Drag marker or use Arrow Keys \u2022 Enter to lock in', W / 2, liBtnY + liBtnH + 20);
+            ctx.fillText(isTouchDevice
+              ? 'Drag marker \u2022 Tap Lock In to confirm'
+              : 'Drag marker or use Arrow Keys \u2022 Enter to lock in', W / 2, liBtnY + liBtnH + 20);
           }
 
           if (state === 'playing' && estimateLocked) {

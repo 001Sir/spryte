@@ -158,6 +158,8 @@ export default function OrbitKeeperGame() {
     // Game State Variables (all inside useEffect closure)
     // -----------------------------------------------------------------------
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     let state: GameState = 'menu';
     let animId = 0;
     let lastTime = 0;
@@ -845,7 +847,7 @@ export default function OrbitKeeperGame() {
 
         c.font = '14px monospace';
         c.fillStyle = '#94a3b8';
-        c.fillText('Click and drag planets to adjust orbits', W / 2, H / 2 + 28);
+        c.fillText(isTouchDevice ? 'Touch and drag planets to adjust orbits' : 'Click and drag planets to adjust orbits', W / 2, H / 2 + 28);
       }
 
       // Event message
@@ -944,7 +946,12 @@ export default function OrbitKeeperGame() {
       c.fillText('Maintain orbital harmony in a chaotic solar system', CX, CY - 65);
 
       // Instructions box
-      const instructions = [
+      const instructions = isTouchDevice ? [
+        'Touch & drag planets to adjust their velocity',
+        'Keep all planets in stable circular orbits',
+        'Survive perturbations: asteroids, solar flares',
+        'Fewer interventions = higher score',
+      ] : [
         'Click & drag planets to adjust their velocity',
         'Keep all planets in stable circular orbits',
         'Survive perturbations: asteroids, solar flares',
@@ -963,7 +970,7 @@ export default function OrbitKeeperGame() {
       const pulse = 0.6 + 0.4 * Math.sin(time * 3);
       c.font = 'bold 20px monospace';
       c.fillStyle = `rgba(14, 165, 233, ${pulse})`;
-      c.fillText('Click to Start', CX, CY + 210);
+      c.fillText(isTouchDevice ? 'Tap to Start' : 'Click to Start', CX, CY + 210);
     }
 
     function drawGameOver(time: number) {
@@ -1019,7 +1026,7 @@ export default function OrbitKeeperGame() {
       c.font = 'bold 20px monospace';
       c.fillStyle = `rgba(14, 165, 233, ${pulse})`;
       c.textAlign = 'center';
-      c.fillText('Click to Restart', CX, CY + 140);
+      c.fillText(isTouchDevice ? 'Tap to Restart' : 'Click to Restart', CX, CY + 140);
     }
 
     // -----------------------------------------------------------------------
