@@ -31,6 +31,7 @@ const gameComponents: Record<string, ReturnType<typeof dynamic>> = {
   'orbit-keeper': dynamic(() => import('@/games/orbit-keeper/OrbitKeeperGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
   'symbiosis': dynamic(() => import('@/games/symbiosis/SymbiosisGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
   'drift': dynamic(() => import('@/games/drift/DriftGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
+  'spectrum': dynamic(() => import('@/games/spectrum/SpectrumGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
 };
 
 export default function GamePlayer({ slug }: { slug: string }) {

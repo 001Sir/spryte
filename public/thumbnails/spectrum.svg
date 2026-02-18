@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0a0a"/>
+      <stop offset="1" stop-color="#1a0a00"/>
+    </linearGradient>
+    <linearGradient id="spectrum" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="0.25" stop-color="#84cc16"/>
+      <stop offset="0.5" stop-color="#eab308"/>
+      <stop offset="0.75" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#ef4444"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f97316" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="answerglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#22c55e" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#22c55e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <!-- Question text placeholder -->
+  <rect x="80" y="60" width="240" height="12" rx="6" fill="#ffffff" opacity="0.15"/>
+  <rect x="120" y="80" width="160" height="10" rx="5" fill="#ffffff" opacity="0.08"/>
+  <!-- Number line track -->
+  <rect x="50" y="148" width="300" height="8" rx="4" fill="#262626"/>
+  <rect x="50" y="148" width="300" height="8" rx="4" fill="url(#spectrum)" opacity="0.25"/>
+  <!-- Tick marks -->
+  <line x1="50" y1="140" x2="50" y2="164" stroke="#525252" stroke-width="1"/>
+  <line x1="125" y1="143" x2="125" y2="161" stroke="#525252" stroke-width="0.8"/>
+  <line x1="200" y1="140" x2="200" y2="164" stroke="#525252" stroke-width="1"/>
+  <line x1="275" y1="143" x2="275" y2="161" stroke="#525252" stroke-width="0.8"/>
+  <line x1="350" y1="140" x2="350" y2="164" stroke="#525252" stroke-width="1"/>
+  <!-- Answer marker (green) -->
+  <ellipse cx="235" cy="152" rx="20" ry="20" fill="url(#answerglow)"/>
+  <line x1="235" y1="135" x2="235" y2="169" stroke="#22c55e" stroke-width="2.5"/>
+  <!-- Player marker (orange) -->
+  <ellipse cx="190" cy="152" rx="25" ry="25" fill="url(#glow)"/>
+  <circle cx="190" cy="152" r="12" fill="#f97316" stroke="#ffffff" stroke-width="2"/>
+  <!-- Distance line -->
+  <line x1="190" y1="152" x2="235" y2="152" stroke="#eab308" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+  <!-- Confidence buttons -->
+  <rect x="60" y="200" width="48" height="32" rx="6" fill="#1a1a1a" stroke="#22c55e" stroke-width="1"/>
+  <text x="84" y="220" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#22c55e">1x</text>
+  <rect x="118" y="200" width="48" height="32" rx="6" fill="#1a1a1a" stroke="#84cc16" stroke-width="1"/>
+  <text x="142" y="220" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#84cc16">2x</text>
+  <rect x="176" y="200" width="48" height="32" rx="6" fill="#1a1a1a" stroke="#eab308" stroke-width="1"/>
+  <text x="200" y="220" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#eab308">3x</text>
+  <rect x="234" y="200" width="48" height="32" rx="6" fill="#f97316" stroke="#f97316" stroke-width="1.5"/>
+  <text x="258" y="220" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#000000">4x</text>
+  <rect x="292" y="200" width="48" height="32" rx="6" fill="#1a1a1a" stroke="#ef4444" stroke-width="1"/>
+  <text x="316" y="220" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#ef4444">5x</text>
+  <!-- Chain indicator -->
+  <text x="350" y="65" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#ef4444">CHAIN x3</text>
+  <!-- Score -->
+  <text x="350" y="40" text-anchor="end" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#e5e5e5">4,250</text>
+  <!-- Round indicator -->
+  <text x="50" y="40" font-family="system-ui, sans-serif" font-size="10" fill="#737373">Round 7 / 15</text>
+  <!-- Decorative particles -->
+  <circle cx="210" cy="130" r="2" fill="#f97316" opacity="0.7"/>
+  <circle cx="225" cy="125" r="1.5" fill="#eab308" opacity="0.5"/>
+  <circle cx="200" cy="120" r="1.8" fill="#f97316" opacity="0.4"/>
+  <circle cx="240" cy="135" r="1.2" fill="#22c55e" opacity="0.6"/>
+  <!-- Bottom spectrum line -->
+  <rect x="50" y="270" width="300" height="3" rx="1.5" fill="url(#spectrum)" opacity="0.5"/>
+  <text x="200" y="290" text-anchor="middle" font-family="monospace" font-size="10" fill="#f97316" opacity="0.6">SPECTRUM</text>
+</svg>

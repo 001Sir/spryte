@@ -174,6 +174,31 @@ export const games: Game[] = [
     color: '#51e2ff',
     isNew: true,
   },
+  {
+    slug: 'spectrum',
+    title: 'Spectrum',
+    description: 'Place estimates on a number line and bet your confidence from 1x to 5x. Build nerve chains with bold accurate guesses — but miss big and the chain breaks.',
+    categories: ['Puzzle', 'Strategy'],
+    controls: 'Mouse drag to estimate, Click to lock in, 1-5 keys for confidence, Enter to confirm',
+    howToPlay: [
+      'A question appears — drag the marker on the number line to place your estimate',
+      'Lock in your estimate by clicking away from the line or pressing Enter',
+      'Bet your confidence: 1x (safe) to 5x (nerve) — higher risk, higher reward',
+      'Score is based on accuracy × confidence multiplier',
+      'Consecutive accurate answers at 3x+ confidence build a nerve chain with escalating bonuses',
+      'Miss badly at high confidence and the chain breaks with a score penalty',
+    ],
+    controlsList: [
+      { key: 'Mouse Drag', action: 'Move estimate on number line' },
+      { key: 'Arrow Keys', action: 'Fine-tune estimate' },
+      { key: '1-5 Keys', action: 'Select confidence level' },
+      { key: 'Enter', action: 'Lock in / Confirm' },
+    ],
+    difficulty: 'Medium',
+    thumbnail: '/thumbnails/spectrum.svg',
+    color: '#f97316',
+    isNew: true,
+  },
 ];
 
 export function getGameBySlug(slug: string): Game | undefined {
