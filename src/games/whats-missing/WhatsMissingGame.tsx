@@ -28,7 +28,6 @@ const SCENE_H = 420;
 // ─── Types ───
 type GameState = 'menu' | 'playing' | 'gameover';
 type PlayPhase = 'memorize' | 'find' | 'feedback' | 'transition';
-type Theme = 'room' | 'kitchen' | 'outdoor' | 'space' | 'ocean';
 type InteractionMode = 'choice' | 'click';
 
 interface SceneObject {
@@ -59,6 +58,15 @@ interface ButtonRect {
   h: number;
   label: string;
   id: string;
+}
+
+interface ScorePopup {
+  x: number;
+  y: number;
+  text: string;
+  color: string;
+  life: number;
+  maxLife: number;
 }
 
 // ─── Object Drawing Functions ───
@@ -591,6 +599,32 @@ function drawUfo(ctx: CanvasRenderingContext2D, x: number, y: number, w: number,
   ctx.fill();
 }
 
+function drawBlackHole(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const cx = x + w / 2, cy = y + h / 2, r = Math.min(w, h) * 0.3;
+  // Accretion disk
+  ctx.strokeStyle = '#F39C12';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, r * 1.8, r * 0.5, 0.3, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = '#E74C3C';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, r * 1.4, r * 0.4, 0.3, 0, Math.PI * 2);
+  ctx.stroke();
+  // Event horizon
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Glow ring
+  ctx.strokeStyle = '#9B59B6';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.05, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
 function drawNebula(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   const cx = x + w / 2, cy = y + h / 2;
   const colors = ['rgba(147,51,234,0.3)', 'rgba(236,72,153,0.25)', 'rgba(59,130,246,0.2)'];
@@ -787,6 +821,49 @@ function drawCrab(ctx: CanvasRenderingContext2D, x: number, y: number, w: number
   }
 }
 
+function drawJellyfish(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Bell
+  ctx.fillStyle = 'rgba(200,150,255,0.6)';
+  ctx.beginPath();
+  ctx.ellipse(x + w / 2, y + h * 0.3, w * 0.35, h * 0.28, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + w / 2, y + h * 0.3, w * 0.35, h * 0.12, 0, 0, Math.PI);
+  ctx.fill();
+  // Tentacles
+  ctx.strokeStyle = 'rgba(200,150,255,0.5)';
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < 5; i++) {
+    const tx = x + w * (0.25 + i * 0.125);
+    ctx.beginPath();
+    ctx.moveTo(tx, y + h * 0.38);
+    ctx.quadraticCurveTo(tx + (i % 2 === 0 ? 8 : -8), y + h * 0.6, tx, y + h * 0.85);
+    ctx.stroke();
+  }
+  // Inner glow
+  ctx.fillStyle = 'rgba(255,200,255,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(x + w / 2, y + h * 0.22, w * 0.15, h * 0.1, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawSeaweed(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const stems = 3;
+  for (let s = 0; s < stems; s++) {
+    const sx = x + w * (0.2 + s * 0.3);
+    ctx.strokeStyle = s % 2 === 0 ? '#228B22' : '#2E8B57';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(sx, y + h);
+    for (let j = 0; j < 5; j++) {
+      const yy = y + h - (j + 1) * (h / 5);
+      const dx = (j % 2 === 0 ? 1 : -1) * w * 0.12;
+      ctx.quadraticCurveTo(sx + dx, yy + h * 0.1, sx, yy);
+    }
+    ctx.stroke();
+  }
+}
+
 // ─── Theme Definitions ───
 interface ThemeDef {
   name: string;
@@ -906,7 +983,7 @@ const THEMES: ThemeDef[] = [
       { name: 'Moon', draw: drawMoon },
       { name: 'UFO', draw: drawUfo },
       { name: 'Nebula', draw: drawNebula },
-      { name: 'Star', draw: drawStar },
+      { name: 'Black Hole', draw: drawBlackHole },
     ],
   },
   {
@@ -940,7 +1017,8 @@ const THEMES: ThemeDef[] = [
       { name: 'Shell', draw: drawShell },
       { name: 'Coral', draw: drawCoral },
       { name: 'Crab', draw: drawCrab },
-      { name: 'Fish', draw: drawFish },
+      { name: 'Jellyfish', draw: drawJellyfish },
+      { name: 'Seaweed', draw: drawSeaweed },
     ],
   },
 ];
@@ -1072,6 +1150,7 @@ export default function WhatsMissingGame() {
     // Feedback
     let feedbackCorrect = false;
     let feedbackTimer = 0;
+    let feedbackTimeout = false;
     const FEEDBACK_TIME = 90;
 
     // Transition
@@ -1089,17 +1168,20 @@ export default function WhatsMissingGame() {
     let clickY = -1;
     let showClickMarker = false;
 
-    // Mouse
-    let mouseX = 0, mouseY = 0;
-
     // Particles
     let particles: Particle[] = [];
+
+    // Score popups
+    let scorePopups: ScorePopup[] = [];
 
     // Menu animation
     let menuTime = 0;
 
     // Screen shake
     let shakeX = 0, shakeY = 0, shakeMag = 0;
+
+    // Scene entrance fade
+    let sceneAlpha = 0;
 
     // ─── Helpers ───
     function addParticles(px: number, py: number, color: string, count: number) {
@@ -1147,6 +1229,7 @@ export default function WhatsMissingGame() {
       clickX = -1;
       clickY = -1;
       showClickMarker = false;
+      sceneAlpha = 0;
     }
 
     function startFindPhase() {
@@ -1217,6 +1300,7 @@ export default function WhatsMissingGame() {
     function handleAnswer(answer: string) {
       if (phase !== 'find') return;
       playerAnswer = answer;
+      feedbackTimeout = false;
       const isCorrect = nothingRemoved
         ? answer === 'Nothing'
         : answer === (removedObject?.name || '');
@@ -1234,10 +1318,12 @@ export default function WhatsMissingGame() {
         totalCorrect++;
         SoundEngine.play('collectGem');
         if (streak > 0 && streak % 5 === 0) SoundEngine.play('comboUp');
-        if (removedObject) {
-          addParticles(removedObject.x + removedObject.w / 2, removedObject.y + removedObject.h / 2, GREEN, 20);
-        } else {
-          addParticles(W / 2, H / 2, GREEN, 20);
+        const popX = removedObject ? removedObject.x + removedObject.w / 2 : W / 2;
+        const popY = removedObject ? removedObject.y : H / 2;
+        addParticles(popX, popY, GREEN, 20);
+        scorePopups.push({ x: popX, y: popY - 10, text: `+${roundScore}`, color: GREEN, life: 60, maxLife: 60 });
+        if (streak >= 3) {
+          scorePopups.push({ x: popX, y: popY + 15, text: `${Math.min(1 + streak * 0.1, 3).toFixed(1)}x streak!`, color: ORANGE, life: 50, maxLife: 50 });
         }
       } else {
         lives--;
@@ -1247,6 +1333,7 @@ export default function WhatsMissingGame() {
         if (removedObject) {
           addParticles(removedObject.x + removedObject.w / 2, removedObject.y + removedObject.h / 2, RED, 15);
         }
+        scorePopups.push({ x: W / 2, y: H / 2, text: `-1 life`, color: RED, life: 50, maxLife: 50 });
       }
 
       phase = 'feedback';
@@ -1260,18 +1347,21 @@ export default function WhatsMissingGame() {
       showClickMarker = true;
 
       if (nothingRemoved) {
-        // Clicking anywhere is wrong in trick round — need to press "Nothing" button
-        // We don't auto-handle click as answer for trick rounds in click mode
-        // Instead, there's always a small "Nothing Missing" button in click mode too
+        // Clicking anywhere shows a miss marker — need to press "Nothing" button
+        addParticles(cx, cy, 'rgba(255,100,100,0.5)', 5);
         return;
       }
 
       if (removedObject) {
         const obj = removedObject;
-        const margin = 20;
+        const margin = 25;
         if (cx >= obj.x - margin && cx <= obj.x + obj.w + margin &&
             cy >= obj.y - margin && cy <= obj.y + obj.h + margin) {
           handleAnswer(obj.name);
+        } else {
+          // Visual miss feedback
+          addParticles(cx, cy, 'rgba(255,100,100,0.5)', 5);
+          SoundEngine.play('wallHit');
         }
       }
     }
@@ -1287,6 +1377,8 @@ export default function WhatsMissingGame() {
 
     // ─── Update ───
     function update() {
+      menuTime++;
+
       // Particles
       particles = particles.filter(p => {
         p.x += p.vx;
@@ -1294,6 +1386,13 @@ export default function WhatsMissingGame() {
         p.vy += 0.05;
         p.life--;
         return p.life > 0;
+      });
+
+      // Score popups
+      scorePopups = scorePopups.filter(sp => {
+        sp.y -= 0.8;
+        sp.life--;
+        return sp.life > 0;
       });
 
       // Shake
@@ -1305,11 +1404,15 @@ export default function WhatsMissingGame() {
       }
 
       if (state === 'menu') {
-        menuTime++;
         return;
       }
 
       if (state !== 'playing') return;
+
+      // Scene entrance fade
+      if (sceneAlpha < 1) {
+        sceneAlpha = Math.min(1, sceneAlpha + 0.04);
+      }
 
       if (phase === 'memorize') {
         phaseTimer++;
@@ -1323,10 +1426,12 @@ export default function WhatsMissingGame() {
           lives--;
           streak = 0;
           feedbackCorrect = false;
+          feedbackTimeout = true;
           SoundEngine.play('playerDamage');
           shakeMag = 8;
           phase = 'feedback';
           feedbackTimer = 0;
+          scorePopups.push({ x: W / 2, y: H / 2, text: "Time's up!", color: RED, life: 60, maxLife: 60 });
         }
       } else if (phase === 'feedback') {
         feedbackTimer++;
@@ -1478,7 +1583,7 @@ export default function WhatsMissingGame() {
       const btnX = W - btnW - 20;
       const btnY = H - 60;
 
-      const isHovered = hoveredButton === 'nothing-btn';
+      const isHovered = hoveredButton === 'Nothing';
 
       ctx.fillStyle = isHovered ? ACCENT2 : '#333';
       ctx.globalAlpha = isHovered ? 0.85 : 0.6;
@@ -1512,6 +1617,17 @@ export default function WhatsMissingGame() {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2);
         ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawScorePopups() {
+      for (const sp of scorePopups) {
+        ctx.globalAlpha = Math.min(1, sp.life / (sp.maxLife * 0.3));
+        ctx.fillStyle = sp.color;
+        ctx.font = 'bold 18px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText(sp.text, sp.x, sp.y);
       }
       ctx.globalAlpha = 1;
     }
@@ -1597,17 +1713,17 @@ export default function WhatsMissingGame() {
       ctx.translate(shakeX, shakeY);
 
       if (phase === 'memorize') {
+        ctx.globalAlpha = sceneAlpha;
         drawScene(true);
+        ctx.globalAlpha = 1;
         drawHUD();
 
-        // "Memorize!" label
-        const fadeIn = Math.min(phaseTimer / 20, 1);
-        ctx.globalAlpha = fadeIn;
+        // Countdown seconds
+        const secsLeft = Math.ceil((phaseMaxTime - phaseTimer) / 60);
         ctx.fillStyle = ACCENT;
         ctx.font = 'bold 22px system-ui';
         ctx.textAlign = 'center';
-        ctx.fillText('Memorize this scene!', W / 2, H - 30);
-        ctx.globalAlpha = 1;
+        ctx.fillText(`Memorize! ${secsLeft}s`, W / 2, H - 30);
 
         drawTimerBar(phaseMaxTime - phaseTimer, phaseMaxTime, H - 50);
 
@@ -1685,8 +1801,12 @@ export default function WhatsMissingGame() {
           ctx.fillText(msgs[round % msgs.length], W / 2, H - 30);
         } else {
           ctx.fillStyle = RED;
-          const msgs = ['Wrong!', 'Missed it!', 'Nope!', "Time's up!"];
-          ctx.fillText(feedbackTimer === 0 && phaseTimer >= phaseMaxTime ? msgs[3] : msgs[round % 3], W / 2, H - 30);
+          if (feedbackTimeout) {
+            ctx.fillText("Time's up!", W / 2, H - 30);
+          } else {
+            const msgs = ['Wrong!', 'Missed it!', 'Nope!'];
+            ctx.fillText(msgs[round % msgs.length], W / 2, H - 30);
+          }
         }
 
         if (interactionMode === 'choice') {
@@ -1704,13 +1824,13 @@ export default function WhatsMissingGame() {
         ctx.textAlign = 'center';
         ctx.fillText(`Round ${round + 1}`, W / 2, H / 2);
 
-        const nextThemeName = '...';
         ctx.fillStyle = TEXT_DIM;
         ctx.font = '14px system-ui';
-        ctx.fillText(`Get ready! ${nextThemeName}`, W / 2, H / 2 + 30);
+        ctx.fillText('Get ready!', W / 2, H / 2 + 30);
       }
 
       drawParticles();
+      drawScorePopups();
       ctx.restore();
     }
 
@@ -1823,9 +1943,6 @@ export default function WhatsMissingGame() {
 
     function handleMouseMove(e: MouseEvent) {
       const pos = getCanvasCoords(e);
-      mouseX = pos.x;
-      mouseY = pos.y;
-
       // Button hover
       hoveredButton = null;
       for (const btn of choiceButtons) {
@@ -1927,10 +2044,6 @@ export default function WhatsMissingGame() {
     function handleTouchStart(e: TouchEvent) {
       e.preventDefault();
       if (e.touches.length > 0) {
-        const pos = getCanvasCoords(e.touches[0]);
-        mouseX = pos.x;
-        mouseY = pos.y;
-
         // Reuse click logic
         handleClick({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } as MouseEvent);
       }
