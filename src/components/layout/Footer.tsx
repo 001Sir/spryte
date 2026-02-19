@@ -7,9 +7,9 @@ export default function Footer() {
   const categories = getAllCategories();
 
   return (
-    <footer className="border-t border-border mt-20" role="contentinfo">
+    <footer className="relative z-10 border-t border-white/[0.06] mt-20 bg-surface" role="contentinfo">
       {/* Main footer content */}
-      <div className="max-w-7xl mx-auto px-4 pt-12 pb-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-10 pt-12 pb-10">
         {/* Top row: branding + description */}
         <div className="flex flex-col sm:flex-row items-start gap-6 mb-10">
           <Link href="/" className="inline-flex items-center gap-3 group shrink-0">
@@ -24,7 +24,7 @@ export default function Footer() {
               Spryte Games
             </span>
           </Link>
-          <p className="text-sm text-muted leading-relaxed max-w-md">
+          <p className="text-sm text-dim leading-relaxed max-w-md">
             Play free browser games instantly. No downloads, no installs, no accounts — just pick a game and play. All {games.length} games run entirely in your browser using HTML5.
           </p>
         </div>
@@ -33,7 +33,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-8">
           {/* Games column */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-4">
+            <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-dim mb-4">
               Games
             </h4>
             <nav aria-label="Popular games" className="flex flex-col gap-2.5">
@@ -41,7 +41,7 @@ export default function Footer() {
                 <Link
                   key={game.slug}
                   href={`/games/${game.slug}`}
-                  className="text-sm text-muted hover:text-foreground transition-colors"
+                  className="text-sm text-dim hover:text-foreground transition-colors"
                 >
                   {game.title}
                 </Link>
@@ -57,7 +57,7 @@ export default function Footer() {
 
           {/* Categories column */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-4">
+            <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-dim mb-4">
               Categories
             </h4>
             <nav aria-label="Game categories" className="flex flex-col gap-2.5">
@@ -65,11 +65,11 @@ export default function Footer() {
                 <Link
                   key={cat}
                   href={`/category/${cat.toLowerCase()}`}
-                  className="text-sm text-muted hover:text-foreground transition-colors inline-flex items-center gap-2"
+                  className="text-sm text-dim hover:text-foreground transition-colors inline-flex items-center gap-2"
                 >
                   <span className="text-xs" aria-hidden="true">{categoryIcons[cat] || '🎮'}</span>
                   {cat}
-                  <span className="text-xs text-muted/50">({getGamesByCategory(cat).length})</span>
+                  <span className="text-xs text-dim/50">({getGamesByCategory(cat).length})</span>
                 </Link>
               ))}
             </nav>
@@ -77,17 +77,17 @@ export default function Footer() {
 
           {/* Site column */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-4">
+            <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-dim mb-4">
               Site
             </h4>
             <nav aria-label="Site links" className="flex flex-col gap-2.5">
-              <Link href="/" className="text-sm text-muted hover:text-foreground transition-colors">
+              <Link href="/" className="text-sm text-dim hover:text-foreground transition-colors">
                 Home
               </Link>
-              <Link href="/search" className="text-sm text-muted hover:text-foreground transition-colors">
+              <Link href="/search" className="text-sm text-dim hover:text-foreground transition-colors">
                 Search Games
               </Link>
-              <Link href="/#games" className="text-sm text-muted hover:text-foreground transition-colors">
+              <Link href="/#games" className="text-sm text-dim hover:text-foreground transition-colors">
                 All Games
               </Link>
             </nav>
@@ -95,14 +95,14 @@ export default function Footer() {
 
           {/* Legal column */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-4">
+            <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-dim mb-4">
               Legal
             </h4>
             <nav aria-label="Legal links" className="flex flex-col gap-2.5">
-              <Link href="/privacy" className="text-sm text-muted hover:text-foreground transition-colors">
+              <Link href="/privacy" className="text-sm text-dim hover:text-foreground transition-colors">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="text-sm text-muted hover:text-foreground transition-colors">
+              <Link href="/terms" className="text-sm text-dim hover:text-foreground transition-colors">
                 Terms of Service
               </Link>
             </nav>
@@ -111,8 +111,8 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-border">
-        <div className="max-w-7xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted/70">
+      <div className="border-t border-white/[0.06]">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-10 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-dim/70">
           <span>&copy; {new Date().getFullYear()} Spryte Games. All rights reserved.</span>
           <span>Free to play. No plugins required.</span>
         </div>

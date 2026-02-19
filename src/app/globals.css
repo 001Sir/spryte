@@ -1,16 +1,22 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #0a0a0f;
-  --color-foreground: #e5e5e5;
-  --color-card: #14141f;
-  --color-card-hover: #1c1c2e;
-  --color-border: #2a2a3e;
-  --color-muted: #9ca3af;
+  --color-background: #06050e;
+  --color-foreground: #eeedf5;
+  --color-card: #111024;
+  --color-card-hover: #191838;
+  --color-border: rgba(255,255,255,0.06);
+  --color-muted: #9896a8;
   --color-accent: #e94560;
   --color-accent-hover: #ff5a7a;
-  --font-sans: var(--font-geist-sans);
+  --color-surface: #0d0c18;
+  --color-dim: #706f82;
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html {
@@ -19,7 +25,7 @@ html {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2a2a3e transparent;
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
 }
 
 body {
@@ -61,6 +67,40 @@ canvas {
   height: auto;
 }
 
+/* Particles canvas */
+.particles-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Vignette overlay */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, var(--color-background) 100%);
+}
+
+/* Snap horizontal scroll */
+.snap-scroll-x {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-scroll-x > * {
+  scroll-snap-align: start;
+}
+
+/* Frosted glass */
+.frosted-glass {
+  background: rgba(6, 5, 14, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
 /* Animated gradient for hero */
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
@@ -70,6 +110,16 @@ canvas {
 .animate-gradient {
   background-size: 200% 200%;
   animation: gradient-shift 8s ease infinite;
+}
+
+/* Scroll cue bobbing arrow */
+@keyframes scroll-cue {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+
+.animate-scroll-cue {
+  animation: scroll-cue 2s ease-in-out infinite;
 }
 
 /* Ghost float animation for 404 */
@@ -199,11 +249,36 @@ canvas {
 
 /* Card hover glow */
 .card-glow {
-  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+  transition: box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card-glow:hover {
-  box-shadow: 0 4px 24px var(--glow-color, rgba(233, 69, 96, 0.15));
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4),
+              0 4px 24px var(--glow-color, rgba(233, 69, 96, 0.15));
+}
+
+/* Pulsing dot */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.4); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 8px rgba(233, 69, 96, 0); }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Play button scale on card hover */
+.play-btn-hover {
+  transform: scale(0.7);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.group:hover .play-btn-hover {
+  transform: scale(1);
+  opacity: 1;
 }
 
 /* Subtle shimmer for premium feel */
@@ -243,10 +318,10 @@ canvas {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #2a2a3e;
+  background: rgba(255,255,255,0.06);
   border-radius: 3px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #3a3a5e;
+  background: rgba(255,255,255,0.12);
 }

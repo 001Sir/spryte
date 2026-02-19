@@ -118,14 +118,22 @@ function makeLevels(): LevelConfig[] {
       name: 'Welcome to the Slide',
       platforms: [
         ...border(),
-        { x: 100, y: 480, w: 200, h: 14 },
-        { x: 350, y: 420, w: 150, h: 14 },
-        { x: 550, y: 360, w: 200, h: 14 },
+        { x: 100, y: 480, w: 200, h: 14 },    // 4: start
+        { x: 350, y: 420, w: 150, h: 14 },     // 5: middle step
+        { x: 550, y: 360, w: 200, h: 14 },     // 6: end platform
       ],
-      spikes: [],
+      spikes: [
+        { x: 280, y: H - 28, w: 220, h: 14, dir: 'up' },  // spike patch — teaches "spikes = death"
+      ],
       startX: 150, startY: 450,
       exitX: 700, exitY: 330,
-      traps: [],
+      traps: [
+        // Gentle foreshadowing: tiny shake when you think you've won
+        makeTrap(
+          { type: 'playerNearExit', threshold: 40 },
+          { type: 'shakeScreen', intensity: 3 }
+        ),
+      ],
       deathQuote: DEATH_QUOTES[0],
     },
     // Level 2: Trust Fall
@@ -162,17 +170,30 @@ function makeLevels(): LevelConfig[] {
       name: 'The Bait',
       platforms: [
         ...border(),
-        { x: 50, y: 500, w: 700, h: 14 },     // 4: wide floor
+        { x: 50, y: 500, w: 580, h: 14 },     // 4: wide floor (shortened — gap on the right!)
         { x: 200, y: 440, w: 140, h: 14 },     // 5: step (60px gap)
-        { x: 450, y: 380, w: 140, h: 14 },     // 6: step (60px gap)
+        { x: 450, y: 380, w: 140, h: 14 },     // 6: step — crumbles (60px gap)
+        { x: 100, y: 380, w: 120, h: 14 },     // 7: landing near moved exit
       ],
-      spikes: [],
+      spikes: [
+        { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },  // full floor spikes under gaps
+      ],
       startX: 100, startY: 470,
-      exitX: 700, exitY: 470,
+      exitX: 680, exitY: 470,
       traps: [
         makeTrap(
           { type: 'playerNearExit', threshold: 80 },
-          { type: 'moveExit', exitX: 100, exitY: 350 }
+          { type: 'moveExit', exitX: 150, exitY: 350 }
+        ),
+        // Wind burst pushes you right — toward the floor gap!
+        makeTrap(
+          { type: 'playerNearExit', threshold: 80 },
+          { type: 'windBurst', windFx: 300, windFy: 0 }
+        ),
+        // Upper step crumbles — one less stepping stone
+        makeTrap(
+          { type: 'playerOnPlatform', platformIndex: 6 },
+          { type: 'removePlatform', platformIndex: 6 }
         ),
       ],
       deathQuote: DEATH_QUOTES[2],
@@ -187,7 +208,10 @@ function makeLevels(): LevelConfig[] {
         { x: 300, y: 200, w: 200, h: 14 },     // 6 (reached via gravity flip)
         { x: 550, y: 120, w: 200, h: 14 },     // 7 (reached via gravity flip)
       ],
-      spikes: [],
+      spikes: [
+        { x: 350, y: 14, w: 436, h: 14, dir: 'down' },   // ceiling spikes right half — deadly after gravity flip!
+        { x: 14, y: H - 28, w: 300, h: 14, dir: 'up' },  // floor spikes left half
+      ],
       startX: 120, startY: 450,
       exitX: 680, exitY: 90,
       traps: [
@@ -198,6 +222,11 @@ function makeLevels(): LevelConfig[] {
         makeTrap(
           { type: 'playerPassX', value: 400 },
           { type: 'reverseControls', duration: 3 }
+        ),
+        // Screen shake when everything flips — total disorientation
+        makeTrap(
+          { type: 'playerPassX', value: 400 },
+          { type: 'shakeScreen', intensity: 8 }
         ),
       ],
       deathQuote: DEATH_QUOTES[3],
@@ -214,13 +243,20 @@ function makeLevels(): LevelConfig[] {
         { x: 200, y: 280, w: 120, h: 14 },     // 8 (70px gap)
         { x: 500, y: 210, w: 150, h: 14 },     // 9 (70px gap)
       ],
-      spikes: [],
+      spikes: [
+        { x: 14, y: H - 28, w: 200, h: 14, dir: 'up' },  // left floor spikes
+      ],
       startX: 100, startY: 450,
       exitX: 620, exitY: 180,
       traps: [
         makeTrap(
           { type: 'playerPassY', value: 430, direction: 'left' },
           { type: 'crushWalls', crushSpeed: 60, crushWallIndices: [2, 3] }
+        ),
+        // Screen shake when walls start crushing
+        makeTrap(
+          { type: 'playerPassY', value: 430, direction: 'left' },
+          { type: 'shakeScreen', intensity: 6 }
         ),
         makeTrap(
           { type: 'playerPassY', value: 350, direction: 'left' },
@@ -236,11 +272,14 @@ function makeLevels(): LevelConfig[] {
       name: 'Trampoline Trick',
       platforms: [
         ...border(),
-        { x: 50, y: 480, w: 200, h: 14 },
-        { x: 320, y: 450, w: 160, h: 14 },   // 5: fake bouncer
-        { x: 550, y: 350, w: 200, h: 14 },
+        { x: 50, y: 480, w: 200, h: 14 },     // 4: start
+        { x: 320, y: 450, w: 160, h: 14 },     // 5: fake bouncer
+        { x: 550, y: 350, w: 200, h: 14 },     // 6: end — crumbles when you land!
+        { x: 300, y: 300, w: 100, h: 14 },     // 7: rescue ledge (if bounce goes wrong)
       ],
-      spikes: [],
+      spikes: [
+        { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },  // full floor spikes
+      ],
       startX: 120, startY: 450,
       exitX: 680, exitY: 320,
       traps: [
@@ -253,6 +292,16 @@ function makeLevels(): LevelConfig[] {
           { type: 'spawnSpikes', spikes: [
             { x: 280, y: 14, w: 240, h: 14, dir: 'down' },
           ]}
+        ),
+        // End platform crumbles — hurry to the exit!
+        makeTrap(
+          { type: 'playerOnPlatform', platformIndex: 6 },
+          { type: 'removePlatform', platformIndex: 6 }
+        ),
+        // Wind burst near exit pushes you back
+        makeTrap(
+          { type: 'playerNearExit', threshold: 60 },
+          { type: 'windBurst', windFx: -200, windFy: 0 }
         ),
       ],
       deathQuote: DEATH_QUOTES[6],
@@ -290,6 +339,18 @@ function makeLevels(): LevelConfig[] {
           { type: 'playerOnPlatform', platformIndex: 8 },
           { type: 'windBurst', windFx: -400, windFy: 0 }
         ),
+        // Screen shake with the wind — disorienting on the last platform!
+        makeTrap(
+          { type: 'playerOnPlatform', platformIndex: 8 },
+          { type: 'shakeScreen', intensity: 6 }
+        ),
+        // Ceiling spikes appear when approaching exit
+        makeTrap(
+          { type: 'playerNearExit', threshold: 80 },
+          { type: 'spawnSpikes', spikes: [
+            { x: 600, y: 14, w: 186, h: 14, dir: 'down' },
+          ]}
+        ),
       ],
       deathQuote: DEATH_QUOTES[5],
     },
@@ -298,17 +359,30 @@ function makeLevels(): LevelConfig[] {
       name: 'Ceiling Drop',
       platforms: [
         ...border(),
-        { x: 50, y: 500, w: 200, h: 14 },
-        { x: 350, y: 450, w: 150, h: 14 },
-        { x: 600, y: 400, w: 180, h: 14 },
+        { x: 50, y: 500, w: 200, h: 14 },     // 4: start
+        { x: 350, y: 450, w: 150, h: 14 },     // 5: middle step
+        { x: 600, y: 400, w: 180, h: 14 },     // 6: end platform
+        { x: 200, y: 380, w: 100, h: 14 },     // 7: upper escape ledge
       ],
-      spikes: [],
+      spikes: [
+        { x: 250, y: H - 28, w: 300, h: 14, dir: 'up' },  // middle floor spikes
+      ],
       startX: 120, startY: 470,
       exitX: 720, exitY: 370,
       traps: [
         makeTrap(
           { type: 'playerPassX', value: 300 },
           { type: 'dropCeiling', ceilingIndex: 0, dropSpeed: 80 }
+        ),
+        // Screen shake when ceiling starts falling
+        makeTrap(
+          { type: 'playerPassX', value: 300 },
+          { type: 'shakeScreen', intensity: 7 }
+        ),
+        // Reverse controls during the chaos
+        makeTrap(
+          { type: 'playerPassX', value: 500 },
+          { type: 'reverseControls', duration: 2 }
         ),
       ],
       deathQuote: DEATH_QUOTES[7],
@@ -326,6 +400,7 @@ function makeLevels(): LevelConfig[] {
       ],
       spikes: [
         { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },
+        { x: 400, y: 14, w: 200, h: 14, dir: 'down' },   // ceiling spikes upper right
       ],
       startX: 120, startY: 470,
       exitX: 650, exitY: 230,
@@ -333,6 +408,16 @@ function makeLevels(): LevelConfig[] {
         makeTrap(
           { type: 'timer', value: 0.5 },
           { type: 'reverseControls', duration: 999 }
+        ),
+        // Wind burst halfway up — with reversed controls this is evil
+        makeTrap(
+          { type: 'playerPassY', value: 380, direction: 'left' },
+          { type: 'windBurst', windFx: 200, windFy: 0 }
+        ),
+        // Screen shake to pile on the disorientation
+        makeTrap(
+          { type: 'playerPassY', value: 320, direction: 'left' },
+          { type: 'shakeScreen', intensity: 5 }
         ),
       ],
       deathQuote: DEATH_QUOTES[8],
@@ -342,18 +427,39 @@ function makeLevels(): LevelConfig[] {
       name: 'Bait & Switch',
       platforms: [
         ...border(),
-        { x: 50, y: 480, w: 200, h: 14 },     // 4 (60px gaps)
-        { x: 350, y: 420, w: 200, h: 14 },     // 5
-        { x: 600, y: 360, w: 180, h: 14 },     // 6
-        { x: 200, y: 300, w: 150, h: 14 },     // 7
+        { x: 50, y: 480, w: 200, h: 14 },     // 4: start (60px gaps)
+        { x: 350, y: 420, w: 200, h: 14 },     // 5: crumbles!
+        { x: 600, y: 360, w: 180, h: 14 },     // 6: near fake exit
+        { x: 200, y: 300, w: 150, h: 14 },     // 7: near real exit
+        { x: 450, y: 300, w: 120, h: 14 },     // 8: stepping stone to reach P7
       ],
-      spikes: [],
+      spikes: [
+        { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },  // full floor spikes
+      ],
       startX: 120, startY: 450,
       exitX: 700, exitY: 330,
       traps: [
+        // Fake-out: exit teleports away
         makeTrap(
           { type: 'playerNearExit', threshold: 60 },
           { type: 'fakeExit', exitX: 280, exitY: 270 }
+        ),
+        // Screen shake on the fake-out
+        makeTrap(
+          { type: 'playerNearExit', threshold: 60 },
+          { type: 'shakeScreen', intensity: 6 }
+        ),
+        // P5 crumbles — no easy backtracking
+        makeTrap(
+          { type: 'playerOnPlatform', platformIndex: 5 },
+          { type: 'removePlatform', platformIndex: 5 }
+        ),
+        // Ceiling spikes spawn over the right side
+        makeTrap(
+          { type: 'playerPassX', value: 350 },
+          { type: 'spawnSpikes', spikes: [
+            { x: 560, y: 14, w: 226, h: 14, dir: 'down' },
+          ]}
         ),
       ],
       deathQuote: DEATH_QUOTES[9],
@@ -372,6 +478,7 @@ function makeLevels(): LevelConfig[] {
       ],
       spikes: [
         { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },
+        { x: 550, y: 14, w: 236, h: 14, dir: 'down' },   // ceiling spikes over exit area
       ],
       startX: 80, startY: 470,
       exitX: 740, exitY: 220,
@@ -381,6 +488,16 @@ function makeLevels(): LevelConfig[] {
         makeTrap({ type: 'playerOnPlatform', platformIndex: 7 }, { type: 'removePlatform', platformIndex: 6 }),
         makeTrap({ type: 'playerOnPlatform', platformIndex: 8 }, { type: 'removePlatform', platformIndex: 7 }),
         makeTrap({ type: 'playerOnPlatform', platformIndex: 9 }, { type: 'removePlatform', platformIndex: 8 }),
+        // Wind burst on the last platform — pushes back into the void!
+        makeTrap(
+          { type: 'playerOnPlatform', platformIndex: 9 },
+          { type: 'windBurst', windFx: -300, windFy: 0 }
+        ),
+        // Screen shake for emphasis
+        makeTrap(
+          { type: 'playerOnPlatform', platformIndex: 9 },
+          { type: 'shakeScreen', intensity: 5 }
+        ),
       ],
       deathQuote: DEATH_QUOTES[10],
     },
@@ -389,23 +506,30 @@ function makeLevels(): LevelConfig[] {
       name: 'Gravity Ping-Pong',
       platforms: [
         ...border(),
-        { x: 100, y: 480, w: 200, h: 14 },
-        { x: 100, y: 106, w: 200, h: 14 },
-        { x: 400, y: 300, w: 150, h: 14 },
-        { x: 600, y: 480, w: 180, h: 14 },
-        { x: 600, y: 106, w: 180, h: 14 },
+        { x: 100, y: 480, w: 200, h: 14 },    // 4: bottom left
+        { x: 100, y: 106, w: 200, h: 14 },     // 5: top left
+        { x: 400, y: 300, w: 150, h: 14 },     // 6: middle
+        { x: 600, y: 480, w: 180, h: 14 },     // 7: bottom right
+        { x: 600, y: 106, w: 180, h: 14 },     // 8: top right
       ],
       spikes: [
-        { x: 350, y: H - 28, w: 200, h: 14, dir: 'up' },
-        { x: 350, y: 14, w: 200, h: 14, dir: 'down' },
+        { x: 350, y: H - 28, w: 200, h: 14, dir: 'up' },    // bottom middle
+        { x: 350, y: 14, w: 200, h: 14, dir: 'down' },       // top middle
+        { x: 14, y: 200, w: 14, h: 200, dir: 'right' },      // left wall spikes
       ],
       startX: 150, startY: 450,
       exitX: 700, exitY: 450,
       traps: [
         makeTrap({ type: 'timer', value: 3.0 }, { type: 'flipGravity' }),
+        makeTrap({ type: 'timer', value: 3.0 }, { type: 'shakeScreen', intensity: 4 }),
         makeTrap({ type: 'timer', value: 6.0 }, { type: 'flipGravity' }),
+        makeTrap({ type: 'timer', value: 6.0 }, { type: 'shakeScreen', intensity: 4 }),
         makeTrap({ type: 'timer', value: 9.0 }, { type: 'flipGravity' }),
+        makeTrap({ type: 'timer', value: 9.0 }, { type: 'shakeScreen', intensity: 4 }),
         makeTrap({ type: 'timer', value: 12.0 }, { type: 'flipGravity' }),
+        makeTrap({ type: 'timer', value: 12.0 }, { type: 'shakeScreen', intensity: 4 }),
+        // Wind burst at the midpoint — pushes toward wall spikes
+        makeTrap({ type: 'timer', value: 7.0 }, { type: 'windBurst', windFx: -250, windFy: 0 }),
       ],
       deathQuote: DEATH_QUOTES[11],
     },
@@ -420,7 +544,9 @@ function makeLevels(): LevelConfig[] {
         { x: 300, y: 280, w: 140, h: 14 },     // 7 (70px gap from P6)
         { x: 600, y: 210, w: 160, h: 14 },     // 8 (70px gap from P7)
       ],
-      spikes: [],
+      spikes: [
+        { x: W - 28, y: 250, w: 14, h: 150, dir: 'left' },  // right wall spikes
+      ],
       startX: 120, startY: 450,
       exitX: 700, exitY: 180,
       traps: [
@@ -431,6 +557,11 @@ function makeLevels(): LevelConfig[] {
         makeTrap(
           { type: 'playerOnPlatform', platformIndex: 5 },
           { type: 'spawnSpikes', spikes: [{ x: 240, y: 14, w: 220, h: 14, dir: 'down' }] }
+        ),
+        // Screen shake on bounce — adds to the chaos
+        makeTrap(
+          { type: 'playerOnPlatform', platformIndex: 5 },
+          { type: 'shakeScreen', intensity: 6 }
         ),
         makeTrap(
           { type: 'playerNearExit', threshold: 100 },
@@ -470,9 +601,13 @@ function makeLevels(): LevelConfig[] {
           { type: 'playerOnPlatform', platformIndex: 6 },
           { type: 'spawnSpikes', spikes: [{ x: 360, y: 14, w: 200, h: 14, dir: 'down' }] }
         ),
+        // Screen shake on bounce
+        makeTrap({ type: 'playerOnPlatform', platformIndex: 6 }, { type: 'shakeScreen', intensity: 6 }),
         makeTrap({ type: 'playerOnPlatform', platformIndex: 7 }, { type: 'removePlatform', platformIndex: 7 }),
         makeTrap({ type: 'playerPassX', value: 500 }, { type: 'reverseControls', duration: 2.5 }),
         makeTrap({ type: 'playerNearExit', threshold: 80 }, { type: 'moveExit', exitX: 200, exitY: 290 }),
+        // Wind burst when exit moves — pushes toward right wall
+        makeTrap({ type: 'playerNearExit', threshold: 80 }, { type: 'windBurst', windFx: 250, windFy: 0 }),
       ],
       deathQuote: DEATH_QUOTES[13],
     },
@@ -491,13 +626,18 @@ function makeLevels(): LevelConfig[] {
       ],
       spikes: [
         { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },
+        { x: 14, y: 200, w: 14, h: 200, dir: 'right' },    // left wall spikes
       ],
       startX: 80, startY: 470,
       exitX: 700, exitY: 110,
       traps: [
         makeTrap({ type: 'playerOnPlatform', platformIndex: 5 }, { type: 'removePlatform', platformIndex: 5 }),
+        // Screen shake when first platform crumbles
+        makeTrap({ type: 'playerOnPlatform', platformIndex: 5 }, { type: 'shakeScreen', intensity: 4 }),
         makeTrap({ type: 'playerOnPlatform', platformIndex: 6 }, { type: 'removePlatform', platformIndex: 6 }),
         makeTrap({ type: 'playerPassX', value: 500 }, { type: 'flipGravity' }),
+        // Big shake on gravity flip
+        makeTrap({ type: 'playerPassX', value: 500 }, { type: 'shakeScreen', intensity: 8 }),
         makeTrap(
           { type: 'playerNearExit', threshold: 100 },
           { type: 'moveExit', exitX: 250, exitY: 130 }
@@ -511,6 +651,8 @@ function makeLevels(): LevelConfig[] {
           { type: 'moveExit', exitX: 100, exitY: 80 }
         ),
         makeTrap({ type: 'timer', value: 8 }, { type: 'reverseControls', duration: 3 }),
+        // Wind burst at the halfway mark — pushes toward wall spikes
+        makeTrap({ type: 'timer', value: 10 }, { type: 'windBurst', windFx: -300, windFy: 0 }),
         makeTrap({ type: 'timer', value: 15 }, { type: 'spawnSpikes', spikes: [
           { x: 14, y: 14, w: W - 28, h: 14, dir: 'down' },
         ]}),

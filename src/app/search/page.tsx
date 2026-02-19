@@ -40,7 +40,7 @@ function SearchResults() {
             placeholder="Search by name, description, or category..."
             aria-label="Search games"
             autoFocus={!query}
-            className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_12px_rgba(233,69,96,0.1)] transition-all duration-200"
+            className="w-full bg-card border border-white/[0.06] rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_12px_rgba(233,69,96,0.1)] transition-all duration-200"
           />
           <button
             type="submit"
@@ -75,7 +75,7 @@ function SearchResults() {
               <Link
                 key={cat}
                 href={`/category/${cat.toLowerCase()}`}
-                className="text-sm px-4 py-2 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 hover:bg-white/[0.02] transition-all duration-200"
+                className="text-sm px-4 py-2 rounded-lg border border-white/[0.06] text-muted hover:text-accent hover:border-accent/40 hover:bg-white/[0.02] transition-all duration-200"
               >
                 {cat}
               </Link>
@@ -98,7 +98,7 @@ function SearchResults() {
               <Link
                 key={cat}
                 href={`/category/${cat.toLowerCase()}`}
-                className="text-sm px-4 py-2 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 hover:bg-white/[0.02] transition-all duration-200"
+                className="text-sm px-4 py-2 rounded-lg border border-white/[0.06] text-muted hover:text-accent hover:border-accent/40 hover:bg-white/[0.02] transition-all duration-200"
               >
                 {cat}
               </Link>

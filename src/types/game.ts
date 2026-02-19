@@ -11,6 +11,7 @@ export interface Game {
   color: string;
   featured?: boolean;
   isNew?: boolean;
+  preview?: string;
 }
 
 export type Category =

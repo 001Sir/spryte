@@ -5,9 +5,16 @@ import RecentlyPlayed from '@/components/game/RecentlyPlayed';
 import Link from 'next/link';
 import Image from 'next/image';
 
+const difficultyDot: Record<string, string> = {
+  Easy: '#4ade80',
+  Medium: '#f59e0b',
+  Hard: '#e94560',
+};
+
 export default function Home() {
   const featured = games.find((g) => g.featured) || games[0];
   const categories = getAllCategories();
+  const newGames = games.filter((g) => g.isNew);
 
   const websiteJsonLd = {
     '@context': 'https://schema.org',
@@ -47,8 +54,13 @@ export default function Home() {
     })),
   };
 
+  // Split featured title for accent styling
+  const titleWords = featured.title.split(' ');
+  const firstWord = titleWords[0];
+  const restWords = titleWords.slice(1).join(' ');
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
@@ -61,156 +73,264 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(gameListJsonLd) }}
       />
-      {/* Hero */}
-      <section className="relative rounded-2xl overflow-hidden mb-14 border border-border shadow-[0_0_60px_rgba(233,69,96,0.06)]">
-        <div
-          className="animate-gradient p-8 sm:p-12 md:p-16 relative"
-          style={{
-            background: `linear-gradient(135deg, ${featured.color}20, #e9456020, ${featured.color}30, #0a0a0f)`,
-            backgroundSize: '200% 200%',
-          }}
-        >
-          {/* Subtle decorative circles */}
-          <div
-            className="absolute top-[-50px] right-[-50px] w-[200px] h-[200px] rounded-full opacity-10 blur-3xl"
-            style={{ background: featured.color }}
-          />
-          <div
-            className="absolute bottom-[-30px] left-[20%] w-[150px] h-[150px] rounded-full opacity-10 blur-3xl"
-            style={{ background: '#e94560' }}
-          />
 
-          <div className="relative max-w-lg">
-            <Image
-              src="/logo.png"
-              alt=""
-              width={64}
-              height={64}
-              className="rounded-full mb-4 shadow-lg"
+      {/* ── Hero — Full viewport cinematic ── */}
+      <section className="relative min-h-screen flex items-end overflow-hidden">
+        {/* Blurred backdrop — video if preview exists, otherwise thumbnail */}
+        <div className="absolute inset-0 z-[1]">
+          {featured.preview ? (
+            <video
+              src={featured.preview}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover opacity-30"
               aria-hidden="true"
-              priority
             />
-            <span className="text-xs font-medium uppercase tracking-wider text-accent">
-              Featured Game
+          ) : (
+            <Image
+              src={featured.thumbnail}
+              alt=""
+              fill
+              className="object-cover opacity-30"
+              priority
+              aria-hidden="true"
+            />
+          )}
+        </div>
+        {/* Vignette */}
+        <div className="absolute inset-0 z-[2]" style={{ background: 'radial-gradient(ellipse at 50% 30%, transparent 20%, #06050e 80%)' }} />
+        {/* Bottom gradient — strong fade to bg */}
+        <div className="absolute bottom-0 left-0 right-0 h-[70%] z-[3]" style={{ background: 'linear-gradient(to top, #06050e 0%, #06050e 15%, rgba(6,5,14,0.8) 40%, transparent)' }} />
+
+        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-10 pb-20 pt-32">
+          {/* Eyebrow with pulsing dot */}
+          <div className="flex items-center gap-2 mb-5">
+            <span className="w-2 h-2 rounded-full bg-accent animate-pulse-dot" />
+            <span className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-accent">
+              Now Playing
             </span>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mt-2 mb-4 leading-tight" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.5)' }}>
-              {featured.title}
-            </h1>
-            <p className="text-muted mb-6 text-lg leading-relaxed">{featured.description}</p>
+          </div>
 
-            {/* Stat badges */}
-            <div className="flex flex-wrap gap-3 mb-8">
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-foreground/80 backdrop-blur-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent" aria-hidden="true">
-                  <rect x="2" y="6" width="20" height="12" rx="2" /><path d="M6 12h4M8 10v4" />
-                </svg>
-                {games.length} Games
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-foreground/80 backdrop-blur-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-400" aria-hidden="true">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                {categories.length} Categories
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-foreground/80 backdrop-blur-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-400" aria-hidden="true">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                </svg>
-                Free Forever
-              </span>
-            </div>
+          {/* Title with accent word */}
+          <h1
+            className="text-[clamp(2.5rem,7vw,4.5rem)] font-black leading-[1] tracking-tight mb-4 max-w-[700px]"
+            style={{ letterSpacing: '-0.03em' }}
+          >
+            {firstWord} <span className="text-accent">{restWords}</span>
+          </h1>
 
+          <p className="text-muted text-[1.05rem] leading-relaxed max-w-[500px] mb-9">
+            {featured.description}
+          </p>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-4 mb-8">
             <Link
               href={`/games/${featured.slug}`}
-              className="animate-glow inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-7 py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-accent/20"
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-[14px] bg-accent text-white font-bold text-[0.95rem] transition-all duration-300 hover:-translate-y-0.5 shadow-[0_4px_30px_rgba(233,69,96,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_8px_40px_rgba(233,69,96,0.4),inset_0_1px_0_rgba(255,255,255,0.15)]"
               aria-label={`Play ${featured.title} now`}
             >
-              Play Now
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M8 5v14l11-7z" />
               </svg>
+              Play Now
+            </Link>
+            <Link
+              href={`/games/${featured.slug}#how-to-play`}
+              className="inline-flex items-center gap-2 px-7 py-4 rounded-[14px] backdrop-blur-lg bg-white/[0.04] border border-white/[0.1] text-foreground font-semibold text-[0.9rem] transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.2]"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+              </svg>
+              How to Play
             </Link>
           </div>
+
+          {/* Meta row */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-[0.8rem] text-dim">
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: difficultyDot[featured.difficulty] || '#9896a8' }}
+              />
+              {featured.difficulty}
+            </div>
+            <span className="text-[0.8rem] text-dim">
+              {featured.categories.join(' / ')}
+            </span>
+            <span className="text-[0.8rem] text-dim">
+              {featured.controls.split(',')[0]}
+            </span>
+          </div>
+        </div>
+
+        {/* Game preview card — floating on right (desktop) */}
+        <div className="hidden lg:block absolute right-10 xl:right-20 bottom-24 z-10">
+          <div className="relative w-[320px] rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5)] group/preview">
+            <div className="aspect-[16/10] relative overflow-hidden">
+              {featured.preview ? (
+                <video
+                  src={featured.preview}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Image
+                  src={featured.thumbnail}
+                  alt={`${featured.title} preview`}
+                  fill
+                  sizes="320px"
+                  className="object-cover"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#111024] via-transparent to-transparent" />
+              {/* Play overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/preview:bg-black/40 transition-colors">
+                <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center shadow-[0_4px_20px_rgba(233,69,96,0.4)] transition-transform duration-300 group-hover/preview:scale-110">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white" className="ml-0.5" aria-hidden="true">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div className="bg-card p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[0.7rem] font-semibold text-foreground">{featured.title}</span>
+                <span className="text-[0.6rem] text-dim px-2 py-0.5 rounded bg-white/[0.04]">{featured.categories[0]}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll cue */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 animate-scroll-cue">
+          <span className="text-[0.65rem] uppercase tracking-[0.1em] text-dim">Scroll</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-dim" aria-hidden="true">
+            <path d="M12 5v14M5 12l7 7 7-7" />
+          </svg>
         </div>
       </section>
 
-      {/* New Games */}
-      {games.filter((g) => g.isNew).length > 0 && (
-        <section className="mb-14">
-          <div className="flex items-center gap-3 mb-6">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-400 shrink-0" aria-hidden="true">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-            <h2 className="text-2xl font-bold">New Games</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-10">
+        {/* ── New Releases — Horizontal Showcase ── */}
+        {newGames.length > 0 && (
+          <section className="mb-20 pt-12">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-baseline gap-3">
+                <h2 className="text-[1.3rem] font-bold tracking-tight">New Releases</h2>
+                <span className="text-dim text-[0.85rem]">{newGames.length} games just dropped</span>
+              </div>
+            </div>
+            <div className="flex gap-5 overflow-x-auto pb-4 snap-scroll-x">
+              {newGames.map((game) => (
+                <Link
+                  key={game.slug}
+                  href={`/games/${game.slug}`}
+                  className="group shrink-0 w-[340px] rounded-2xl overflow-hidden border border-white/[0.06] bg-card hover:border-white/[0.12] card-glow transition-all duration-400"
+                  style={{
+                    '--glow-color': `${game.color}20`,
+                  } as React.CSSProperties}
+                  aria-label={`Play ${game.title}`}
+                >
+                  <div
+                    className="aspect-[16/10] relative overflow-hidden"
+                    style={{ background: `linear-gradient(135deg, ${game.color}22, ${game.color}44)` }}
+                  >
+                    <Image
+                      src={game.thumbnail}
+                      alt={`${game.title} thumbnail`}
+                      fill
+                      sizes="340px"
+                      className="object-cover transition-transform duration-600 group-hover:scale-105"
+                      style={{ transitionTimingFunction: 'var(--ease-cinematic)' }}
+                    />
+                    {/* Overlay on hover with blur */}
+                    <div className="absolute inset-0 bg-[#06050e]/60 backdrop-blur-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center shadow-[0_4px_20px_rgba(233,69,96,0.4)] scale-[0.8] group-hover:scale-100 transition-transform duration-300">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white" className="ml-0.5" aria-hidden="true">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                    {/* Badges */}
+                    <div className="absolute top-3 left-3 flex gap-1.5 z-[2]">
+                      <span className="text-[0.6rem] font-bold uppercase tracking-[0.06em] px-2.5 py-1 rounded-md backdrop-blur-md bg-green-500/20 text-green-400 border border-green-500/20">
+                        New
+                      </span>
+                    </div>
+                  </div>
+                  {/* Body */}
+                  <div className="p-4">
+                    <div className="font-bold text-[0.95rem] mb-1.5">{game.title}</div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[0.7rem] text-dim px-2 py-0.5 rounded bg-white/[0.04]">
+                        {game.categories[0]}
+                      </span>
+                      <span className="flex items-center gap-1 text-[0.7rem] text-dim">
+                        <span
+                          className="w-[5px] h-[5px] rounded-full"
+                          style={{ background: difficultyDot[game.difficulty] || '#9896a8' }}
+                        />
+                        {game.difficulty}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Recently Played ── */}
+        <RecentlyPlayed />
+
+        {/* ── Category Strip ── */}
+        <section className="mb-20">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-[1.3rem] font-bold tracking-tight">Browse Categories</h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            {categories.map((cat) => {
+              const catGames = getGamesByCategory(cat);
+              const color = categoryColors[cat] || '#e94560';
+              const icon = categoryIcons[cat] || '🎮';
+              return (
+                <Link
+                  key={cat}
+                  href={`/category/${cat.toLowerCase()}`}
+                  className="group shrink-0 flex items-center gap-2.5 px-6 py-3.5 rounded-[14px] bg-card border border-white/[0.06] hover:border-white/[0.12] hover:bg-card-hover hover:-translate-y-0.5 transition-all duration-300 whitespace-nowrap"
+                >
+                  {/* Colored vertical bar */}
+                  <div
+                    className="w-[3px] h-6 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"
+                    style={{ background: color }}
+                  />
+                  <span className="text-lg" aria-hidden="true">{icon}</span>
+                  <span className="font-semibold text-[0.85rem] text-foreground">{cat}</span>
+                  <span className="text-[0.7rem] text-dim ml-1">({catGames.length})</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── All Games ── */}
+        <section className="mb-20" id="games">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-[1.3rem] font-bold tracking-tight">All Games</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {games.filter((g) => g.isNew).map((game) => (
+            {games.map((game) => (
               <GameCard key={game.slug} game={game} />
             ))}
           </div>
         </section>
-      )}
-
-      {/* Recently Played */}
-      <RecentlyPlayed />
-
-      {/* All Games */}
-      <section className="mb-14" id="games">
-        <div className="flex items-center gap-3 mb-6">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0" aria-hidden="true">
-            <rect x="2" y="6" width="20" height="12" rx="2" />
-            <path d="M6 12h4M8 10v4M15 11h.01M18 13h.01" />
-          </svg>
-          <h2 className="text-2xl font-bold">All Games</h2>
-          <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {games.map((game) => (
-            <GameCard key={game.slug} game={game} />
-          ))}
-        </div>
-      </section>
-
-      {/* Browse by Category */}
-      <section className="mb-14">
-        <div className="flex items-center gap-3 mb-6">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent shrink-0" aria-hidden="true">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-          <h2 className="text-2xl font-bold">Browse by Category</h2>
-          <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {categories.map((cat) => {
-            const catGames = getGamesByCategory(cat);
-            const color = categoryColors[cat] || '#e94560';
-            const icon = categoryIcons[cat] || '🎮';
-            return (
-              <Link
-                key={cat}
-                href={`/category/${cat.toLowerCase()}`}
-                className="group relative overflow-hidden rounded-xl border border-border bg-card hover:border-accent/40 transition-all duration-200 p-5 hover:scale-[1.02] card-glow"
-                style={{ '--glow-color': `${color}18` } as React.CSSProperties}
-              >
-                <div
-                  className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity"
-                  style={{ background: `linear-gradient(135deg, ${color}, transparent)` }}
-                />
-                {/* Colored top bar */}
-                <div className="absolute top-0 left-0 right-0 h-0.5 opacity-40 group-hover:opacity-80 transition-opacity" style={{ background: color }} />
-                <div className="relative">
-                  <span className="text-2xl mb-2 block" aria-hidden="true">{icon}</span>
-                  <h3 className="font-semibold text-foreground group-hover:text-accent transition-colors">{cat}</h3>
-                  <p className="text-xs text-muted mt-1">
-                    {catGames.length} game{catGames.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-    </div>
+      </div>
+    </>
   );
 }

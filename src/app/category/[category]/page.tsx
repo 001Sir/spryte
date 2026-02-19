@@ -61,7 +61,7 @@ export default async function CategoryPage({ params }: Props) {
 
       {/* Category header */}
       <div
-        className="rounded-xl p-6 mb-8 border border-border relative overflow-hidden"
+        className="rounded-xl p-6 mb-8 border border-white/[0.06] relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${color}15, ${color}08, transparent)`, borderLeftWidth: '3px', borderLeftColor: color }}
       >
         <div

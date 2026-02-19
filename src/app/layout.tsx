@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ScrollToTop from "@/components/layout/ScrollToTop";
+import Particles from "@/components/layout/Particles";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -95,18 +97,19 @@ export default function RootLayout({
         <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
         <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#e94560" />
+        <meta name="theme-color" content="#06050e" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Spryte Games" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
+        className={`${inter.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
       >
         <a href="#main-content" className="skip-nav">
           Skip to content
         </a>
+        <Particles />
         <Navbar />
-        <main id="main-content" className="animate-fade-in">{children}</main>
+        <main id="main-content" className="relative z-10 animate-fade-in">{children}</main>
         <Footer />
         <ScrollToTop />
       </body>

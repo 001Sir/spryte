@@ -39,7 +39,7 @@ export default function NotFound() {
           </Link>
           <Link
             href="/search"
-            className="inline-flex items-center justify-center gap-2 border border-border hover:border-accent/50 text-foreground px-6 py-3 rounded-xl font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 border border-white/[0.06] hover:border-accent/50 text-foreground px-6 py-3 rounded-xl font-semibold transition-colors"
           >
             Search Games
           </Link>

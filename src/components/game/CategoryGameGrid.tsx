@@ -35,7 +35,7 @@ export default function CategoryGameGrid({ games }: { games: Game[] }) {
             className={`text-sm px-3.5 py-1.5 rounded-lg border transition-all duration-200 min-h-[36px] ${
               difficulty === f
                 ? 'border-current font-medium shadow-sm'
-                : 'border-border text-muted hover:text-foreground hover:border-border hover:bg-white/[0.03]'
+                : 'border-white/[0.06] text-muted hover:text-foreground hover:border-white/[0.12] hover:bg-white/[0.03]'
             }`}
             style={difficulty === f ? { color: filterColors[f], borderColor: filterColors[f] + '40', background: filterColors[f] + '10' } : undefined}
           >

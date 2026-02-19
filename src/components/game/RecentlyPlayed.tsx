@@ -20,12 +20,14 @@ export default function RecentlyPlayed() {
           <circle cx="12" cy="12" r="10" />
           <path d="M12 6v6l4 2" />
         </svg>
-        <h2 className="text-2xl font-bold">Recently Played</h2>
-        <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
+        <h2 className="text-2xl font-bold text-foreground">Recently Played</h2>
+        <div className="flex-1 h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="flex gap-4 overflow-x-auto pb-2 snap-scroll-x">
         {recentGames.map((game) => (
-          <GameCard key={game.slug} game={game} />
+          <div key={game.slug} className="shrink-0 w-[200px]">
+            <GameCard game={game} />
+          </div>
         ))}
       </div>
     </section>

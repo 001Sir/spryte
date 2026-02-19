@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
 import { SoundEngine } from '@/lib/sounds';
+import GameRecorder from './GameRecorder';
 
 function LoadingSkeleton() {
   return (
@@ -179,9 +180,12 @@ export default function GamePlayer({ slug }: { slug: string }) {
           )}
         </button>
       </div>
-      <p className="text-xs text-muted mt-2 text-center">
-        Press <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">F</kbd> fullscreen · <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">M</kbd> mute · <kbd className="px-1.5 py-0.5 bg-card border border-border rounded text-[10px] font-mono">P</kbd> pause
-      </p>
+      <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
+        <p className="text-xs text-muted">
+          Press <kbd className="px-1.5 py-0.5 bg-card border border-white/[0.06] rounded text-[10px] font-mono">F</kbd> fullscreen · <kbd className="px-1.5 py-0.5 bg-card border border-white/[0.06] rounded text-[10px] font-mono">M</kbd> mute · <kbd className="px-1.5 py-0.5 bg-card border border-white/[0.06] rounded text-[10px] font-mono">P</kbd> pause
+        </p>
+        <GameRecorder slug={slug} />
+      </div>
     </div>
   );
 }

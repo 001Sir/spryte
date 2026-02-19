@@ -19,7 +19,7 @@ export default function Error(
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
           >
-            <circle cx="40" cy="40" r="36" fill="#14141f" stroke="#2a2a3e" strokeWidth="2" />
+            <circle cx="40" cy="40" r="36" fill="#111024" stroke="rgba(255,255,255,0.06)" strokeWidth="2" />
             <path
               d="M40 24v20"
               stroke="#e94560"
@@ -64,7 +64,7 @@ export default function Error(
           </button>
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 border border-border hover:border-accent/50 text-foreground px-6 py-3 rounded-xl font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 border border-white/[0.06] hover:border-accent/50 text-foreground px-6 py-3 rounded-xl font-semibold transition-colors"
           >
             <svg
               width="16"

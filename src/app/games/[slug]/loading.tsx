@@ -16,7 +16,7 @@ export default function GameLoading() {
       </div>
 
       {/* Game info skeleton */}
-      <div className="bg-card border border-border rounded-xl p-6 mt-6 space-y-4">
+      <div className="bg-card border border-white/[0.06] rounded-xl p-6 mt-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1 space-y-3">
             <div className="flex items-center gap-3">

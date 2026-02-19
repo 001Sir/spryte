@@ -45,7 +45,7 @@ export default function GameInfo({ game }: { game: Game }) {
 
   return (
     <div
-      className="bg-card border border-border rounded-xl p-6 mt-6 border-l-3"
+      className="bg-card border border-white/[0.06] rounded-xl p-6 mt-6 border-l-3"
       style={{ borderLeftColor: game.color, borderLeftWidth: '3px' }}
     >
       {/* Header row */}
@@ -80,7 +80,7 @@ export default function GameInfo({ game }: { game: Game }) {
           {/* Share button */}
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground hover:bg-white/[0.03] transition-all duration-200 min-h-[36px]"
+            className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border border-white/[0.06] hover:border-accent/50 text-muted hover:text-foreground hover:bg-white/[0.03] transition-all duration-200 min-h-[36px]"
             aria-label="Share game link"
           >
             {copied ? (
@@ -108,7 +108,7 @@ export default function GameInfo({ game }: { game: Game }) {
             <Link
               key={cat}
               href={`/category/${cat.toLowerCase()}`}
-              className="text-xs px-3 py-1.5 rounded-full border border-border hover:border-accent/50 text-muted hover:text-foreground hover:bg-white/[0.03] transition-all duration-200 min-h-[36px] flex items-center"
+              className="text-xs px-3 py-1.5 rounded-full border border-white/[0.06] hover:border-accent/50 text-muted hover:text-foreground hover:bg-white/[0.03] transition-all duration-200 min-h-[36px] flex items-center"
             >
               {cat}
             </Link>
@@ -129,7 +129,7 @@ export default function GameInfo({ game }: { game: Game }) {
       </div>
 
       {/* How to Play expandable section */}
-      <div className="mt-4 border-t border-border pt-4">
+      <div className="mt-4 border-t border-white/[0.06] pt-4">
         <button
           onClick={() => setHowToPlayOpen(!howToPlayOpen)}
           className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-colors w-full text-left min-h-[44px] group/htp"
