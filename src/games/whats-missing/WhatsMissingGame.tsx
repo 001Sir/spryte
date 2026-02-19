@@ -27,7 +27,7 @@ const SCENE_H = 420;
 
 // ─── Types ───
 type GameState = 'menu' | 'playing' | 'gameover';
-type PlayPhase = 'memorize' | 'find' | 'feedback' | 'transition';
+type PlayPhase = 'memorize' | 'flash' | 'find' | 'feedback' | 'transition';
 type InteractionMode = 'choice' | 'click';
 
 interface SceneObject {
@@ -1153,6 +1153,10 @@ export default function WhatsMissingGame() {
     let feedbackTimeout = false;
     const FEEDBACK_TIME = 90;
 
+    // Flash (memorize→find transition)
+    let flashTimer = 0;
+    const FLASH_TIME = 25;
+
     // Transition
     let transitionTimer = 0;
     const TRANSITION_TIME = 40;
@@ -1183,6 +1187,9 @@ export default function WhatsMissingGame() {
     // Scene entrance fade
     let sceneAlpha = 0;
 
+    // Pause
+    let paused = false;
+
     // ─── Helpers ───
     function addParticles(px: number, py: number, color: string, count: number) {
       for (let i = 0; i < count; i++) {
@@ -1206,8 +1213,10 @@ export default function WhatsMissingGame() {
       const diff = getDifficulty(round);
       interactionMode = diff.mode;
 
-      // Random theme
-      currentTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
+      // Random theme (avoid back-to-back repeats)
+      const prevThemeName = currentTheme.name;
+      const candidates = THEMES.filter(t => t.name !== prevThemeName);
+      currentTheme = candidates[Math.floor(Math.random() * candidates.length)];
       const rng = seededRng(Date.now() + round * 1000);
       sceneObjects = generateScene(currentTheme, diff.objectCount, rng);
 
@@ -1230,6 +1239,9 @@ export default function WhatsMissingGame() {
       clickY = -1;
       showClickMarker = false;
       sceneAlpha = 0;
+      paused = false;
+
+      if (round > 1) SoundEngine.play('waveStart');
     }
 
     function startFindPhase() {
@@ -1316,8 +1328,8 @@ export default function WhatsMissingGame() {
         streak++;
         if (streak > bestStreak) bestStreak = streak;
         totalCorrect++;
-        SoundEngine.play('collectGem');
-        if (streak > 0 && streak % 5 === 0) SoundEngine.play('comboUp');
+        SoundEngine.play('memoryRecall');
+        if (streak > 0 && streak % 5 === 0) SoundEngine.play('streakRise');
         const popX = removedObject ? removedObject.x + removedObject.w / 2 : W / 2;
         const popY = removedObject ? removedObject.y : H / 2;
         addParticles(popX, popY, GREEN, 20);
@@ -1328,7 +1340,7 @@ export default function WhatsMissingGame() {
       } else {
         lives--;
         streak = 0;
-        SoundEngine.play('playerDamage');
+        SoundEngine.play('wrongGuess');
         shakeMag = 8;
         if (removedObject) {
           addParticles(removedObject.x + removedObject.w / 2, removedObject.y + removedObject.h / 2, RED, 15);
@@ -1361,18 +1373,24 @@ export default function WhatsMissingGame() {
         } else {
           // Visual miss feedback
           addParticles(cx, cy, 'rgba(255,100,100,0.5)', 5);
-          SoundEngine.play('wallHit');
+          SoundEngine.play('lockIn');
         }
       }
     }
 
     function endGame() {
       state = 'gameover';
-      if (score > highScore) {
+      const isNewHigh = score > highScore;
+      if (isNewHigh) {
         highScore = score;
         setHighScore(SLUG, score);
       }
-      SoundEngine.play('gameOver');
+      if (isNewHigh) {
+        SoundEngine.play('victoryFanfare');
+        setTimeout(() => SoundEngine.play('newHighScore'), 500);
+      } else {
+        SoundEngine.play('gameOver');
+      }
     }
 
     // ─── Update ───
@@ -1408,6 +1426,7 @@ export default function WhatsMissingGame() {
       }
 
       if (state !== 'playing') return;
+      if (paused) return;
 
       // Scene entrance fade
       if (sceneAlpha < 1) {
@@ -1417,6 +1436,13 @@ export default function WhatsMissingGame() {
       if (phase === 'memorize') {
         phaseTimer++;
         if (phaseTimer >= phaseMaxTime) {
+          phase = 'flash';
+          flashTimer = 0;
+          SoundEngine.play('waveStart');
+        }
+      } else if (phase === 'flash') {
+        flashTimer++;
+        if (flashTimer >= FLASH_TIME) {
           startFindPhase();
         }
       } else if (phase === 'find') {
@@ -1427,7 +1453,7 @@ export default function WhatsMissingGame() {
           streak = 0;
           feedbackCorrect = false;
           feedbackTimeout = true;
-          SoundEngine.play('playerDamage');
+          SoundEngine.play('timeDrain');
           shakeMag = 8;
           phase = 'feedback';
           feedbackTimer = 0;
@@ -1535,7 +1561,8 @@ export default function WhatsMissingGame() {
     }
 
     function drawChoiceButtons() {
-      for (const btn of choiceButtons) {
+      for (let bi = 0; bi < choiceButtons.length; bi++) {
+        const btn = choiceButtons[bi];
         const isHovered = hoveredButton === btn.id;
         const isSelected = playerAnswer === btn.id;
 
@@ -1566,6 +1593,15 @@ export default function WhatsMissingGame() {
         ctx.beginPath();
         ctx.roundRect(btn.x, btn.y, btn.w, btn.h, 10);
         ctx.stroke();
+
+        // Number key hint
+        if (phase === 'find') {
+          ctx.fillStyle = 'rgba(255,255,255,0.25)';
+          ctx.font = 'bold 10px system-ui';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.fillText(`${bi + 1}`, btn.x + 6, btn.y + 5);
+        }
 
         ctx.fillStyle = TEXT_WHITE;
         ctx.font = 'bold 14px system-ui';
@@ -1727,6 +1763,27 @@ export default function WhatsMissingGame() {
 
         drawTimerBar(phaseMaxTime - phaseTimer, phaseMaxTime, H - 50);
 
+        // Object count hint
+        ctx.fillStyle = TEXT_DIM;
+        ctx.font = '12px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${sceneObjects.length} objects`, SCENE_X, SCENE_Y - 5);
+
+      } else if (phase === 'flash') {
+        // Brief blank screen with "What's Missing?" text
+        ctx.fillStyle = BG;
+        ctx.fillRect(SCENE_X, SCENE_Y, SCENE_W, SCENE_H);
+        drawHUD();
+        const flashAlpha = flashTimer < FLASH_TIME / 2
+          ? flashTimer / (FLASH_TIME / 2)
+          : 1;
+        ctx.globalAlpha = flashAlpha;
+        ctx.fillStyle = ACCENT;
+        ctx.font = 'bold 32px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText("What's Missing?", W / 2, H / 2);
+        ctx.globalAlpha = 1;
+
       } else if (phase === 'find') {
         // Draw scene without removed object
         drawScene(false);
@@ -1832,6 +1889,19 @@ export default function WhatsMissingGame() {
       drawParticles();
       drawScorePopups();
       ctx.restore();
+
+      // Pause overlay
+      if (paused) {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = TEXT_WHITE;
+        ctx.font = 'bold 36px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('Paused', W / 2, H / 2 - 10);
+        ctx.fillStyle = TEXT_DIM;
+        ctx.font = '16px system-ui';
+        ctx.fillText('Press P to resume', W / 2, H / 2 + 25);
+      }
     }
 
     function drawGameOverScreen() {
@@ -1995,7 +2065,7 @@ export default function WhatsMissingGame() {
         return;
       }
 
-      if (state === 'playing' && phase === 'find') {
+      if (state === 'playing' && phase === 'find' && !paused) {
         // Check choice buttons
         for (const btn of choiceButtons) {
           if (pos.x >= btn.x && pos.x <= btn.x + btn.w &&
@@ -2030,6 +2100,12 @@ export default function WhatsMissingGame() {
           startRound();
           SoundEngine.play('menuSelect');
         }
+      }
+
+      if ((e.key === 'p' || e.key === 'P') && state === 'playing') {
+        paused = !paused;
+        SoundEngine.play('click');
+        return;
       }
 
       if (state === 'playing' && phase === 'find' && interactionMode === 'choice') {
