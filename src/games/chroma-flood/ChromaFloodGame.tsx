@@ -307,6 +307,7 @@ export default function ChromaFloodGame() {
       gridOffsetY = hudHeight + Math.floor((availH - gs * cellSize) / 2) + 10;
 
       state = 'playing';
+      SoundEngine.startAmbient('colorful-puzzle');
     };
 
     // --- Flood fill ----------------------------------------------------
@@ -431,6 +432,7 @@ export default function ChromaFloodGame() {
 
         winTimeoutId = setTimeout(() => {
           state = 'gameover';
+          SoundEngine.stopAmbient();
           winTimeoutId = null;
         }, 600);
       }
@@ -1132,6 +1134,7 @@ export default function ChromaFloodGame() {
 
     return () => {
       cancelAnimationFrame(rafId);
+      SoundEngine.stopAmbient();
       if (winTimeoutId !== null) {
         clearTimeout(winTimeoutId);
       }

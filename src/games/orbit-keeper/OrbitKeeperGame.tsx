@@ -1118,6 +1118,7 @@ export default function OrbitKeeperGame() {
         gameWon = false;
         if (score > highScore) { highScore = score; newHighScore = true; setHighScore('orbit-keeper', score); }
         state = 'gameover';
+        SoundEngine.stopAmbient();
         SoundEngine.play('gameOver');
         return;
       }
@@ -1141,6 +1142,7 @@ export default function OrbitKeeperGame() {
           gameWon = true;
           if (score > highScore) { highScore = score; newHighScore = true; setHighScore('orbit-keeper', score); }
           state = 'gameover';
+          SoundEngine.stopAmbient();
           SoundEngine.play('levelComplete');
           return;
         }
@@ -1256,6 +1258,7 @@ export default function OrbitKeeperGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        SoundEngine.startAmbient('cosmic-orbit');
         score = 0;
         newHighScore = false;
         totalOrbitsStabilized = 0;
@@ -1323,6 +1326,7 @@ export default function OrbitKeeperGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        SoundEngine.startAmbient('cosmic-orbit');
         score = 0;
         newHighScore = false;
         totalOrbitsStabilized = 0;
@@ -1417,6 +1421,7 @@ export default function OrbitKeeperGame() {
     // Cleanup
     return () => {
       cancelAnimationFrame(animId);
+      SoundEngine.stopAmbient();
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('mousedown', onMouseDown);
       canvas.removeEventListener('mousemove', onMouseMove);

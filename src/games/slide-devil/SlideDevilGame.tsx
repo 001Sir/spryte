@@ -9,7 +9,8 @@ const W = 800;
 const H = 600;
 const PLAYER_SIZE = 20;
 const GRAVITY = 1800;
-const FRICTION = 0.005;
+const GROUND_DRAG = 0.997;  // Per-frame multiplier — near-1.0 = near-zero friction
+const AIR_DRAG = 0.99;
 const MOVE_ACCEL = 600;
 const JUMP_VEL = -520;
 const WALL_JUMP_VX = 380;
@@ -132,19 +133,26 @@ function makeLevels(): LevelConfig[] {
       name: 'Trust Fall',
       platforms: [
         ...border(),
-        { x: 50, y: 480, w: 180, h: 14 },   // 4: start platform
-        { x: 280, y: 400, w: 180, h: 14 },   // 5: middle - will crumble
-        { x: 520, y: 320, w: 180, h: 14 },   // 6: end platform
+        { x: 50, y: 480, w: 220, h: 14 },    // 4: start platform (generous run-up)
+        { x: 320, y: 430, w: 170, h: 14 },    // 5: middle — crumbles on contact
+        { x: 540, y: 370, w: 220, h: 14 },    // 6: end platform
+        { x: 460, y: 280, w: 14, h: 80 },     // 7: vertical bar between P5 & P6 (obstacle)
+        { x: 200, y: 340, w: 80, h: 14 },     // 8: small rescue ledge (hard to reach back)
       ],
       spikes: [
-        { x: 280, y: H - 28, w: 180, h: 14, dir: 'up' },
+        { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },  // full floor spikes — no safe landing
       ],
       startX: 120, startY: 450,
-      exitX: 650, exitY: 290,
+      exitX: 690, exitY: 340,
       traps: [
         makeTrap(
           { type: 'playerOnPlatform', platformIndex: 5 },
           { type: 'removePlatform', platformIndex: 5 }
+        ),
+        // Troll: screen shake when you think you've made it
+        makeTrap(
+          { type: 'playerNearExit', threshold: 50 },
+          { type: 'shakeScreen', intensity: 5 }
         ),
       ],
       deathQuote: DEATH_QUOTES[1],
@@ -154,9 +162,9 @@ function makeLevels(): LevelConfig[] {
       name: 'The Bait',
       platforms: [
         ...border(),
-        { x: 50, y: 500, w: 700, h: 14 },
-        { x: 200, y: 380, w: 120, h: 14 },
-        { x: 450, y: 300, w: 120, h: 14 },
+        { x: 50, y: 500, w: 700, h: 14 },     // 4: wide floor
+        { x: 200, y: 440, w: 140, h: 14 },     // 5: step (60px gap)
+        { x: 450, y: 380, w: 140, h: 14 },     // 6: step (60px gap)
       ],
       spikes: [],
       startX: 100, startY: 470,
@@ -164,7 +172,7 @@ function makeLevels(): LevelConfig[] {
       traps: [
         makeTrap(
           { type: 'playerNearExit', threshold: 80 },
-          { type: 'moveExit', exitX: 100, exitY: 270 }
+          { type: 'moveExit', exitX: 100, exitY: 350 }
         ),
       ],
       deathQuote: DEATH_QUOTES[2],
@@ -174,10 +182,10 @@ function makeLevels(): LevelConfig[] {
       name: 'Reversal',
       platforms: [
         ...border(),
-        { x: 50, y: 480, w: 200, h: 14 },
-        { x: 300, y: 400, w: 200, h: 14 },
-        { x: 300, y: 200, w: 200, h: 14 },
-        { x: 550, y: 120, w: 200, h: 14 },
+        { x: 50, y: 480, w: 200, h: 14 },     // 4: start
+        { x: 300, y: 420, w: 200, h: 14 },     // 5 (60px gap — gravity flip handles upper plats)
+        { x: 300, y: 200, w: 200, h: 14 },     // 6 (reached via gravity flip)
+        { x: 550, y: 120, w: 200, h: 14 },     // 7 (reached via gravity flip)
       ],
       spikes: [],
       startX: 120, startY: 450,
@@ -199,18 +207,19 @@ function makeLevels(): LevelConfig[] {
       name: 'The Squeeze',
       platforms: [
         ...border(),
-        { x: 50, y: 480, w: 150, h: 14 },
-        { x: 250, y: 380, w: 80, h: 14 },    // 5: wall-jump platform
-        { x: 470, y: 380, w: 80, h: 14 },    // 6: wall-jump platform
-        { x: 350, y: 200, w: 100, h: 14 },
-        { x: 600, y: 120, w: 150, h: 14 },
+        { x: 50, y: 480, w: 150, h: 14 },     // 4: start
+        { x: 250, y: 420, w: 100, h: 14 },     // 5 (60px gap)
+        { x: 470, y: 420, w: 100, h: 14 },     // 6 (same height)
+        { x: 350, y: 350, w: 120, h: 14 },     // 7 (70px gap)
+        { x: 200, y: 280, w: 120, h: 14 },     // 8 (70px gap)
+        { x: 500, y: 210, w: 150, h: 14 },     // 9 (70px gap)
       ],
       spikes: [],
       startX: 100, startY: 450,
-      exitX: 700, exitY: 90,
+      exitX: 620, exitY: 180,
       traps: [
         makeTrap(
-          { type: 'playerPassY', value: 400, direction: 'left' },
+          { type: 'playerPassY', value: 430, direction: 'left' },
           { type: 'crushWalls', crushSpeed: 60, crushWallIndices: [2, 3] }
         ),
         makeTrap(
@@ -309,17 +318,17 @@ function makeLevels(): LevelConfig[] {
       name: 'Mirror Mirror',
       platforms: [
         ...border(),
-        { x: 50, y: 480, w: 180, h: 14 },
-        { x: 300, y: 400, w: 200, h: 14 },
-        { x: 550, y: 320, w: 200, h: 14 },
-        { x: 200, y: 240, w: 150, h: 14 },
-        { x: 500, y: 160, w: 200, h: 14 },
+        { x: 50, y: 500, w: 180, h: 14 },     // 4 (60px gaps throughout)
+        { x: 300, y: 440, w: 200, h: 14 },     // 5
+        { x: 550, y: 380, w: 200, h: 14 },     // 6
+        { x: 200, y: 320, w: 150, h: 14 },     // 7
+        { x: 500, y: 260, w: 200, h: 14 },     // 8
       ],
       spikes: [
         { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },
       ],
-      startX: 120, startY: 450,
-      exitX: 650, exitY: 130,
+      startX: 120, startY: 470,
+      exitX: 650, exitY: 230,
       traps: [
         makeTrap(
           { type: 'timer', value: 0.5 },
@@ -333,18 +342,18 @@ function makeLevels(): LevelConfig[] {
       name: 'Bait & Switch',
       platforms: [
         ...border(),
-        { x: 50, y: 480, w: 200, h: 14 },
-        { x: 350, y: 400, w: 200, h: 14 },
-        { x: 600, y: 320, w: 180, h: 14 },
-        { x: 200, y: 200, w: 150, h: 14 },
+        { x: 50, y: 480, w: 200, h: 14 },     // 4 (60px gaps)
+        { x: 350, y: 420, w: 200, h: 14 },     // 5
+        { x: 600, y: 360, w: 180, h: 14 },     // 6
+        { x: 200, y: 300, w: 150, h: 14 },     // 7
       ],
       spikes: [],
       startX: 120, startY: 450,
-      exitX: 700, exitY: 290,
+      exitX: 700, exitY: 330,
       traps: [
         makeTrap(
           { type: 'playerNearExit', threshold: 60 },
-          { type: 'fakeExit', exitX: 280, exitY: 170 }
+          { type: 'fakeExit', exitX: 280, exitY: 270 }
         ),
       ],
       deathQuote: DEATH_QUOTES[9],
@@ -405,15 +414,15 @@ function makeLevels(): LevelConfig[] {
       name: 'The Funhouse',
       platforms: [
         ...border(),
-        { x: 50, y: 480, w: 180, h: 14 },
-        { x: 280, y: 420, w: 140, h: 14 },   // 5: bouncer
-        { x: 500, y: 350, w: 140, h: 14 },
-        { x: 300, y: 200, w: 140, h: 14 },
-        { x: 600, y: 140, w: 160, h: 14 },
+        { x: 50, y: 480, w: 180, h: 14 },     // 4: start
+        { x: 280, y: 420, w: 140, h: 14 },     // 5: bouncer (60px gap)
+        { x: 500, y: 350, w: 140, h: 14 },     // 6 (70px gap — or reachable from bounce)
+        { x: 300, y: 280, w: 140, h: 14 },     // 7 (70px gap from P6)
+        { x: 600, y: 210, w: 160, h: 14 },     // 8 (70px gap from P7)
       ],
       spikes: [],
       startX: 120, startY: 450,
-      exitX: 700, exitY: 110,
+      exitX: 700, exitY: 180,
       traps: [
         makeTrap(
           { type: 'playerOnPlatform', platformIndex: 5 },
@@ -425,7 +434,7 @@ function makeLevels(): LevelConfig[] {
         ),
         makeTrap(
           { type: 'playerNearExit', threshold: 100 },
-          { type: 'moveExit', exitX: 120, exitY: 170 }
+          { type: 'moveExit', exitX: 400, exitY: 240 }
         ),
         makeTrap(
           { type: 'playerPassX', value: 450 },
@@ -439,18 +448,18 @@ function makeLevels(): LevelConfig[] {
       name: 'Trust Nothing',
       platforms: [
         ...border(),
-        { x: 50, y: 500, w: 150, h: 14 },    // 4
-        { x: 240, y: 440, w: 120, h: 14 },    // 5: crumbles
-        { x: 400, y: 380, w: 120, h: 14 },    // 6: bouncer
-        { x: 560, y: 320, w: 120, h: 14 },    // 7: crumbles
-        { x: 350, y: 200, w: 120, h: 14 },    // 8
-        { x: 600, y: 140, w: 160, h: 14 },    // 9
+        { x: 50, y: 500, w: 150, h: 14 },     // 4: start
+        { x: 240, y: 440, w: 120, h: 14 },     // 5: crumbles (60px gap)
+        { x: 400, y: 380, w: 120, h: 14 },     // 6: bouncer (60px gap)
+        { x: 560, y: 320, w: 120, h: 14 },     // 7: crumbles (60px gap)
+        { x: 350, y: 260, w: 120, h: 14 },     // 8 (60px gap)
+        { x: 600, y: 200, w: 160, h: 14 },     // 9 (60px gap)
       ],
       spikes: [
         { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },
       ],
       startX: 100, startY: 470,
-      exitX: 700, exitY: 110,
+      exitX: 700, exitY: 170,
       traps: [
         makeTrap({ type: 'playerOnPlatform', platformIndex: 5 }, { type: 'removePlatform', platformIndex: 5 }),
         makeTrap(
@@ -463,7 +472,7 @@ function makeLevels(): LevelConfig[] {
         ),
         makeTrap({ type: 'playerOnPlatform', platformIndex: 7 }, { type: 'removePlatform', platformIndex: 7 }),
         makeTrap({ type: 'playerPassX', value: 500 }, { type: 'reverseControls', duration: 2.5 }),
-        makeTrap({ type: 'playerNearExit', threshold: 80 }, { type: 'moveExit', exitX: 80, exitY: 170 }),
+        makeTrap({ type: 'playerNearExit', threshold: 80 }, { type: 'moveExit', exitX: 200, exitY: 290 }),
       ],
       deathQuote: DEATH_QUOTES[13],
     },
@@ -472,19 +481,19 @@ function makeLevels(): LevelConfig[] {
       name: 'Final Slide',
       platforms: [
         ...border(),
-        { x: 30, y: 500, w: 150, h: 14 },    // 4: start
-        { x: 220, y: 440, w: 120, h: 14 },    // 5: crumbles
-        { x: 380, y: 380, w: 120, h: 14 },    // 6: crumbles
-        { x: 540, y: 320, w: 120, h: 14 },    // 7
-        { x: 400, y: 220, w: 120, h: 14 },    // 8
-        { x: 200, y: 160, w: 120, h: 14 },    // 9
-        { x: 600, y: 120, w: 170, h: 14 },    // 10
+        { x: 30, y: 500, w: 150, h: 14 },     // 4: start
+        { x: 220, y: 440, w: 120, h: 14 },     // 5: crumbles (60px gap)
+        { x: 380, y: 380, w: 120, h: 14 },     // 6: crumbles (60px gap)
+        { x: 540, y: 320, w: 120, h: 14 },     // 7 (60px gap)
+        { x: 400, y: 260, w: 120, h: 14 },     // 8 (60px gap — gravity flip assists)
+        { x: 200, y: 200, w: 120, h: 14 },     // 9 (60px gap)
+        { x: 600, y: 140, w: 170, h: 14 },     // 10 (60px gap)
       ],
       spikes: [
         { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },
       ],
       startX: 80, startY: 470,
-      exitX: 700, exitY: 90,
+      exitX: 700, exitY: 110,
       traps: [
         makeTrap({ type: 'playerOnPlatform', platformIndex: 5 }, { type: 'removePlatform', platformIndex: 5 }),
         makeTrap({ type: 'playerOnPlatform', platformIndex: 6 }, { type: 'removePlatform', platformIndex: 6 }),
@@ -495,11 +504,11 @@ function makeLevels(): LevelConfig[] {
         ),
         makeTrap(
           { type: 'playerNearExit', threshold: 80 },
-          { type: 'moveExit', exitX: 650, exitY: 490 }
+          { type: 'moveExit', exitX: 650, exitY: 50 }
         ),
         makeTrap(
           { type: 'playerNearExit', threshold: 60 },
-          { type: 'moveExit', exitX: 100, exitY: 490 }
+          { type: 'moveExit', exitX: 100, exitY: 80 }
         ),
         makeTrap({ type: 'timer', value: 8 }, { type: 'reverseControls', duration: 3 }),
         makeTrap({ type: 'timer', value: 15 }, { type: 'spawnSpikes', spikes: [
@@ -528,7 +537,7 @@ export default function SlideDevilGame() {
     ctx.scale(dpr, dpr);
 
     // ── State ──
-    type GState = 'menu' | 'playing' | 'dead' | 'levelComplete';
+    type GState = 'menu' | 'playing' | 'dead' | 'levelComplete' | 'victory';
     let state: GState = 'menu';
     let levels = makeLevels();
     let currentLevel = 0;
@@ -555,6 +564,8 @@ export default function SlideDevilGame() {
     // Player visual
     let scaleX = 1, scaleY = 1;
     let eyeTrackX = 0, eyeTrackY = 0;
+    let wasOnGround = false;
+    let gravityFlipVisual = 0; // rotation tween for gravity flip feedback
 
     // Particles & trail
     let particles: Particle[] = [];
@@ -651,6 +662,8 @@ export default function SlideDevilGame() {
       reverseTimer = 0;
       scaleX = 1;
       scaleY = 1;
+      wasOnGround = false;
+      gravityFlipVisual = 0;
       removedPlatforms = new Set();
       platformFadeTimers = new Map();
       spawnedSpikes = [];
@@ -670,6 +683,9 @@ export default function SlideDevilGame() {
       paused = false;
     };
 
+    // Death quote state
+    let currentDeathQuote = '';
+
     // ── Die ──
     const die = () => {
       spawnParticles(px + PLAYER_SIZE / 2, py + PLAYER_SIZE / 2, 25, '#ef4444', 5);
@@ -679,7 +695,10 @@ export default function SlideDevilGame() {
       SoundEngine.play('gameOver');
       levelDeaths++;
       totalDeaths++;
+      // Pick random death quote
+      currentDeathQuote = DEATH_QUOTES[Math.floor(Math.random() * DEATH_QUOTES.length)];
       state = 'dead';
+      SoundEngine.stopAmbient();
     };
 
     // ── Trap System ──
@@ -731,7 +750,7 @@ export default function SlideDevilGame() {
           trap.fired = true;
           trap.warningTimer = 0.15;
           warningFlash = 0.15;
-          SoundEngine.play('playerDamage');
+          SoundEngine.play('trollActivate');
           applyEffect(trap, lv);
         }
       }
@@ -799,6 +818,7 @@ export default function SlideDevilGame() {
           if (e.platformIndex !== undefined) {
             platformFadeTimers.set(e.platformIndex, 0.3);
             shakeIntensity = 4;
+            SoundEngine.play('floorCrumble');
           }
           break;
         case 'spawnSpikes':
@@ -809,31 +829,32 @@ export default function SlideDevilGame() {
           break;
         case 'flipGravity':
           gravityDir *= -1;
+          gravityFlipVisual = Math.PI; // Start rotation animation
           shakeIntensity = 6;
-          SoundEngine.play('portalEnter');
+          SoundEngine.play('gravityFlip');
           break;
         case 'moveExit':
-          exitTargetX = e.exitX || exitX;
-          exitTargetY = e.exitY || exitY;
+          exitTargetX = e.exitX ?? exitX;
+          exitTargetY = e.exitY ?? exitY;
           exitMoving = true;
           break;
         case 'reverseControls':
           controlsReversed = true;
-          reverseTimer = e.duration || 3;
+          reverseTimer = e.duration ?? 3;
           break;
         case 'crushWalls':
           crushWallsActive = true;
-          crushSpeed = e.crushSpeed || 60;
-          crushWallIndices = e.crushWallIndices || [];
+          crushSpeed = e.crushSpeed ?? 60;
+          crushWallIndices = e.crushWallIndices ?? [];
           break;
         case 'dropCeiling':
           ceilingDropActive = true;
-          ceilingDropIndex = e.ceilingIndex || 0;
-          ceilingDropSpeed = e.dropSpeed || 80;
+          ceilingDropIndex = e.ceilingIndex ?? 0;
+          ceilingDropSpeed = e.dropSpeed ?? 80;
           break;
         case 'fakePlatformBounce':
           if (e.platformIndex !== undefined) {
-            pvy = (e.bounceVel || -800) * gravityDir;
+            pvy = (e.bounceVel ?? -800) * gravityDir;
             onGround = false;
             coyoteTimer = 0;
             SoundEngine.play('bounce');
@@ -845,8 +866,8 @@ export default function SlideDevilGame() {
           fakeExitActive = true;
           fakeExitX = exitX;
           fakeExitY = exitY;
-          exitX = e.exitX || 100;
-          exitY = e.exitY || 100;
+          exitX = e.exitX ?? 100;
+          exitY = e.exitY ?? 100;
           spawnedSpikes.push({ x: fakeExitX - 20, y: fakeExitY - 20, w: 40, h: 40, dir: 'up' });
           shakeIntensity = 8;
           break;
@@ -877,11 +898,12 @@ export default function SlideDevilGame() {
       // Horizontal acceleration
       pvx += moveDir * MOVE_ACCEL * dt;
 
-      // Near-zero friction (only when on ground)
+      // Near-zero friction — multiplier close to 1.0 means player barely slows down
+      const steps = dt * 60; // Normalize to ~60fps
       if (onGround) {
-        pvx *= Math.pow(FRICTION, dt);
+        pvx *= Math.pow(GROUND_DRAG, steps);
       } else {
-        pvx *= Math.pow(0.1, dt); // Slight air drag
+        pvx *= Math.pow(AIR_DRAG, steps);
       }
 
       // Gravity
@@ -944,6 +966,45 @@ export default function SlideDevilGame() {
           pvx = 0;
           onWallLeft = true;
         }
+      }
+
+      // Landing impact detection
+      if (onGround && !wasOnGround) {
+        const impactSpeed = Math.abs(pvy);
+        if (impactSpeed > 100) {
+          SoundEngine.play('wallHit');
+          scaleX = 1.3;
+          scaleY = 0.7;
+          shakeIntensity = Math.min(impactSpeed * 0.01, 4);
+          spawnParticles(px + PLAYER_SIZE / 2, py + PLAYER_SIZE, 3 + Math.floor(impactSpeed / 100), '#ffffff', 2);
+        }
+      }
+      wasOnGround = onGround;
+
+      // Sliding sparks on ground at speed
+      if (onGround && Math.abs(pvx) > 100 && Math.random() < Math.abs(pvx) / 400 * dt * 60) {
+        const sparkX = px + (pvx > 0 ? 0 : PLAYER_SIZE);
+        const sparkY = gravityDir === 1 ? py + PLAYER_SIZE : py;
+        spawnParticles(sparkX, sparkY, 1, '#fbbf24', 1.5);
+      }
+
+      // Crush death — check if player is squeezed too tight
+      let minX = 0, maxX = W, minY = 0, maxY = H;
+      for (const { rect: plat } of activePlatforms) {
+        if (aabbOverlap(px - 1, py, PLAYER_SIZE + 2, PLAYER_SIZE, plat.x, plat.y, plat.w, plat.h)) {
+          // Horizontal squeeze
+          if (plat.x + plat.w / 2 < px + PLAYER_SIZE / 2) minX = Math.max(minX, plat.x + plat.w);
+          else maxX = Math.min(maxX, plat.x);
+        }
+        if (aabbOverlap(px, py - 1, PLAYER_SIZE, PLAYER_SIZE + 2, plat.x, plat.y, plat.w, plat.h)) {
+          // Vertical squeeze
+          if (plat.y + plat.h / 2 < py + PLAYER_SIZE / 2) minY = Math.max(minY, plat.y + plat.h);
+          else maxY = Math.min(maxY, plat.y);
+        }
+      }
+      if (maxX - minX < PLAYER_SIZE - 2 || maxY - minY < PLAYER_SIZE - 2) {
+        die();
+        return;
       }
 
       // Coyote time
@@ -1145,10 +1206,23 @@ export default function SlideDevilGame() {
       ctx.save();
       ctx.translate(cx, cy);
 
+      // Gravity flip rotation tween
+      if (gravityFlipVisual > 0.01) {
+        gravityFlipVisual = lerp(gravityFlipVisual, 0, 8 * dt);
+        ctx.rotate(gravityFlipVisual);
+      }
+
+      // Slight velocity-based tilt
+      const tilt = clamp(pvx * 0.0003, -0.15, 0.15);
+      ctx.rotate(tilt);
+
       // Squash/stretch lerp
       scaleX = lerp(scaleX, 1, 6 * dt);
       scaleY = lerp(scaleY, 1, 6 * dt);
       ctx.scale(scaleX, scaleY);
+
+      // Flip upside down when gravity reversed
+      if (gravityDir === -1) ctx.scale(1, -1);
 
       const hs = PLAYER_SIZE / 2;
 
@@ -1180,7 +1254,7 @@ export default function SlideDevilGame() {
 
       // Eyes (tracking movement direction)
       const targetEyeX = speed > 10 ? (pvx / speed) * 2 : 0;
-      const targetEyeY = speed > 10 ? (pvy / speed) * 2 : 0;
+      const targetEyeY = speed > 10 ? (pvy / speed) * 2 * gravityDir : 0;
       eyeTrackX = lerp(eyeTrackX, targetEyeX, 8 * dt);
       eyeTrackY = lerp(eyeTrackY, targetEyeY, 8 * dt);
 
@@ -1204,6 +1278,20 @@ export default function SlideDevilGame() {
       ctx.fill();
 
       ctx.restore();
+
+      // Wall-slide indicator (draw outside player transform)
+      if ((onWallLeft || onWallRight) && !onGround) {
+        const wallX = onWallLeft ? px - 3 : px + PLAYER_SIZE + 3;
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        // Small wall-grip lines
+        for (let i = 0; i < 3; i++) {
+          ctx.fillRect(wallX - 1, py + 3 + i * 6, 2, 4);
+        }
+        // Wall-slide particles
+        if (Math.random() < 0.3) {
+          spawnParticles(wallX, py + PLAYER_SIZE / 2, 1, '#ffffff', 0.5);
+        }
+      }
     };
 
     const drawHUD = (lv: LevelConfig) => {
@@ -1360,10 +1448,10 @@ export default function SlideDevilGame() {
       ctx.textAlign = 'center';
       ctx.fillText('YOU DIED', W / 2, 200);
 
-      // Death quote
+      // Death quote (randomized per death)
       ctx.fillStyle = 'rgba(255,150,100,0.8)';
       ctx.font = 'italic 15px monospace';
-      ctx.fillText(lv.deathQuote, W / 2, 250);
+      ctx.fillText(currentDeathQuote, W / 2, 250);
 
       // Stats
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -1480,6 +1568,122 @@ export default function SlideDevilGame() {
       ctx.textAlign = 'left';
     };
 
+    const drawVictory = (dt: number) => {
+      menuTime += dt;
+      drawBg();
+
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, H);
+
+      // Title
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 44px monospace';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 20;
+      ctx.fillText('YOU SURVIVED!', W / 2, 120);
+      ctx.shadowBlur = 0;
+
+      // Subtitle
+      ctx.fillStyle = 'rgba(220,38,38,0.8)';
+      ctx.font = '16px monospace';
+      ctx.fillText('All 15 levels conquered. The Devil is impressed.', W / 2, 160);
+
+      // Stats
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = '20px monospace';
+      ctx.fillText(`Final Score: ${totalScore}`, W / 2, 220);
+      ctx.fillText(`Total Deaths: ${totalDeaths}`, W / 2, 255);
+
+      // Rating
+      let rating = 'Slippery Legend';
+      if (totalDeaths > 50) rating = 'Eternal Slider';
+      else if (totalDeaths > 30) rating = 'Determined Drifter';
+      else if (totalDeaths > 15) rating = 'Quick Learner';
+      else if (totalDeaths > 5) rating = 'Natural Talent';
+      else if (totalDeaths === 0) rating = 'Impossible! Are you cheating?';
+
+      ctx.fillStyle = '#dc2626';
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText(`Rating: ${rating}`, W / 2, 300);
+
+      // High score
+      ctx.fillStyle = '#888';
+      ctx.font = '14px monospace';
+      ctx.fillText(`Best: ${highScore}`, W / 2, 335);
+      if (newHighScore) {
+        ctx.fillStyle = '#22c55e';
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText('New High Score!', W / 2, 355);
+      }
+
+      // Animated devil character celebration
+      const celebY = 410 + Math.sin(menuTime * 3) * 5;
+      ctx.save();
+      ctx.translate(W / 2, celebY);
+      const celebScale = 1.5;
+      ctx.scale(celebScale, celebScale);
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#dc2626';
+      ctx.shadowBlur = 15;
+      ctx.fillRect(-10, -10, 20, 20);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath(); ctx.moveTo(-8, -10); ctx.lineTo(-5, -18); ctx.lineTo(-2, -10); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(2, -10); ctx.lineTo(5, -18); ctx.lineTo(8, -10); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.arc(-4, -2, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(4, -2, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath(); ctx.arc(-4, -2, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(4, -2, 1, 0, Math.PI * 2); ctx.fill();
+      // Smile
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 2, 4, 0.1, Math.PI - 0.1); ctx.stroke();
+      ctx.restore();
+
+      // Play again button
+      const btnX = W / 2 - 90;
+      const btnY = 480;
+      const btnW = 180;
+      const btnH = 48;
+      ctx.fillStyle = menuHover ? 'rgba(220,38,38,0.3)' : 'rgba(220,38,38,0.1)';
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(btnX, btnY, btnW, btnH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#dc2626';
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText('PLAY AGAIN', W / 2, btnY + 30);
+
+      ctx.textAlign = 'left';
+
+      // Victory particles
+      if (Math.random() < dt * 5) {
+        spawnParticles(Math.random() * W, Math.random() * H * 0.3, 2, Math.random() > 0.5 ? '#fbbf24' : '#dc2626', 2);
+      }
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt * 60;
+        p.y += p.vy * dt * 60;
+        p.vy += 1 * dt;
+        p.life -= dt * 0.8;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+      for (const p of particles) {
+        ctx.globalAlpha = p.life / p.maxLife;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    };
+
     const drawPlaying = (dt: number) => {
       drawBg();
 
@@ -1498,13 +1702,15 @@ export default function SlideDevilGame() {
       drawExit(exitX, exitY);
       if (fakeExitActive) drawFakeExit(fakeExitX, fakeExitY);
 
-      // Trail
+      // Trail (speed-dependent intensity)
+      const playerSpeed = Math.sqrt(pvx * pvx + pvy * pvy);
+      const trailIntensity = clamp(playerSpeed / 300, 0.1, 1);
       for (let i = 0; i < trail.length; i++) {
         const t = trail[i];
-        ctx.globalAlpha = t.alpha * 0.4;
-        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = t.alpha * 0.4 * trailIntensity;
+        ctx.fillStyle = playerSpeed > 400 ? '#fbbf24' : '#ffffff';
         ctx.beginPath();
-        ctx.arc(t.x, t.y, 2 * t.alpha, 0, Math.PI * 2);
+        ctx.arc(t.x, t.y, (2 + trailIntensity) * t.alpha, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
@@ -1608,6 +1814,9 @@ export default function SlideDevilGame() {
         case 'levelComplete':
           drawLevelComplete();
           break;
+        case 'victory':
+          drawVictory(dt);
+          break;
       }
 
       rafId = requestAnimationFrame(gameLoop);
@@ -1625,6 +1834,7 @@ export default function SlideDevilGame() {
       if (state === 'menu') {
         if (pos.x >= W / 2 - 80 && pos.x <= W / 2 + 80 && pos.y >= 380 && pos.y <= 428) {
           state = 'playing';
+          SoundEngine.startAmbient('slide-chaos');
           SoundEngine.play('menuSelect');
           currentLevel = 0;
           totalScore = 0;
@@ -1648,6 +1858,17 @@ export default function SlideDevilGame() {
         }
         return;
       }
+
+      if (state === 'victory') {
+        if (pos.x >= W / 2 - 90 && pos.x <= W / 2 + 90 && pos.y >= 480 && pos.y <= 528) {
+          state = 'menu';
+          totalScore = 0;
+          totalDeaths = 0;
+          newHighScore = false;
+          SoundEngine.play('menuSelect');
+        }
+        return;
+      }
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -1661,6 +1882,9 @@ export default function SlideDevilGame() {
       if (state === 'levelComplete') {
         nextBtnHover = pos.x >= W / 2 - 90 && pos.x <= W / 2 + 90 && pos.y >= 390 && pos.y <= 438;
       }
+      if (state === 'victory') {
+        menuHover = pos.x >= W / 2 - 90 && pos.x <= W / 2 + 90 && pos.y >= 480 && pos.y <= 528;
+      }
     };
 
     const retryLevel = () => {
@@ -1668,18 +1892,20 @@ export default function SlideDevilGame() {
       initLevel(currentLevel);
       levelDeaths = savedDeaths;
       state = 'playing';
+      SoundEngine.startAmbient('slide-chaos');
       SoundEngine.play('menuSelect');
     };
 
     const advanceLevel = () => {
       if (currentLevel >= levels.length - 1) {
-        state = 'menu';
-        totalScore = 0;
-        totalDeaths = 0;
-        newHighScore = false;
+        state = 'victory';
+        SoundEngine.stopAmbient();
+        SoundEngine.play('victoryFanfare');
+        if (newHighScore) setTimeout(() => SoundEngine.play('newHighScore'), 500);
       } else {
         currentLevel++;
         state = 'playing';
+        SoundEngine.startAmbient('slide-chaos');
         initLevel(currentLevel);
       }
       SoundEngine.play('menuSelect');
@@ -1710,6 +1936,7 @@ export default function SlideDevilGame() {
       if (state === 'menu') {
         if (key === ' ' || key === 'Enter') {
           state = 'playing';
+          SoundEngine.startAmbient('slide-chaos');
           SoundEngine.play('menuSelect');
           currentLevel = 0;
           totalScore = 0;
@@ -1730,6 +1957,17 @@ export default function SlideDevilGame() {
       if (state === 'levelComplete') {
         if (key === ' ' || key === 'Enter') {
           advanceLevel();
+        }
+        return;
+      }
+
+      if (state === 'victory') {
+        if (key === ' ' || key === 'Enter') {
+          state = 'menu';
+          totalScore = 0;
+          totalDeaths = 0;
+          newHighScore = false;
+          SoundEngine.play('menuSelect');
         }
         return;
       }
@@ -1774,6 +2012,7 @@ export default function SlideDevilGame() {
 
     return () => {
       cancelAnimationFrame(rafId);
+      SoundEngine.stopAmbient();
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);

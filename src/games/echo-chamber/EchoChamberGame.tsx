@@ -358,6 +358,7 @@ export default function EchoChamberGame() {
     function onClick() {
       if (state === 'menu') {
         state = 'playing';
+        SoundEngine.startAmbient('dark-cave');
         SoundEngine.play('menuSelect');
         level = 1;
         score = 0;
@@ -411,6 +412,7 @@ export default function EchoChamberGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        SoundEngine.startAmbient('dark-cave');
         level = 1;
         score = 0;
         newHighScore = false;
@@ -679,6 +681,7 @@ export default function EchoChamberGame() {
         if (Math.sqrt(edx * edx + edy * edy) < pRadius + 8) {
           // game over
           state = 'gameover';
+          SoundEngine.stopAmbient();
           goMessage = 'Caught in the dark!';
           goScore = score;
           goLevel = level;
@@ -715,6 +718,7 @@ export default function EchoChamberGame() {
         if (level > 10) {
           // win
           state = 'gameover';
+          SoundEngine.stopAmbient();
           goMessage = 'You escaped all 10 levels!';
           goScore = score;
           goLevel = level - 1;
@@ -1058,6 +1062,7 @@ export default function EchoChamberGame() {
     /* ── cleanup ─────────────────────────────────────────── */
     return () => {
       cancelAnimationFrame(animId);
+      SoundEngine.stopAmbient();
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('touchstart', onTouchStart);

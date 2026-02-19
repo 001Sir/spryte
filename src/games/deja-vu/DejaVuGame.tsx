@@ -309,11 +309,13 @@ export default function DejaVuGame() {
     let scorePopups: ScorePopup[] = [];
     let shakeAmount = 0;
     let shakeTimer = 0;
+    let wrongFlash = 0;
 
     // Animation state
     let displayScore = 0;
     let gameOverTime = 0;
     let lifeLostFlash = 0;
+    let feedbackFade = 0;
 
     // Button hover states
     let hoverNew = false;
@@ -393,6 +395,7 @@ export default function DejaVuGame() {
     // ─── Start game ───────────────────────────────────────────────────
     function startGame() {
       state = 'playing';
+      SoundEngine.startAmbient('memory-ethereal');
       round = 0;
       score = 0;
       lives = 3;
@@ -408,6 +411,8 @@ export default function DejaVuGame() {
       displayScore = 0;
       gameOverTime = 0;
       lifeLostFlash = 0;
+      wrongFlash = 0;
+      feedbackFade = 0;
       planRounds();
       nextRound();
       SoundEngine.play('menuSelect');
@@ -426,7 +431,7 @@ export default function DejaVuGame() {
       lastAnswer = null;
       playPhase = 'entrance';
       phaseTimer = 0;
-      SoundEngine.play('waveStart');
+      SoundEngine.play('shapeReveal');
     }
 
     // ─── Answer logic ─────────────────────────────────────────────────
@@ -450,11 +455,11 @@ export default function DejaVuGame() {
           base = 200;
           decoysIdentified++;
           lastAnswerDetail = 'DECOY CAUGHT!';
-          SoundEngine.play('collectPowerup');
+          SoundEngine.play('decoyCatch');
         } else if (currentRoundType === 'repeat' && !answeredNew) {
           base = 150;
           lastAnswerDetail = 'SEEN BEFORE!';
-          SoundEngine.play('collectGem');
+          SoundEngine.play('memoryRecall');
         } else {
           base = 100;
           lastAnswerDetail = 'CORRECT!';
@@ -469,22 +474,26 @@ export default function DejaVuGame() {
         lastAnswer = 'correct';
 
         // Streak milestone sounds
-        if (streak === 5 || streak === 10) SoundEngine.play('comboUp');
+        if (streak === 5 || streak === 10) SoundEngine.play('streakRise');
 
-        // Particles
+        // Particles + popup
         spawnParticles(W / 2, H / 2 - 40, TEAL, 15);
+        spawnScorePopup(W / 2, H / 2 - 60, `+${pts}`, TEAL);
       } else {
         lives--;
         streak = 0;
         lastPoints = 0;
         lastAnswer = 'wrong';
         lastAnswerDetail = isActuallyNew ? 'IT WAS NEW' : 'YOU SAW IT';
-        SoundEngine.play('playerDamage');
+        SoundEngine.play('wrongGuess');
         shakeAmount = 8;
         shakeTimer = 0.3;
         lifeLostFlash = 0.5;
+        wrongFlash = 0.15;
         spawnParticles(W / 2, H / 2 - 40, '#ef4444', 12);
       }
+
+      feedbackFade = 0;
 
       // Add to seen pool if it was a genuinely new shape (includes decoys)
       if ((currentRoundType === 'new' || currentRoundType === 'decoy') && currentShape) {
@@ -496,16 +505,17 @@ export default function DejaVuGame() {
     }
 
     function handleTimeout() {
-      responseTimes.push(roundTimerMax);
       lives--;
       streak = 0;
       lastPoints = 0;
       lastAnswer = 'timeout';
       lastAnswerDetail = 'TIME UP!';
-      SoundEngine.play('spikeHit');
+      SoundEngine.play('timeDrain');
       shakeAmount = 6;
       shakeTimer = 0.3;
       lifeLostFlash = 0.5;
+      wrongFlash = 0.15;
+      feedbackFade = 0;
 
       if ((currentRoundType === 'new' || currentRoundType === 'decoy') && currentShape) {
         seenShapes.push(currentShape);
@@ -517,11 +527,20 @@ export default function DejaVuGame() {
 
     function endGame() {
       state = 'gameover';
-      if (score > highScore) {
+      SoundEngine.stopAmbient();
+      const isNewHigh = score > highScore;
+      if (isNewHigh) {
         highScore = score;
         setHighScore('deja-vu', score);
       }
-      SoundEngine.play('gameOver');
+      if (round >= TOTAL_ROUNDS && lives > 0) {
+        SoundEngine.play('victoryFanfare');
+      } else {
+        SoundEngine.play('gameOver');
+      }
+      if (isNewHigh) {
+        setTimeout(() => SoundEngine.play('newHighScore'), 500);
+      }
     }
 
     // ─── Particles ────────────────────────────────────────────────────
@@ -558,6 +577,14 @@ export default function DejaVuGame() {
 
       // Life lost flash decay
       if (lifeLostFlash > 0) lifeLostFlash -= dt;
+
+      // Wrong answer red flash decay
+      if (wrongFlash > 0) wrongFlash -= dt;
+
+      // Feedback text fade-in
+      if (state === 'playing' && playPhase === 'feedback') {
+        feedbackFade = Math.min(1, feedbackFade + dt * 5);
+      }
 
       // Particles
       for (let i = particles.length - 1; i >= 0; i--) {
@@ -679,19 +706,17 @@ export default function DejaVuGame() {
       ctx.fillStyle = BG;
       ctx.fillRect(-10, -10, W + 20, H + 20);
 
-      // Subtle background pattern
-      ctx.globalAlpha = 0.03;
-      for (let x = 0; x < W; x += 40) {
-        for (let y = 0; y < H; y += 40) {
-          ctx.fillStyle = (x + y) % 80 === 0 ? '#fff' : '#000';
-          ctx.fillRect(x, y, 1, 1);
-        }
-      }
-      ctx.globalAlpha = 1;
-
       if (state === 'menu') drawMenu();
       else if (state === 'playing') drawPlaying();
       else if (state === 'gameover') drawGameOver();
+
+      // Wrong answer red flash overlay
+      if (wrongFlash > 0) {
+        ctx.globalAlpha = wrongFlash * 0.4;
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = 1;
+      }
 
       // Particles
       for (const p of particles) {
@@ -779,11 +804,24 @@ export default function DejaVuGame() {
       if (!currentShape) return;
 
       // HUD - top bar
-      // Round counter
+      // Round progress bar
+      const progW = 120, progH = 4, progX = 16, progY = 26;
+      drawRoundedRect(ctx, progX, progY, progW, progH, 2);
+      ctx.fillStyle = '#222';
+      ctx.fill();
+      const progFill = ((round + 1) / TOTAL_ROUNDS) * progW;
+      if (progFill > 1) {
+        drawRoundedRect(ctx, progX, progY, progFill, progH, 2);
+        ctx.fillStyle = TEAL;
+        ctx.fill();
+      }
       ctx.fillStyle = '#666';
-      ctx.font = '14px system-ui, -apple-system, sans-serif';
+      ctx.font = '11px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`Round ${round + 1}/${TOTAL_ROUNDS}`, 20, 30);
+      ctx.fillText(`${round + 1}/${TOTAL_ROUNDS}`, progX, progY + 16);
+      // Memory pool count
+      ctx.fillStyle = '#555';
+      ctx.fillText(`${seenShapes.length} memorized`, progX + 55, progY + 16);
 
       // Lives with flash on loss
       for (let i = 0; i < 3; i++) {
@@ -899,13 +937,18 @@ export default function DejaVuGame() {
         ctx.fillText(`${roundTimer.toFixed(1)}s`, W / 2, barY + 22);
       }
 
-      // Feedback overlay
+      // Feedback overlay with fade-in
       if (playPhase === 'feedback') {
+        ctx.globalAlpha = feedbackFade;
         ctx.textAlign = 'center';
         if (lastAnswer === 'correct') {
+          ctx.save();
+          ctx.shadowColor = TEAL;
+          ctx.shadowBlur = 12 * feedbackFade;
           ctx.fillStyle = TEAL;
           ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
           ctx.fillText(lastAnswerDetail, W / 2, shapeY + 110);
+          ctx.restore();
           if (lastPoints > 0) {
             ctx.fillStyle = '#aaa';
             ctx.font = '18px system-ui, -apple-system, sans-serif';
@@ -917,8 +960,9 @@ export default function DejaVuGame() {
           ctx.fillText(lastAnswerDetail, W / 2, shapeY + 110);
           ctx.fillStyle = '#888';
           ctx.font = '16px system-ui, -apple-system, sans-serif';
-          ctx.fillText('-1 ♥', W / 2, shapeY + 140);
+          ctx.fillText('-1 \u2665', W / 2, shapeY + 140);
         }
+        ctx.globalAlpha = 1;
       }
 
       // Response buttons (only during responding phase)
@@ -955,15 +999,17 @@ export default function DejaVuGame() {
       }
 
       // Fade-in title (phase 1: 0-0.3s)
+      const survived = round >= TOTAL_ROUNDS;
+      const titleText = survived ? 'COMPLETE!' : 'GAME OVER';
       const titleAlpha = clamp(gameOverTime / 0.3, 0, 1);
       ctx.save();
       ctx.globalAlpha = titleAlpha;
-      ctx.shadowColor = TEAL;
+      ctx.shadowColor = survived ? '#fbbf24' : TEAL;
       ctx.shadowBlur = 20;
-      ctx.fillStyle = TEAL;
+      ctx.fillStyle = survived ? '#fbbf24' : TEAL;
       ctx.font = 'bold 42px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('GAME OVER', W / 2, 90);
+      ctx.fillText(titleText, W / 2, 90);
       ctx.restore();
 
       // Fade-in score (phase 2: 0.2-0.6s)
@@ -995,7 +1041,7 @@ export default function DejaVuGame() {
       const statsY = 235;
       const stats = [
         { label: 'Rounds', value: `${round}/${TOTAL_ROUNDS}` },
-        { label: 'Accuracy', value: `${responseTimes.length > 0 ? Math.round((totalCorrect / responseTimes.length) * 100) : 0}%` },
+        { label: 'Accuracy', value: `${round > 0 ? Math.round((totalCorrect / round) * 100) : 0}%` },
         { label: 'Best Streak', value: `${bestStreak}` },
         { label: 'Decoys Caught', value: `${decoysIdentified}` },
         { label: 'Avg Response', value: `${responseTimes.length > 0 ? (responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length).toFixed(2) : 0}s` },
@@ -1089,7 +1135,7 @@ export default function DejaVuGame() {
         return;
       }
 
-      if (state === 'gameover' && inRect(mouseX, mouseY, btnPlayAgainRect)) {
+      if (state === 'gameover' && gameOverTime >= 1.3 && inRect(mouseX, mouseY, btnPlayAgainRect)) {
         startGame();
         return;
       }
@@ -1097,10 +1143,8 @@ export default function DejaVuGame() {
       if (state === 'playing' && playPhase === 'responding') {
         if (inRect(mouseX, mouseY, btnNewRect)) {
           submitAnswer(true);
-          if (lastAnswer === 'correct') spawnScorePopup(W / 2, H / 2 - 60, `+${lastPoints}`, TEAL);
         } else if (inRect(mouseX, mouseY, btnSeenRect)) {
           submitAnswer(false);
-          if (lastAnswer === 'correct') spawnScorePopup(W / 2, H / 2 - 60, `+${lastPoints}`, TEAL);
         }
       }
     }
@@ -1119,7 +1163,7 @@ export default function DejaVuGame() {
       }
 
       if (state === 'gameover') {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if ((e.key === 'Enter' || e.key === ' ') && gameOverTime >= 1.3) {
           startGame();
         }
         return;
@@ -1128,10 +1172,8 @@ export default function DejaVuGame() {
       if (state === 'playing' && playPhase === 'responding') {
         if (e.key === 'n' || e.key === 'N' || e.key === 'ArrowLeft') {
           submitAnswer(true);
-          if (lastAnswer === 'correct') spawnScorePopup(W / 2, H / 2 - 60, `+${lastPoints}`, TEAL);
         } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowRight') {
           submitAnswer(false);
-          if (lastAnswer === 'correct') spawnScorePopup(W / 2, H / 2 - 60, `+${lastPoints}`, TEAL);
         }
       }
     }
@@ -1148,7 +1190,7 @@ export default function DejaVuGame() {
         return;
       }
 
-      if (state === 'gameover' && inRect(mouseX, mouseY, btnPlayAgainRect)) {
+      if (state === 'gameover' && gameOverTime >= 1.3 && inRect(mouseX, mouseY, btnPlayAgainRect)) {
         startGame();
         return;
       }
@@ -1156,10 +1198,8 @@ export default function DejaVuGame() {
       if (state === 'playing' && playPhase === 'responding') {
         if (inRect(mouseX, mouseY, btnNewRect)) {
           submitAnswer(true);
-          if (lastAnswer === 'correct') spawnScorePopup(W / 2, H / 2 - 60, `+${lastPoints}`, TEAL);
         } else if (inRect(mouseX, mouseY, btnSeenRect)) {
           submitAnswer(false);
-          if (lastAnswer === 'correct') spawnScorePopup(W / 2, H / 2 - 60, `+${lastPoints}`, TEAL);
         }
       }
     }
@@ -1185,6 +1225,7 @@ export default function DejaVuGame() {
 
     return () => {
       cancelAnimationFrame(animId);
+      SoundEngine.stopAmbient();
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('touchstart', handleTouchStart);

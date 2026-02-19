@@ -1380,6 +1380,7 @@ export default function WhatsMissingGame() {
 
     function endGame() {
       state = 'gameover';
+      SoundEngine.stopAmbient();
       const isNewHigh = score > highScore;
       if (isNewHigh) {
         highScore = score;
@@ -2034,6 +2035,7 @@ export default function WhatsMissingGame() {
         const btnX = W / 2 - btnW / 2, btnY = 360;
         if (pos.x >= btnX && pos.x <= btnX + btnW && pos.y >= btnY && pos.y <= btnY + btnH) {
           state = 'playing';
+          SoundEngine.startAmbient('missing-tension');
           round = 0;
           score = 0;
           lives = 3;
@@ -2052,6 +2054,7 @@ export default function WhatsMissingGame() {
         const btnX = W / 2 - btnW / 2, btnY = 360;
         if (pos.x >= btnX && pos.x <= btnX + btnW && pos.y >= btnY && pos.y <= btnY + btnH) {
           state = 'playing';
+          SoundEngine.startAmbient('missing-tension');
           round = 0;
           score = 0;
           lives = 3;
@@ -2090,6 +2093,7 @@ export default function WhatsMissingGame() {
         if (state === 'menu' || state === 'gameover') {
           e.preventDefault();
           state = 'playing';
+          SoundEngine.startAmbient('missing-tension');
           round = 0;
           score = 0;
           lives = 3;
@@ -2135,6 +2139,7 @@ export default function WhatsMissingGame() {
 
     return () => {
       cancelAnimationFrame(animId);
+      SoundEngine.stopAmbient();
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('touchstart', handleTouchStart);

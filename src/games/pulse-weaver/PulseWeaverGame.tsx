@@ -415,6 +415,7 @@ export default function PulseWeaverGame() {
     // ── Start / Reset Game ───────────────────────────────────────────────
     function startGame() {
       state = 'playing';
+      SoundEngine.startAmbient('synth-combat');
       paused = false;
       px = W / 2;
       py = H - 80;
@@ -768,6 +769,7 @@ export default function PulseWeaverGame() {
 
     function gameOver() {
       state = 'gameover';
+      SoundEngine.stopAmbient();
       finalScore = score;
       finalWave = wave;
       finalMaxCombo = maxCombo;
@@ -1353,6 +1355,7 @@ export default function PulseWeaverGame() {
     // ── Cleanup ──────────────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(animId);
+      SoundEngine.stopAmbient();
       canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('mousedown', onMouseDown);
       canvas.removeEventListener('mouseup', onMouseUp);

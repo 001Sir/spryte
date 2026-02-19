@@ -775,6 +775,7 @@ export default function SymbiosisGame() {
         host.hp = 0;
         if (score > highScore) { highScore = score; newHighScore = true; setHighScore('symbiosis', score); }
         state = 'GameOver';
+        SoundEngine.stopAmbient();
         spawnParticles(host.x, host.y, FUCHSIA, 30, 2);
         SoundEngine.play('gameOver');
         return;
@@ -1256,6 +1257,7 @@ export default function SymbiosisGame() {
         mouseClicked = false;
         if (state === 'Menu') {
           state = 'Playing';
+          SoundEngine.startAmbient('organic');
           initGame();
         } else if (state === 'GameOver') {
           state = 'Menu';
@@ -1309,6 +1311,7 @@ export default function SymbiosisGame() {
     return () => {
       running = false;
       cancelAnimationFrame(animId);
+      SoundEngine.stopAmbient();
       canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('mousedown', onMouseDown);
       canvas.removeEventListener('touchstart', onTouchStart);

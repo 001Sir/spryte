@@ -267,6 +267,7 @@ export default function TerravoreGame() {
       paused = false;
       generateLevel(0);
       state = 'Playing';
+      SoundEngine.startAmbient('underground');
       SoundEngine.play('menuSelect');
     }
 
@@ -546,6 +547,7 @@ export default function TerravoreGame() {
           totalScore += health * 50; // bonus for remaining health
           if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('terravore', totalScore); }
           state = 'GameOver';
+          SoundEngine.stopAmbient();
         }
       }
     }
@@ -763,6 +765,7 @@ export default function TerravoreGame() {
         totalScore += score;
         if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('terravore', totalScore); }
         state = 'GameOver';
+        SoundEngine.stopAmbient();
         SoundEngine.play('gameOver');
       }
 
@@ -1491,6 +1494,7 @@ export default function TerravoreGame() {
     // ── Cleanup ─────────────────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(animId);
+      SoundEngine.stopAmbient();
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('touchstart', onTouchStart);

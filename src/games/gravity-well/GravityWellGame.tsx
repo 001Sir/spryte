@@ -1129,6 +1129,7 @@ export default function GravityWellGame() {
           if (collision === 'debris') {
             if (score > highScore) { highScore = score; newHighScore = true; setHighScore('gravity-well', score); }
             state = 'gameover';
+            SoundEngine.stopAmbient();
             SoundEngine.play('gameOver');
           } else if (collision === 'goal') {
             // Calculate level score
@@ -1197,6 +1198,7 @@ export default function GravityWellGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        SoundEngine.startAmbient('space-gravity');
         score = 0;
         newHighScore = false;
         levelIndex = 0;
@@ -1207,6 +1209,7 @@ export default function GravityWellGame() {
 
       if (state === 'gameover') {
         state = 'playing';
+        SoundEngine.startAmbient('space-gravity');
         score = 0;
         newHighScore = false;
         levelIndex = 0;
@@ -1327,6 +1330,7 @@ export default function GravityWellGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        SoundEngine.startAmbient('space-gravity');
         score = 0;
         newHighScore = false;
         levelIndex = 0;
@@ -1336,6 +1340,7 @@ export default function GravityWellGame() {
 
       if (state === 'gameover') {
         state = 'playing';
+        SoundEngine.startAmbient('space-gravity');
         score = 0;
         newHighScore = false;
         levelIndex = 0;
@@ -1466,6 +1471,7 @@ export default function GravityWellGame() {
 
     return () => {
       cancelAnimationFrame(animId);
+      SoundEngine.stopAmbient();
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('click', handleClick);

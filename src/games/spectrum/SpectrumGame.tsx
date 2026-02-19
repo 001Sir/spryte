@@ -13,6 +13,9 @@ const TOTAL_ROUNDS = 15;
 const MAX_BASE_SCORE = 1000;
 const CHAIN_THRESHOLD = 0.15; // within 15% of range = accurate
 const HIGH_CONF_MIN = 3; // 3x+ = high confidence
+const TIMER_DURATION = 15;
+const QUICK_DRAW_THRESHOLD = 10; // timer must be > 10 (locked in within 5s)
+const QUICK_DRAW_BONUS = 50;
 
 // ─── Question bank ────────────────────────────────────────────────────────────
 interface Question {
@@ -22,88 +25,89 @@ interface Question {
   max: number;
   unit: string;
   category: string;
+  fact: string;
 }
 
 const QUESTIONS: Question[] = [
   // Geography
-  { text: 'What % of Earth\'s surface is covered by water?', answer: 71, min: 0, max: 100, unit: '%', category: 'Geography' },
-  { text: 'How many countries are in Africa?', answer: 54, min: 10, max: 100, unit: '', category: 'Geography' },
-  { text: 'What is the depth of the Mariana Trench in meters?', answer: 10994, min: 5000, max: 15000, unit: 'm', category: 'Geography' },
-  { text: 'What % of Earth\'s land is desert?', answer: 33, min: 0, max: 100, unit: '%', category: 'Geography' },
-  { text: 'How long is the Nile River in kilometers?', answer: 6650, min: 3000, max: 10000, unit: 'km', category: 'Geography' },
-  { text: 'How many time zones does Russia span?', answer: 11, min: 1, max: 20, unit: '', category: 'Geography' },
-  { text: 'What % of the world\'s population lives in Asia?', answer: 60, min: 20, max: 90, unit: '%', category: 'Geography' },
-  { text: 'How tall is Mount Everest in meters?', answer: 8849, min: 5000, max: 12000, unit: 'm', category: 'Geography' },
+  { text: 'What % of Earth\'s surface is covered by water?', answer: 71, min: 0, max: 100, unit: '%', category: 'Geography', fact: 'The Pacific Ocean alone covers more area than all of Earth\'s land combined.' },
+  { text: 'How many countries are in Africa?', answer: 54, min: 10, max: 100, unit: '', category: 'Geography', fact: 'Algeria, Africa\'s largest country, is bigger than all of Western Europe.' },
+  { text: 'What is the depth of the Mariana Trench in meters?', answer: 10994, min: 5000, max: 15000, unit: 'm', category: 'Geography', fact: 'If Everest sat at the bottom, there\'d still be over 2 km of water above it.' },
+  { text: 'What % of Earth\'s land is desert?', answer: 33, min: 0, max: 100, unit: '%', category: 'Geography', fact: 'Antarctica is technically the world\'s largest desert \u2014 it rarely snows there.' },
+  { text: 'How long is the Nile River in kilometers?', answer: 6650, min: 3000, max: 10000, unit: 'km', category: 'Geography', fact: 'The Nile flows through 11 different countries on its journey to the sea.' },
+  { text: 'How many time zones does Russia span?', answer: 11, min: 1, max: 20, unit: '', category: 'Geography', fact: 'When it\'s midnight in western Russia, it\'s already 10 AM in the far east.' },
+  { text: 'What % of the world\'s population lives in Asia?', answer: 60, min: 20, max: 90, unit: '%', category: 'Geography', fact: 'India and China together account for over 35% of the world\'s population.' },
+  { text: 'How tall is Mount Everest in meters?', answer: 8849, min: 5000, max: 12000, unit: 'm', category: 'Geography', fact: 'Everest grows about 4 mm taller each year due to tectonic plate movement.' },
 
   // Science
-  { text: 'What is the speed of light in thousands of km/s?', answer: 300, min: 100, max: 500, unit: 'k km/s', category: 'Science' },
-  { text: 'What is the boiling point of water in Fahrenheit?', answer: 212, min: 100, max: 400, unit: '\u00b0F', category: 'Science' },
-  { text: 'How many elements are on the periodic table?', answer: 118, min: 50, max: 200, unit: '', category: 'Science' },
-  { text: 'What % of the atmosphere is nitrogen?', answer: 78, min: 20, max: 100, unit: '%', category: 'Science' },
-  { text: 'At what temperature (C) does gold melt?', answer: 1064, min: 500, max: 2000, unit: '\u00b0C', category: 'Science' },
-  { text: 'How many bones does a shark have?', answer: 0, min: 0, max: 300, unit: '', category: 'Science' },
-  { text: 'What is the pH of pure water?', answer: 7, min: 0, max: 14, unit: '', category: 'Science' },
-  { text: 'How many teeth does an adult human have?', answer: 32, min: 10, max: 60, unit: '', category: 'Science' },
+  { text: 'What is the speed of light in thousands of km/s?', answer: 300, min: 100, max: 500, unit: 'k km/s', category: 'Science', fact: 'Light can circle Earth\'s equator about 7.5 times in a single second.' },
+  { text: 'What is the boiling point of water in Fahrenheit?', answer: 212, min: 100, max: 400, unit: '\u00b0F', category: 'Science', fact: 'At the top of Everest, water boils at just 160\u00b0F due to low air pressure.' },
+  { text: 'How many elements are on the periodic table?', answer: 118, min: 50, max: 200, unit: '', category: 'Science', fact: 'Only 94 elements occur naturally \u2014 the rest were created in laboratories.' },
+  { text: 'What % of the atmosphere is nitrogen?', answer: 78, min: 20, max: 100, unit: '%', category: 'Science', fact: 'We breathe in nitrogen with every breath, but our bodies can\'t use it.' },
+  { text: 'At what temperature (C) does gold melt?', answer: 1064, min: 500, max: 2000, unit: '\u00b0C', category: 'Science', fact: 'One ounce of gold can be stretched into a wire over 50 miles long.' },
+  { text: 'How many bones does a shark have?', answer: 0, min: 0, max: 300, unit: '', category: 'Science', fact: 'A shark\'s skeleton is made entirely of cartilage, like the tip of your nose.' },
+  { text: 'What is the pH of pure water?', answer: 7, min: 0, max: 14, unit: '', category: 'Science', fact: 'Human blood has a pH of 7.4 \u2014 even tiny changes can be life-threatening.' },
+  { text: 'How many teeth does an adult human have?', answer: 32, min: 10, max: 60, unit: '', category: 'Science', fact: 'Tooth enamel is the hardest substance in the human body, stronger than bone.' },
 
   // Space
-  { text: 'How many moons does Jupiter have?', answer: 95, min: 10, max: 150, unit: '', category: 'Space' },
-  { text: 'How old is the Sun in billions of years?', answer: 4.6, min: 1, max: 10, unit: 'B yrs', category: 'Space' },
-  { text: 'How many minutes does sunlight take to reach Earth?', answer: 8, min: 1, max: 30, unit: 'min', category: 'Space' },
-  { text: 'What is the surface temperature of the Sun in \u00b0C?', answer: 5500, min: 1000, max: 10000, unit: '\u00b0C', category: 'Space' },
-  { text: 'How many planets in our solar system?', answer: 8, min: 1, max: 15, unit: '', category: 'Space' },
-  { text: 'How far is the Moon from Earth in thousands of km?', answer: 384, min: 100, max: 800, unit: 'k km', category: 'Space' },
-  { text: 'What % of the universe is dark energy?', answer: 68, min: 10, max: 100, unit: '%', category: 'Space' },
-  { text: 'How many Earth days is a year on Mars?', answer: 687, min: 200, max: 1200, unit: 'days', category: 'Space' },
+  { text: 'How many moons does Jupiter have?', answer: 95, min: 10, max: 150, unit: '', category: 'Space', fact: 'Jupiter\'s moon Ganymede is bigger than the planet Mercury.' },
+  { text: 'How old is the Sun in billions of years?', answer: 4.6, min: 1, max: 10, unit: 'B yrs', category: 'Space', fact: 'The Sun converts 600 million tons of hydrogen into helium every second.' },
+  { text: 'How many minutes does sunlight take to reach Earth?', answer: 8, min: 1, max: 30, unit: 'min', category: 'Space', fact: 'Light leaving the Sun\'s core takes about 100,000 years to reach the surface.' },
+  { text: 'What is the surface temperature of the Sun in \u00b0C?', answer: 5500, min: 1000, max: 10000, unit: '\u00b0C', category: 'Space', fact: 'The Sun\'s core reaches 15 million \u00b0C \u2014 hot enough to fuse hydrogen atoms.' },
+  { text: 'How many planets in our solar system?', answer: 8, min: 1, max: 15, unit: '', category: 'Space', fact: 'Pluto was reclassified as a dwarf planet in 2006, ending a 76-year run.' },
+  { text: 'How far is the Moon from Earth in thousands of km?', answer: 384, min: 100, max: 800, unit: 'k km', category: 'Space', fact: 'The Moon is slowly drifting away from Earth at about 3.8 cm per year.' },
+  { text: 'What % of the universe is dark energy?', answer: 68, min: 10, max: 100, unit: '%', category: 'Space', fact: 'Dark energy makes up most of the universe, yet no one knows what it is.' },
+  { text: 'How many Earth days is a year on Mars?', answer: 687, min: 200, max: 1200, unit: 'days', category: 'Space', fact: 'A day on Mars is only about 37 minutes longer than a day on Earth.' },
 
   // History
-  { text: 'In what year did World War II end?', answer: 1945, min: 1900, max: 2000, unit: '', category: 'History' },
-  { text: 'How many years did the Roman Empire last?', answer: 503, min: 100, max: 1000, unit: 'yrs', category: 'History' },
-  { text: 'In what year was the first iPhone released?', answer: 2007, min: 1990, max: 2020, unit: '', category: 'History' },
-  { text: 'How old were the Egyptian pyramids when Cleopatra was born? (years)', answer: 2500, min: 500, max: 5000, unit: 'yrs', category: 'History' },
-  { text: 'In what year did humans first walk on the Moon?', answer: 1969, min: 1950, max: 2000, unit: '', category: 'History' },
-  { text: 'How many years ago was the printing press invented?', answer: 581, min: 200, max: 1000, unit: 'yrs', category: 'History' },
-  { text: 'In what year did the Titanic sink?', answer: 1912, min: 1850, max: 1950, unit: '', category: 'History' },
-  { text: 'How many people signed the US Declaration of Independence?', answer: 56, min: 10, max: 200, unit: '', category: 'History' },
+  { text: 'In what year did World War II end?', answer: 1945, min: 1900, max: 2000, unit: '', category: 'History', fact: 'Over 100 million people from more than 30 countries were involved in WWII.' },
+  { text: 'How many years did the Roman Empire last?', answer: 503, min: 100, max: 1000, unit: 'yrs', category: 'History', fact: 'At its peak, Rome had over 1 million residents \u2014 unmatched until 1800s London.' },
+  { text: 'In what year was the first iPhone released?', answer: 2007, min: 1990, max: 2020, unit: '', category: 'History', fact: 'The first iPhone had no App Store \u2014 it was added a year later in 2008.' },
+  { text: 'How old were the Egyptian pyramids when Cleopatra was born? (years)', answer: 2500, min: 500, max: 5000, unit: 'yrs', category: 'History', fact: 'Cleopatra lived closer in time to the Moon landing than to the pyramids\' construction.' },
+  { text: 'In what year did humans first walk on the Moon?', answer: 1969, min: 1950, max: 2000, unit: '', category: 'History', fact: 'The Apollo 11 computer had less processing power than a modern calculator.' },
+  { text: 'How many years ago was the printing press invented?', answer: 581, min: 200, max: 1000, unit: 'yrs', category: 'History', fact: 'Gutenberg\'s first major printed work was a 42-line Bible in Latin.' },
+  { text: 'In what year did the Titanic sink?', answer: 1912, min: 1850, max: 1950, unit: '', category: 'History', fact: 'The Titanic\'s band famously continued playing music as the ship went down.' },
+  { text: 'How many people signed the US Declaration of Independence?', answer: 56, min: 10, max: 200, unit: '', category: 'History', fact: 'The youngest signer, Edward Rutledge, was just 26 years old.' },
 
   // Pop Culture
-  { text: 'How many episodes of The Simpsons have aired (approx)?', answer: 770, min: 200, max: 1200, unit: '', category: 'Pop Culture' },
-  { text: 'How many Marvel Cinematic Universe films (through 2024)?', answer: 34, min: 10, max: 60, unit: '', category: 'Pop Culture' },
-  { text: 'In what year was Minecraft first released?', answer: 2011, min: 2000, max: 2020, unit: '', category: 'Pop Culture' },
-  { text: 'How many Harry Potter books are there?', answer: 7, min: 1, max: 15, unit: '', category: 'Pop Culture' },
-  { text: 'How many No. 1 hits did The Beatles have in the US?', answer: 20, min: 5, max: 50, unit: '', category: 'Pop Culture' },
-  { text: 'What year was YouTube founded?', answer: 2005, min: 1995, max: 2015, unit: '', category: 'Pop Culture' },
-  { text: 'How many Oscar nominations does Meryl Streep have?', answer: 21, min: 5, max: 40, unit: '', category: 'Pop Culture' },
-  { text: 'How many copies has Minecraft sold (millions)?', answer: 300, min: 50, max: 500, unit: 'M', category: 'Pop Culture' },
+  { text: 'How many episodes of The Simpsons have aired (approx)?', answer: 770, min: 200, max: 1200, unit: '', category: 'Pop Culture', fact: 'The Simpsons is the longest-running American animated program in TV history.' },
+  { text: 'How many Marvel Cinematic Universe films (through 2024)?', answer: 34, min: 10, max: 60, unit: '', category: 'Pop Culture', fact: 'The MCU is the highest-grossing film franchise ever, exceeding $30 billion.' },
+  { text: 'In what year was Minecraft first released?', answer: 2011, min: 2000, max: 2020, unit: '', category: 'Pop Culture', fact: 'Minecraft was originally called "Cave Game" during its early development.' },
+  { text: 'How many Harry Potter books are there?', answer: 7, min: 1, max: 15, unit: '', category: 'Pop Culture', fact: 'J.K. Rowling was rejected by 12 publishers before Harry Potter was accepted.' },
+  { text: 'How many No. 1 hits did The Beatles have in the US?', answer: 20, min: 5, max: 50, unit: '', category: 'Pop Culture', fact: 'The Beatles hold the record for most #1 hits on the Billboard Hot 100.' },
+  { text: 'What year was YouTube founded?', answer: 2005, min: 1995, max: 2015, unit: '', category: 'Pop Culture', fact: 'The first YouTube video, "Me at the zoo," is only 18 seconds long.' },
+  { text: 'How many Oscar nominations does Meryl Streep have?', answer: 21, min: 5, max: 40, unit: '', category: 'Pop Culture', fact: 'Streep holds the record for most Academy Award nominations of any actor.' },
+  { text: 'How many copies has Minecraft sold (millions)?', answer: 300, min: 50, max: 500, unit: 'M', category: 'Pop Culture', fact: 'Minecraft is the best-selling video game of all time across all platforms.' },
 
   // Human Body
-  { text: 'How many liters of blood are in the average adult body?', answer: 5, min: 1, max: 15, unit: 'L', category: 'Human Body' },
-  { text: 'How many bones are in the human body?', answer: 206, min: 100, max: 400, unit: '', category: 'Human Body' },
-  { text: 'What % of the human body is water?', answer: 60, min: 20, max: 90, unit: '%', category: 'Human Body' },
-  { text: 'How many times does the heart beat per day (thousands)?', answer: 100, min: 30, max: 200, unit: 'k', category: 'Human Body' },
-  { text: 'How many taste buds does the average person have?', answer: 10000, min: 2000, max: 20000, unit: '', category: 'Human Body' },
-  { text: 'How long is the small intestine in meters?', answer: 6, min: 1, max: 15, unit: 'm', category: 'Human Body' },
-  { text: 'How many muscles are in the human body?', answer: 600, min: 200, max: 1000, unit: '', category: 'Human Body' },
-  { text: 'Average body temperature in Fahrenheit?', answer: 98.6, min: 90, max: 110, unit: '\u00b0F', category: 'Human Body' },
+  { text: 'How many liters of blood are in the average adult body?', answer: 5, min: 1, max: 15, unit: 'L', category: 'Human Body', fact: 'Your body produces about 2 million new red blood cells every single second.' },
+  { text: 'How many bones are in the human body?', answer: 206, min: 100, max: 400, unit: '', category: 'Human Body', fact: 'Babies are born with roughly 270 bones \u2014 many fuse together as they grow.' },
+  { text: 'What % of the human body is water?', answer: 60, min: 20, max: 90, unit: '%', category: 'Human Body', fact: 'Your brain is about 75% water \u2014 even mild dehydration affects thinking.' },
+  { text: 'How many times does the heart beat per day (thousands)?', answer: 100, min: 30, max: 200, unit: 'k', category: 'Human Body', fact: 'In a lifetime, your heart pumps enough blood to fill over 200 train tank cars.' },
+  { text: 'How many taste buds does the average person have?', answer: 10000, min: 2000, max: 20000, unit: '', category: 'Human Body', fact: 'Taste buds are replaced every 10 to 14 days throughout your entire life.' },
+  { text: 'How long is the small intestine in meters?', answer: 6, min: 1, max: 15, unit: 'm', category: 'Human Body', fact: 'The "small" intestine is about 3 times longer than a person is tall.' },
+  { text: 'How many muscles are in the human body?', answer: 600, min: 200, max: 1000, unit: '', category: 'Human Body', fact: 'It takes about 17 muscles to smile but 43 muscles to frown.' },
+  { text: 'Average body temperature in Fahrenheit?', answer: 98.6, min: 90, max: 110, unit: '\u00b0F', category: 'Human Body', fact: 'Your body temperature naturally fluctuates \u2014 it\'s lowest in early morning.' },
 
   // Food
-  { text: 'How many calories are in a Big Mac?', answer: 550, min: 200, max: 1000, unit: 'cal', category: 'Food' },
-  { text: 'What % of a watermelon is water?', answer: 92, min: 50, max: 100, unit: '%', category: 'Food' },
-  { text: 'How many grapes does it take to make a bottle of wine?', answer: 600, min: 100, max: 1500, unit: '', category: 'Food' },
-  { text: 'How many cocoa beans to make 1 pound of chocolate?', answer: 400, min: 50, max: 1000, unit: '', category: 'Food' },
-  { text: 'What temperature (F) should you cook a chicken to?', answer: 165, min: 100, max: 300, unit: '\u00b0F', category: 'Food' },
-  { text: 'How many different varieties of cheese exist worldwide?', answer: 1800, min: 500, max: 5000, unit: '', category: 'Food' },
-  { text: 'How many kernels are on an average ear of corn?', answer: 800, min: 200, max: 1500, unit: '', category: 'Food' },
-  { text: 'What % of the world\'s food is produced by small farms?', answer: 35, min: 5, max: 80, unit: '%', category: 'Food' },
+  { text: 'How many calories are in a Big Mac?', answer: 550, min: 200, max: 1000, unit: 'cal', category: 'Food', fact: 'McDonald\'s sells roughly 2.5 billion Big Macs worldwide every year.' },
+  { text: 'What % of a watermelon is water?', answer: 92, min: 50, max: 100, unit: '%', category: 'Food', fact: 'Watermelons are technically berries, and they\'re related to cucumbers.' },
+  { text: 'How many grapes does it take to make a bottle of wine?', answer: 600, min: 100, max: 1500, unit: '', category: 'Food', fact: 'It takes about one full cluster of grapes to produce a single glass of wine.' },
+  { text: 'How many cocoa beans to make 1 pound of chocolate?', answer: 400, min: 50, max: 1000, unit: '', category: 'Food', fact: 'The Aztecs once used cocoa beans as a form of currency.' },
+  { text: 'What temperature (F) should you cook a chicken to?', answer: 165, min: 100, max: 300, unit: '\u00b0F', category: 'Food', fact: 'At 165\u00b0F, salmonella and other harmful bacteria are killed within seconds.' },
+  { text: 'How many different varieties of cheese exist worldwide?', answer: 1800, min: 500, max: 5000, unit: '', category: 'Food', fact: 'The world\'s oldest known cheese was found in an Egyptian tomb, over 3,200 years old.' },
+  { text: 'How many kernels are on an average ear of corn?', answer: 800, min: 200, max: 1500, unit: '', category: 'Food', fact: 'An ear of corn always has an even number of rows of kernels.' },
+  { text: 'What % of the world\'s food is produced by small farms?', answer: 35, min: 5, max: 80, unit: '%', category: 'Food', fact: 'About 500 million small farms worldwide help feed nearly 2 billion people.' },
 
   // Technology
-  { text: 'In what year was the World Wide Web invented?', answer: 1989, min: 1970, max: 2000, unit: '', category: 'Technology' },
-  { text: 'How many transistors (billions) in Apple\'s M2 chip?', answer: 20, min: 1, max: 50, unit: 'B', category: 'Technology' },
-  { text: 'How many people use the internet worldwide (billions)?', answer: 5.3, min: 1, max: 8, unit: 'B', category: 'Technology' },
-  { text: 'How many emails are sent globally per day (billions)?', answer: 330, min: 50, max: 500, unit: 'B', category: 'Technology' },
-  { text: 'What year was Bitcoin created?', answer: 2009, min: 2000, max: 2020, unit: '', category: 'Technology' },
-  { text: 'How much data (zettabytes) does the world create per year?', answer: 120, min: 10, max: 300, unit: 'ZB', category: 'Technology' },
-  { text: 'How many apps are on the Apple App Store (millions)?', answer: 1.8, min: 0.5, max: 5, unit: 'M', category: 'Technology' },
-  { text: 'What % of the world\'s electricity is from renewables?', answer: 30, min: 5, max: 80, unit: '%', category: 'Technology' },
+  { text: 'In what year was the World Wide Web invented?', answer: 1989, min: 1970, max: 2000, unit: '', category: 'Technology', fact: 'Tim Berners-Lee invented the Web at CERN \u2014 and made it free for everyone.' },
+  { text: 'How many transistors (billions) in Apple\'s M2 chip?', answer: 20, min: 1, max: 50, unit: 'B', category: 'Technology', fact: 'The first commercial CPU, Intel\'s 4004 from 1971, had just 2,300 transistors.' },
+  { text: 'How many people use the internet worldwide (billions)?', answer: 5.3, min: 1, max: 8, unit: 'B', category: 'Technology', fact: 'About two-thirds of the world\'s population is now connected to the internet.' },
+  { text: 'How many emails are sent globally per day (billions)?', answer: 330, min: 50, max: 500, unit: 'B', category: 'Technology', fact: 'Over 45% of all emails sent worldwide are estimated to be spam.' },
+  { text: 'What year was Bitcoin created?', answer: 2009, min: 2000, max: 2020, unit: '', category: 'Technology', fact: 'Bitcoin\'s creator, Satoshi Nakamoto, has never been definitively identified.' },
+  { text: 'How much data (zettabytes) does the world create per year?', answer: 120, min: 10, max: 300, unit: 'ZB', category: 'Technology', fact: 'About 90% of the world\'s data was generated in just the last two years.' },
+  { text: 'How many apps are on the Apple App Store (millions)?', answer: 1.8, min: 0.5, max: 5, unit: 'M', category: 'Technology', fact: 'When the App Store launched in 2008, it had only about 500 apps.' },
+  { text: 'What % of the world\'s electricity is from renewables?', answer: 30, min: 5, max: 80, unit: '%', category: 'Technology', fact: 'The cost of solar energy has dropped by over 90% since 2010.' },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -140,10 +144,8 @@ export default function SpectrumGame() {
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
     // ── Game state ──────────────────────────────────────────────────────────
-    type GameState = 'menu' | 'playing' | 'betting' | 'reveal' | 'roundEnd' | 'gameover';
+    type GameState = 'menu' | 'playing' | 'betting' | 'reveal' | 'roundEnd' | 'finale-intro' | 'gameover';
     let state: GameState = 'menu';
 
     let questions: Question[] = [];
@@ -184,7 +186,7 @@ export default function SpectrumGame() {
 
     // Score display
     let displayScore = 0;
-    let scorePopups: { text: string; x: number; y: number; life: number; color: string }[] = [];
+    let scorePopups: { text: string; x: number; y: number; life: number; color: string; fontSize: number }[] = [];
 
     // Hover states
     let hoveredConfidence = 0;
@@ -196,6 +198,19 @@ export default function SpectrumGame() {
     // Per-round tracking for game over stats
     let perfectCount = 0;
     let totalAccuracy = 0;
+
+    // ── Timer state ─────────────────────────────────────────────────────────
+    let questionTimer = TIMER_DURATION;
+    let timerActive = false;
+    let quickDraw = false;
+    let lastTimerSecond = TIMER_DURATION;
+
+    // ── Finale state ────────────────────────────────────────────────────────
+    let finaleMode = false;
+    let finaleIntroTimer = 0;
+
+    // ── Fire particles (chain effects) ──────────────────────────────────────
+    let fireParticles: Particle[] = [];
 
     // Background ambient particles
     interface AmbientParticle {
@@ -266,6 +281,8 @@ export default function SpectrumGame() {
       newHighScore = false;
       scorePopups = [];
       particles = [];
+      fireParticles = [];
+      finaleMode = false;
       initAmbientParticles();
       startRound();
     }
@@ -288,7 +305,22 @@ export default function SpectrumGame() {
       hoverLockIn = false;
       revealScoreDisplay = 0;
       revealScoreTarget = 0;
+      questionTimer = TIMER_DURATION;
+      timerActive = true;
+      quickDraw = false;
+      lastTimerSecond = TIMER_DURATION;
+
+      // Check for finale round
+      finaleMode = round === TOTAL_ROUNDS - 1;
+      if (finaleMode) {
+        finaleIntroTimer = 2;
+        state = 'finale-intro';
+        SoundEngine.play('waveStart');
+        return;
+      }
+
       state = 'playing';
+      SoundEngine.startAmbient('quiz-ambient');
       SoundEngine.play('waveStart');
     }
 
@@ -323,6 +355,20 @@ export default function SpectrumGame() {
         }
       }
       // Safe play (1x-2x) doesn't affect chain
+
+      // Quick Draw bonus
+      if (quickDraw) {
+        roundMultipliedScore += QUICK_DRAW_BONUS;
+      }
+
+      // Finale special scoring (double or nothing)
+      if (finaleMode) {
+        if (roundAccuracy >= 0.80) {
+          roundMultipliedScore *= 2;
+        } else if (roundAccuracy < 0.40) {
+          roundMultipliedScore = -Math.round(Math.abs(roundMultipliedScore) * 0.5);
+        }
+      }
 
       // Track stats
       totalAccuracy += roundAccuracy;
@@ -458,9 +504,7 @@ export default function SpectrumGame() {
       // Controls hint
       ctx.fillStyle = '#525252';
       ctx.font = '12px system-ui, -apple-system, sans-serif';
-      ctx.fillText(isTouchDevice
-        ? 'Drag marker \u2022 Tap buttons to set confidence & confirm'
-        : 'Drag marker \u2022 Arrow keys to nudge \u2022 1-5 for confidence \u2022 Enter to confirm', W / 2, 560);
+      ctx.fillText('Drag marker \u2022 Arrow keys to nudge \u2022 1-5 for confidence \u2022 Enter to confirm', W / 2, 560);
     }
 
     // ── Draw HUD ────────────────────────────────────────────────────────────
@@ -480,6 +524,18 @@ export default function SpectrumGame() {
       ctx.fill();
       ctx.fillStyle = ORANGE;
       ctx.fillText(catText, 28, 55);
+
+      // Finale badge
+      if (finaleMode) {
+        ctx.fillStyle = '#eab30833';
+        const finaleText = 'DOUBLE OR NOTHING';
+        const finaleMetrics = ctx.measureText(finaleText);
+        drawRoundedRect(20, 66, finaleMetrics.width + 16, 22, 6);
+        ctx.fill();
+        ctx.fillStyle = '#eab308';
+        ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
+        ctx.fillText(finaleText, 28, 81);
+      }
 
       // Score
       ctx.textAlign = 'right';
@@ -585,8 +641,7 @@ export default function SpectrumGame() {
 
       // Chain accuracy zone (shown during betting phase)
       if (state === 'betting' && confidence >= HIGH_CONF_MIN) {
-        const range = currentQ.max - currentQ.min;
-        const zonePixels = (CHAIN_THRESHOLD * range / range) * NL_W;
+        const zonePixels = CHAIN_THRESHOLD * NL_W;
         const estX = NL_X + estimate * NL_W;
         const zoneLeft = Math.max(NL_X, estX - zonePixels);
         const zoneRight = Math.min(NL_RIGHT, estX + zonePixels);
@@ -763,16 +818,167 @@ export default function SpectrumGame() {
       ctx.fillText('Press Enter', W / 2, btnY + btnH + 16);
     }
 
+    // ── Draw Timer ──────────────────────────────────────────────────────────
+    function drawTimer() {
+      const cx = W / 2;
+      const cy = 70;
+      const radius = 17;
+      const fraction = clamp(questionTimer / TIMER_DURATION, 0, 1);
+
+      // Background circle
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Color based on time remaining
+      let color = '#22c55e';
+      if (fraction < 0.33) color = '#ef4444';
+      else if (fraction < 0.5) color = '#eab308';
+
+      // Timer arc (shrinks as time depletes)
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + fraction * Math.PI * 2);
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+
+      // Timer text
+      ctx.textAlign = 'center';
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
+      ctx.fillText(Math.ceil(questionTimer).toString(), cx, cy + 5);
+
+      // Pulse effect for last 5 seconds
+      if (questionTimer <= 5 && questionTimer > 0) {
+        const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.7;
+        ctx.globalAlpha = pulse;
+        drawGlow(cx, cy, radius + 10, color, 0.4);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // ── Fire Particle Effects (Chain) ───────────────────────────────────────
+    function updateFireParticles(dt: number) {
+      // Spawn new fire particles based on chain length
+      if (chainLength > 0 && (state === 'playing' || state === 'betting' || state === 'reveal')) {
+        // Chain 1-2: Subtle orange glow along top
+        if (Math.random() < 0.25) {
+          fireParticles.push({
+            x: Math.random() * W,
+            y: -5,
+            vx: (Math.random() - 0.5) * 20,
+            vy: 10 + Math.random() * 20,
+            life: 0.6 + Math.random() * 0.8,
+            maxLife: 0.6 + Math.random() * 0.8,
+            color: '#f97316',
+            size: 2 + Math.random() * 2,
+          });
+        }
+
+        // Chain 3-4: Fire emitters on both sides
+        if (chainLength >= 3 && Math.random() < 0.4) {
+          const side = Math.random() > 0.5 ? -5 : W + 5;
+          fireParticles.push({
+            x: side,
+            y: Math.random() * H * 0.8,
+            vx: side < 0 ? (15 + Math.random() * 25) : -(15 + Math.random() * 25),
+            vy: -(10 + Math.random() * 30),
+            life: 0.6 + Math.random() * 0.8,
+            maxLife: 0.6 + Math.random() * 0.8,
+            color: ['#f97316', '#ef4444'][Math.floor(Math.random() * 2)],
+            size: 2 + Math.random() * 3,
+          });
+        }
+
+        // Chain 5+: Embers rising from bottom
+        if (chainLength >= 5 && Math.random() < 0.5) {
+          fireParticles.push({
+            x: Math.random() * W,
+            y: H + 5,
+            vx: (Math.random() - 0.5) * 40,
+            vy: -(40 + Math.random() * 60),
+            life: 1.0 + Math.random() * 1.5,
+            maxLife: 1.0 + Math.random() * 1.5,
+            color: ['#f97316', '#ef4444', '#eab308'][Math.floor(Math.random() * 3)],
+            size: 2 + Math.random() * 4,
+          });
+        }
+      }
+
+      // Cap fire particles for performance
+      if (fireParticles.length > 150) {
+        fireParticles.splice(0, fireParticles.length - 150);
+      }
+
+      // Update existing
+      for (let i = fireParticles.length - 1; i >= 0; i--) {
+        const p = fireParticles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) fireParticles.splice(i, 1);
+      }
+    }
+
+    function drawFireParticles() {
+      for (const p of fireParticles) {
+        const alpha = clamp(p.life / p.maxLife, 0, 1);
+        ctx.globalAlpha = alpha * 0.6;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * (0.5 + alpha * 0.5), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawChainBorder() {
+      // Chain fire border
+      if (chainLength > 0) {
+        const intensity = Math.min(chainLength / 5, 1);
+        const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
+        ctx.globalAlpha = intensity * 0.35 * pulse;
+        const color = chainLength >= 5 ? '#ef4444' : (chainLength >= 3 ? '#f97316' : '#f9731680');
+        ctx.strokeStyle = color;
+        ctx.lineWidth = chainLength >= 5 ? 4 : (chainLength >= 3 ? 3 : 2);
+        drawRoundedRect(4, 4, W - 8, H - 8, 12);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      // Finale gold border
+      if (finaleMode && state !== 'finale-intro') {
+        const pulse = Math.sin(Date.now() / 300) * 0.2 + 0.8;
+        ctx.globalAlpha = 0.25 * pulse;
+        ctx.strokeStyle = '#eab308';
+        ctx.lineWidth = 3;
+        drawRoundedRect(4, 4, W - 8, H - 8, 12);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
     // ── Draw Reveal ─────────────────────────────────────────────────────────
     function drawReveal(dt: number) {
-      revealProgress += dt * 0.8;
+      // Faster reveals (doubled speed), except finale which uses dramatic slower pace
+      const revealSpeed = finaleMode ? 0.8 : 1.6;
+      revealProgress += dt * revealSpeed;
 
-      if (revealPhase === 'slide' && revealProgress > 1.2) {
+      const slideThreshold = finaleMode ? 1.2 : 0.8;
+      const doneThreshold = finaleMode ? 2.5 : 1.8;
+
+      if (revealPhase === 'slide' && revealProgress > slideThreshold) {
         revealPhase = 'score';
         // Spawn particles at answer location
         const ansX = valueToX(currentQ.answer, currentQ);
         if (chainBroken) {
           spawnParticles(ansX, NL_Y, 30, '#ef4444', 4);
+          // Chain break: burst of red particles + screen shake
+          spawnParticles(ansX, NL_Y - 20, 15, '#ef4444', 3);
           shakeIntensity = 8;
           shakeTime = 0.4;
           SoundEngine.play('playerDamage');
@@ -784,9 +990,15 @@ export default function SpectrumGame() {
           spawnParticles(ansX, NL_Y, 12, '#22c55e', 2);
           SoundEngine.play('collectGem');
         }
+
+        // Finale gold particle burst
+        if (finaleMode) {
+          spawnParticles(ansX, NL_Y, 25, '#eab308', 4);
+          spawnParticles(ansX, NL_Y, 15, '#fbbf24', 3);
+        }
       }
 
-      if (revealPhase === 'score' && revealProgress > 2.5) {
+      if (revealPhase === 'score' && revealProgress > doneThreshold) {
         revealPhase = 'done';
       }
 
@@ -796,7 +1008,7 @@ export default function SpectrumGame() {
 
       // Score breakdown
       if (revealPhase === 'score' || revealPhase === 'done') {
-        const fadeIn = clamp((revealProgress - 1.2) * 3, 0, 1);
+        const fadeIn = clamp((revealProgress - slideThreshold) * 3, 0, 1);
         ctx.globalAlpha = fadeIn;
 
         // Accuracy feedback text
@@ -834,18 +1046,69 @@ export default function SpectrumGame() {
           ctx.fillText(`Chain +${chainBonus}`, W / 2 + 130, centerY);
         }
 
+        // Quick Draw bonus indicator
+        if (quickDraw) {
+          ctx.fillStyle = '#06b6d4';
+          ctx.font = '13px system-ui, -apple-system, sans-serif';
+          ctx.fillText(`Quick Draw +${QUICK_DRAW_BONUS}`, W / 2 - 120, centerY + 18);
+        }
+
+        // Finale scoring indicator
+        if (finaleMode) {
+          if (roundAccuracy >= 0.80) {
+            ctx.fillStyle = '#eab308';
+            ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+            ctx.fillText('SCORE DOUBLED!', W / 2 + 120, centerY + 18);
+          } else if (roundAccuracy < 0.40) {
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+            ctx.fillText('PENALTY -50%', W / 2 + 120, centerY + 18);
+          }
+        }
+
         // Total round score (animated counter)
         ctx.fillStyle = '#f5f5f5';
         ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
-        ctx.fillText(`+${Math.round(revealScoreDisplay).toLocaleString()}`, W / 2, centerY + 40);
+        const scoreSign = Math.round(revealScoreDisplay) >= 0 ? '+' : '';
+        ctx.fillText(`${scoreSign}${Math.round(revealScoreDisplay).toLocaleString()}`, W / 2, centerY + 42);
 
+        ctx.globalAlpha = 1;
+      }
+
+      // Fun fact display (after score breakdown)
+      if (revealPhase === 'done' && currentQ.fact) {
+        const factFadeIn = clamp((revealProgress - doneThreshold) * 2, 0, 1);
+        ctx.globalAlpha = factFadeIn;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#a3a3a3';
+        ctx.font = '12px system-ui, -apple-system, sans-serif';
+
+        // Word wrap for fact
+        const factWords = currentQ.fact.split(' ');
+        let factLine = '';
+        const factLines: string[] = [];
+        for (const word of factWords) {
+          const test = factLine + (factLine ? ' ' : '') + word;
+          if (ctx.measureText(test).width > 550 && factLine) {
+            factLines.push(factLine);
+            factLine = word;
+          } else {
+            factLine = test;
+          }
+        }
+        factLines.push(factLine);
+
+        const factStartY = 500;
+        factLines.slice(0, 2).forEach((l, i) => {
+          ctx.fillText(l, W / 2, factStartY + i * 16);
+        });
         ctx.globalAlpha = 1;
       }
 
       // Continue button
       if (revealPhase === 'done') {
         const btnW = 180, btnH = 44;
-        const btnX = W / 2 - btnW / 2, btnY = 530;
+        const btnX = W / 2 - btnW / 2, btnY = 535;
         drawRoundedRect(btnX, btnY, btnW, btnH, 10);
         ctx.fillStyle = hoverContinue ? '#444' : '#333';
         ctx.fill();
@@ -992,10 +1255,10 @@ export default function SpectrumGame() {
     function drawScorePopups() {
       ctx.textAlign = 'center';
       for (const p of scorePopups) {
-        const alpha = clamp(p.life / 1.5, 0, 1);
+        const alpha = clamp(p.life / 2.0, 0, 1);
         ctx.globalAlpha = alpha;
         ctx.fillStyle = p.color;
-        ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+        ctx.font = `bold ${Math.round(p.fontSize)}px system-ui, -apple-system, sans-serif`;
         ctx.fillText(p.text, p.x, p.y);
       }
       ctx.globalAlpha = 1;
@@ -1045,6 +1308,12 @@ export default function SpectrumGame() {
         ctx.globalAlpha = 1;
       }
 
+      // Chain fire effects (drawn behind UI)
+      if (state !== 'menu' && state !== 'gameover') {
+        updateFireParticles(dt);
+        drawFireParticles();
+      }
+
       // Confidence escalation overlay (subtle tint during betting)
       if (state === 'betting' && confidence >= 3) {
         const intensity = (confidence - 2) / 3; // 0.33 at 3x, 0.67 at 4x, 1.0 at 5x
@@ -1076,13 +1345,73 @@ export default function SpectrumGame() {
           drawMenu(dt);
           break;
 
+        case 'finale-intro': {
+          finaleIntroTimer -= dt;
+          drawHUD();
+
+          // Gold pulsing border
+          const fiPulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
+          ctx.globalAlpha = fiPulse * 0.6;
+          ctx.strokeStyle = '#eab308';
+          ctx.lineWidth = 4;
+          drawRoundedRect(4, 4, W - 8, H - 8, 12);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          // Banner
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#eab308';
+          ctx.font = 'bold 38px system-ui, -apple-system, sans-serif';
+          ctx.fillText('FINAL QUESTION', W / 2, H / 2 - 30);
+
+          ctx.fillStyle = '#ef4444';
+          ctx.font = 'bold 26px system-ui, -apple-system, sans-serif';
+          ctx.fillText('DOUBLE OR NOTHING!', W / 2, H / 2 + 20);
+
+          // Subtitle
+          ctx.fillStyle = '#a3a3a3';
+          ctx.font = '14px system-ui, -apple-system, sans-serif';
+          ctx.fillText('High accuracy doubles your score, low accuracy costs you!', W / 2, H / 2 + 60);
+
+          // Spawn gold particles occasionally
+          if (Math.random() < 0.3) {
+            spawnParticles(
+              W / 2 + (Math.random() - 0.5) * 400,
+              H / 2 + (Math.random() - 0.5) * 100,
+              1, '#eab308', 2
+            );
+          }
+
+          if (finaleIntroTimer <= 0) {
+            state = 'playing';
+          }
+          break;
+        }
+
         case 'playing':
         case 'betting': {
+          // Timer countdown during estimation phase
+          if (state === 'playing' && !estimateLocked && timerActive) {
+            questionTimer -= dt;
+            const currentSecond = Math.ceil(questionTimer);
+            if (questionTimer <= 5 && questionTimer > 0 && currentSecond < lastTimerSecond) {
+              SoundEngine.play('click');
+            }
+            lastTimerSecond = currentSecond;
+            if (questionTimer <= 0) {
+              questionTimer = 0;
+              timerActive = false;
+              estimateLocked = true;
+            }
+          }
+
           drawHUD();
           drawQuestion();
           drawNumberLine(false, 0);
 
           if (state === 'playing' && !estimateLocked) {
+            drawTimer();
+
             // Lock In Estimate button
             const liBtnW = 200, liBtnH = 46;
             const liBtnX = W / 2 - liBtnW / 2, liBtnY = 420;
@@ -1097,9 +1426,7 @@ export default function SpectrumGame() {
             // Instruction text
             ctx.fillStyle = '#525252';
             ctx.font = '12px system-ui, -apple-system, sans-serif';
-            ctx.fillText(isTouchDevice
-              ? 'Drag marker \u2022 Tap Lock In to confirm'
-              : 'Drag marker or use Arrow Keys \u2022 Enter to lock in', W / 2, liBtnY + liBtnH + 20);
+            ctx.fillText('Drag marker or use Arrow Keys \u2022 Enter to lock in', W / 2, liBtnY + liBtnH + 20);
           }
 
           if (state === 'playing' && estimateLocked) {
@@ -1123,6 +1450,11 @@ export default function SpectrumGame() {
         case 'gameover':
           drawGameOver();
           break;
+      }
+
+      // Chain border + finale border (drawn on top of UI)
+      if (state !== 'menu' && state !== 'gameover' && state !== 'finale-intro') {
+        drawChainBorder();
       }
 
       // Particles & popups (always drawn)
@@ -1173,12 +1505,21 @@ export default function SpectrumGame() {
         return;
       }
 
+      // Finale intro is skippable by clicking
+      if (state === 'finale-intro') {
+        finaleIntroTimer = 0;
+        state = 'playing';
+        return;
+      }
+
       if (state === 'playing' && !estimateLocked) {
         // Check if clicking the Lock In Estimate button
         const liBtnW = 200, liBtnH = 46;
         const liBtnX = W / 2 - liBtnW / 2, liBtnY = 420;
         if (isInRect(cx, cy, liBtnX, liBtnY, liBtnW, liBtnH)) {
           estimateLocked = true;
+          timerActive = false;
+          if (questionTimer > QUICK_DRAW_THRESHOLD) quickDraw = true;
           SoundEngine.play('click');
           return;
         }
@@ -1227,6 +1568,79 @@ export default function SpectrumGame() {
 
     function confirmBet() {
       calculateScore();
+
+      // Spawn score popups
+      const ansX = valueToX(currentQ.answer, currentQ);
+
+      // Main score popup with dynamic font size
+      const mainFontSize = Math.min(28, 16 + Math.abs(roundMultipliedScore) / 200);
+      const scoreSign = roundMultipliedScore >= 0 ? '+' : '';
+      scorePopups.push({
+        text: `${scoreSign}${roundMultipliedScore}`,
+        x: ansX,
+        y: NL_Y - 50,
+        life: 2.0,
+        color: roundMultipliedScore >= 0 ? '#f5f5f5' : '#ef4444',
+        fontSize: mainFontSize,
+      });
+
+      // Chain bonus popup
+      if (chainBonus > 0) {
+        scorePopups.push({
+          text: `+CHAIN x${chainLength}`,
+          x: ansX,
+          y: NL_Y - 20,
+          life: 2.0,
+          color: '#eab308',
+          fontSize: 18,
+        });
+      }
+
+      // Chain broken popup
+      if (chainBroken) {
+        scorePopups.push({
+          text: 'CHAIN BROKEN!',
+          x: ansX,
+          y: NL_Y - 20,
+          life: 2.0,
+          color: '#ef4444',
+          fontSize: 20,
+        });
+      }
+
+      // Quick Draw popup
+      if (quickDraw) {
+        scorePopups.push({
+          text: `+${QUICK_DRAW_BONUS} QUICK!`,
+          x: ansX,
+          y: NL_Y - 80,
+          life: 2.0,
+          color: '#06b6d4',
+          fontSize: 16,
+        });
+      }
+
+      // Finale doubled/penalty popup
+      if (finaleMode && roundAccuracy >= 0.80) {
+        scorePopups.push({
+          text: 'DOUBLED!',
+          x: W / 2,
+          y: NL_Y - 80,
+          life: 2.5,
+          color: '#eab308',
+          fontSize: 26,
+        });
+      } else if (finaleMode && roundAccuracy < 0.40) {
+        scorePopups.push({
+          text: 'PENALTY!',
+          x: W / 2,
+          y: NL_Y - 80,
+          life: 2.5,
+          color: '#ef4444',
+          fontSize: 26,
+        });
+      }
+
       revealProgress = 0;
       revealPhase = 'slide';
       state = 'reveal';
@@ -1237,6 +1651,7 @@ export default function SpectrumGame() {
       round++;
       if (round >= TOTAL_ROUNDS) {
         state = 'gameover';
+        SoundEngine.stopAmbient();
         SoundEngine.play('gameOver');
       } else {
         startRound();
@@ -1279,7 +1694,7 @@ export default function SpectrumGame() {
 
       if (state === 'reveal') {
         const btnW = 180, btnH = 44;
-        const btnX = W / 2 - btnW / 2, btnY = 530;
+        const btnX = W / 2 - btnW / 2, btnY = 535;
         hoverContinue = isInRect(cx, cy, btnX, btnY, btnW, btnH);
       }
 
@@ -1363,6 +1778,15 @@ export default function SpectrumGame() {
         return;
       }
 
+      // Finale intro skippable
+      if (state === 'finale-intro') {
+        if (e.key === 'Enter' || e.key === ' ') {
+          finaleIntroTimer = 0;
+          state = 'playing';
+        }
+        return;
+      }
+
       if (state === 'playing' && !estimateLocked) {
         const nudge = e.shiftKey ? 0.01 : 0.005;
         if (e.key === 'ArrowLeft' || e.key === 'a') {
@@ -1371,6 +1795,8 @@ export default function SpectrumGame() {
           estimate = clamp(estimate + nudge, 0, 1);
         } else if (e.key === 'Enter' || e.key === ' ') {
           estimateLocked = true;
+          timerActive = false;
+          if (questionTimer > QUICK_DRAW_THRESHOLD) quickDraw = true;
           SoundEngine.play('click');
         }
         return;
@@ -1415,6 +1841,7 @@ export default function SpectrumGame() {
     // ── Cleanup ─────────────────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(rafId);
+      SoundEngine.stopAmbient();
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mousedown', handleMouseDown);
