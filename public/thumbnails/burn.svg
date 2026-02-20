@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <defs>
+    <radialGradient id="fire-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f97316" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="300" fill="#0a0a0f"/>
+  <!-- Terrain grid -->
+  <g transform="translate(40, 20)">
+    <!-- Grass tiles -->
+    <rect x="0" y="0" width="32" height="32" fill="#22c55e" opacity="0.7" rx="2"/>
+    <rect x="34" y="0" width="32" height="32" fill="#22c55e" opacity="0.6" rx="2"/>
+    <rect x="68" y="0" width="32" height="32" fill="#16a34a" opacity="0.7" rx="2"/>
+    <rect x="102" y="0" width="32" height="32" fill="#22c55e" opacity="0.65" rx="2"/>
+    <rect x="136" y="0" width="32" height="32" fill="#16a34a" opacity="0.7" rx="2"/>
+    <rect x="170" y="0" width="32" height="32" fill="#22c55e" opacity="0.6" rx="2"/>
+    <rect x="204" y="0" width="32" height="32" fill="#22c55e" opacity="0.7" rx="2"/>
+    <rect x="238" y="0" width="32" height="32" fill="#16a34a" opacity="0.65" rx="2"/>
+    <rect x="272" y="0" width="32" height="32" fill="#22c55e" opacity="0.7" rx="2"/>
+    <!-- Row 2 - mix of grass, trees, water -->
+    <rect x="0" y="34" width="32" height="32" fill="#15803d" opacity="0.8" rx="2"/>
+    <rect x="34" y="34" width="32" height="32" fill="#15803d" opacity="0.7" rx="2"/>
+    <rect x="68" y="34" width="32" height="32" fill="#22c55e" opacity="0.6" rx="2"/>
+    <rect x="102" y="34" width="32" height="32" fill="#3b82f6" opacity="0.6" rx="2"/>
+    <rect x="136" y="34" width="32" height="32" fill="#3b82f6" opacity="0.7" rx="2"/>
+    <rect x="170" y="34" width="32" height="32" fill="#22c55e" opacity="0.6" rx="2"/>
+    <rect x="204" y="34" width="32" height="32" fill="#15803d" opacity="0.7" rx="2"/>
+    <rect x="238" y="34" width="32" height="32" fill="#22c55e" opacity="0.65" rx="2"/>
+    <rect x="272" y="34" width="32" height="32" fill="#16a34a" opacity="0.7" rx="2"/>
+    <!-- Row 3 - burning tiles -->
+    <rect x="0" y="68" width="32" height="32" fill="#f97316" opacity="0.9" rx="2"/>
+    <rect x="34" y="68" width="32" height="32" fill="#ef4444" opacity="0.85" rx="2"/>
+    <rect x="68" y="68" width="32" height="32" fill="#f97316" opacity="0.8" rx="2"/>
+    <rect x="102" y="68" width="32" height="32" fill="#3b82f6" opacity="0.7" rx="2"/>
+    <rect x="136" y="68" width="32" height="32" fill="#3b82f6" opacity="0.6" rx="2"/>
+    <rect x="170" y="68" width="32" height="32" fill="#f97316" opacity="0.7" rx="2"/>
+    <rect x="204" y="68" width="32" height="32" fill="#ef4444" opacity="0.9" rx="2"/>
+    <rect x="238" y="68" width="32" height="32" fill="#f97316" opacity="0.85" rx="2"/>
+    <rect x="272" y="68" width="32" height="32" fill="#22c55e" opacity="0.5" rx="2"/>
+    <!-- Row 4 - burned/charred -->
+    <rect x="0" y="102" width="32" height="32" fill="#44403c" opacity="0.8" rx="2"/>
+    <rect x="34" y="102" width="32" height="32" fill="#44403c" opacity="0.7" rx="2"/>
+    <rect x="68" y="102" width="32" height="32" fill="#44403c" opacity="0.75" rx="2"/>
+    <rect x="102" y="102" width="32" height="32" fill="#78716c" opacity="0.5" rx="2"/>
+    <rect x="136" y="102" width="32" height="32" fill="#78716c" opacity="0.6" rx="2"/>
+    <rect x="170" y="102" width="32" height="32" fill="#44403c" opacity="0.8" rx="2"/>
+    <rect x="204" y="102" width="32" height="32" fill="#44403c" opacity="0.7" rx="2"/>
+    <rect x="238" y="102" width="32" height="32" fill="#44403c" opacity="0.75" rx="2"/>
+    <rect x="272" y="102" width="32" height="32" fill="#78716c" opacity="0.5" rx="2"/>
+    <!-- Row 5 - more burned -->
+    <rect x="0" y="136" width="32" height="32" fill="#44403c" opacity="0.7" rx="2"/>
+    <rect x="34" y="136" width="32" height="32" fill="#78716c" opacity="0.6" rx="2"/>
+    <rect x="68" y="136" width="32" height="32" fill="#44403c" opacity="0.65" rx="2"/>
+    <rect x="102" y="136" width="32" height="32" fill="#a8a29e" opacity="0.4" rx="2"/>
+    <rect x="136" y="136" width="32" height="32" fill="#44403c" opacity="0.7" rx="2"/>
+    <rect x="170" y="136" width="32" height="32" fill="#78716c" opacity="0.55" rx="2"/>
+    <rect x="204" y="136" width="32" height="32" fill="#44403c" opacity="0.7" rx="2"/>
+    <rect x="238" y="136" width="32" height="32" fill="#44403c" opacity="0.65" rx="2"/>
+    <rect x="272" y="136" width="32" height="32" fill="#78716c" opacity="0.5" rx="2"/>
+  </g>
+  <!-- Fire glow -->
+  <circle cx="100" cy="100" r="60" fill="url(#fire-glow)"/>
+  <circle cx="280" cy="100" r="50" fill="url(#fire-glow)"/>
+  <!-- Flame particles -->
+  <circle cx="72" cy="82" r="3" fill="#fbbf24" opacity="0.9"/>
+  <circle cx="85" cy="75" r="2.5" fill="#f97316" opacity="0.8"/>
+  <circle cx="110" cy="78" r="2" fill="#fbbf24" opacity="0.7"/>
+  <circle cx="60" cy="90" r="2" fill="#ef4444" opacity="0.8"/>
+  <circle cx="245" cy="85" r="3" fill="#fbbf24" opacity="0.9"/>
+  <circle cx="260" cy="78" r="2" fill="#f97316" opacity="0.7"/>
+  <circle cx="290" cy="82" r="2.5" fill="#fbbf24" opacity="0.8"/>
+  <!-- Wind arrow -->
+  <g transform="translate(340, 30)">
+    <circle cx="0" cy="0" r="18" fill="none" stroke="#f97316" stroke-width="1.5" opacity="0.5"/>
+    <line x1="-8" y1="0" x2="8" y2="0" stroke="#f97316" stroke-width="2" opacity="0.8"/>
+    <polygon points="8,0 3,-4 3,4" fill="#f97316" opacity="0.8"/>
+    <text x="0" y="30" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9" opacity="0.5">WIND</text>
+  </g>
+  <!-- Target percentage HUD -->
+  <text x="350" y="100" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="11" opacity="0.5">TARGET</text>
+  <text x="350" y="120" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="18" font-weight="bold" opacity="0.7">62%</text>
+  <!-- Progress bar -->
+  <rect x="325" y="130" width="50" height="6" rx="3" fill="#1a1a2e" stroke="#f97316" stroke-width="0.5" opacity="0.5"/>
+  <rect x="325" y="130" width="28" height="6" rx="3" fill="#f97316" opacity="0.6"/>
+  <text x="200" y="280" text-anchor="middle" fill="#f97316" font-family="sans-serif" font-size="18" font-weight="bold" opacity="0.8">BURN</text>
+</svg>
