@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd } from '@/lib/game-events';
+import { TouchController, isTouchDevice } from '@/lib/touch-controls';
 
 // ────────────────────────────────────────────────────────────────
 //  ECHO CHAMBER  –  Navigate darkness with sound-wave pulses
@@ -221,7 +223,10 @@ export default function EchoChamberGame() {
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const touch = new TouchController(canvas);
+    let prevTouchAction = false;
+
+    const isTouchDev = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     /* ── state machine ──────────────────────────────────── */
     type GameState = 'menu' | 'playing' | 'gameover';
@@ -358,6 +363,7 @@ export default function EchoChamberGame() {
     function onClick() {
       if (state === 'menu') {
         state = 'playing';
+        reportGameStart('echo-chamber');
         SoundEngine.startAmbient('dark-cave');
         SoundEngine.play('menuSelect');
         level = 1;
@@ -412,6 +418,7 @@ export default function EchoChamberGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        reportGameStart('echo-chamber');
         SoundEngine.startAmbient('dark-cave');
         level = 1;
         score = 0;
@@ -589,6 +596,32 @@ export default function EchoChamberGame() {
       if (keys['ArrowRight'] || keys['d']) dx += 1;
       if (keys['ArrowUp'] || keys['w']) dy -= 1;
       if (keys['ArrowDown'] || keys['s']) dy += 1;
+
+      // ── D-pad touch overlay ──
+      if (isTouchDevice()) {
+        if (touch.state.left) { keys['ArrowLeft'] = true; dx -= 1; }
+        if (touch.state.right) { keys['ArrowRight'] = true; dx += 1; }
+        if (touch.state.up) { keys['ArrowUp'] = true; dy -= 1; }
+        if (touch.state.down) { keys['ArrowDown'] = true; dy += 1; }
+
+        // Action button edge detection → trigger pulse
+        if (touch.state.action && !prevTouchAction) {
+          if (pulsesLeft > 0) {
+            pulsesLeft--;
+            waves.push({
+              cx: px,
+              cy: py,
+              radius: 0,
+              maxRadius: 500,
+              speed: 240,
+              alpha: 1,
+            });
+            SoundEngine.play('pulse');
+          }
+        }
+        prevTouchAction = touch.state.action;
+      }
+
       if (dx !== 0 && dy !== 0) {
         dx *= 0.707;
         dy *= 0.707;
@@ -681,6 +714,7 @@ export default function EchoChamberGame() {
         if (Math.sqrt(edx * edx + edy * edy) < pRadius + 8) {
           // game over
           state = 'gameover';
+          reportGameEnd('echo-chamber', score, true, level);
           SoundEngine.stopAmbient();
           goMessage = 'Caught in the dark!';
           goScore = score;
@@ -718,6 +752,7 @@ export default function EchoChamberGame() {
         if (level > 10) {
           // win
           state = 'gameover';
+          reportGameEnd('echo-chamber', score, true, level - 1);
           SoundEngine.stopAmbient();
           goMessage = 'You escaped all 10 levels!';
           goScore = score;
@@ -766,9 +801,9 @@ export default function EchoChamberGame() {
       // instructions
       ctx.fillStyle = COL.dimText;
       ctx.font = '14px monospace';
-      const instructions = isTouchDevice ? [
-        'Swipe  -  Move',
-        'Tap  -  Send sound pulse',
+      const instructions = isTouchDev ? [
+        'Swipe / D-pad  -  Move',
+        'Tap / A button  -  Send sound pulse',
         'Find gems, avoid enemies, reach the exit',
         'Enemies FREEZE when illuminated, but hunt in darkness',
       ] : [
@@ -785,7 +820,7 @@ export default function EchoChamberGame() {
       const blink = Math.sin(t * 3) * 0.4 + 0.6;
       ctx.fillStyle = `rgba(234,179,8,${blink})`;
       ctx.font = 'bold 20px monospace';
-      ctx.fillText(isTouchDevice ? 'Tap to Start' : 'Click to Start', W / 2, H / 2 + 180);
+      ctx.fillText(isTouchDev ? 'Tap to Start' : 'Click to Start', W / 2, H / 2 + 180);
     }
 
     function drawPlaying() {
@@ -974,6 +1009,9 @@ export default function EchoChamberGame() {
       const gcText = `Gems: ${gems.filter((g) => g.collected).length}/${gems.length}`;
       ctx.fillStyle = COL.gem;
       ctx.fillText(gcText, W / 2 + 80, 18);
+
+      // ── Touch D-pad overlay ──
+      touch.draw(ctx, W, H);
     }
 
     function drawGameOver(_t: number) {
@@ -1007,7 +1045,7 @@ export default function EchoChamberGame() {
       const blink = Math.sin(_t * 3) * 0.4 + 0.6;
       ctx.fillStyle = `rgba(234,179,8,${blink})`;
       ctx.font = 'bold 18px monospace';
-      ctx.fillText(isTouchDevice ? 'Tap to Return to Menu' : 'Click to Return to Menu', W / 2, H / 2 + 140);
+      ctx.fillText(isTouchDev ? 'Tap to Return to Menu' : 'Click to Return to Menu', W / 2, H / 2 + 140);
     }
 
     function drawPausedOverlay() {
@@ -1063,6 +1101,7 @@ export default function EchoChamberGame() {
     return () => {
       cancelAnimationFrame(animId);
       SoundEngine.stopAmbient();
+      touch.destroy();
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('touchstart', onTouchStart);

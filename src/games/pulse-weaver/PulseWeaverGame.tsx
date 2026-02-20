@@ -3,6 +3,8 @@
 import { useRef, useEffect } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd } from '@/lib/game-events';
+import { TouchController, isTouchDevice } from '@/lib/touch-controls';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const W = 800;
@@ -181,6 +183,9 @@ export default function PulseWeaverGame() {
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
+
+    // Virtual touch controls (D-pad + action button)
+    const touch = new TouchController(canvas);
 
     // ── Game State ────────────────────────────────────────────────────────
     let state: GameState = 'menu';
@@ -415,6 +420,7 @@ export default function PulseWeaverGame() {
     // ── Start / Reset Game ───────────────────────────────────────────────
     function startGame() {
       state = 'playing';
+      reportGameStart('pulse-weaver');
       SoundEngine.startAmbient('synth-combat');
       paused = false;
       px = W / 2;
@@ -561,6 +567,17 @@ export default function PulseWeaverGame() {
       if (keys['s'] || keys['arrowdown']) dy += 1;
       if (keys['a'] || keys['arrowleft']) dx -= 1;
       if (keys['d'] || keys['arrowright']) dx += 1;
+
+      // Apply virtual D-pad input on touch devices
+      if (isTouchDevice()) {
+        if (touch.state.up) { keys['arrowup'] = true; dy -= 1; }
+        if (touch.state.down) { keys['arrowdown'] = true; dy += 1; }
+        if (touch.state.left) { keys['arrowleft'] = true; dx -= 1; }
+        if (touch.state.right) { keys['arrowright'] = true; dx += 1; }
+        if (touch.state.action) { mouseDown = true; }
+        else if (!touchActive) { /* only clear if no other touch is firing */ }
+      }
+
       if (dx !== 0 || dy !== 0) {
         const len = Math.hypot(dx, dy);
         dx /= len;
@@ -769,6 +786,7 @@ export default function PulseWeaverGame() {
 
     function gameOver() {
       state = 'gameover';
+      reportGameEnd('pulse-weaver', score, true, wave);
       SoundEngine.stopAmbient();
       finalScore = score;
       finalWave = wave;
@@ -807,6 +825,9 @@ export default function PulseWeaverGame() {
         drawParticles();
         drawHUD();
         if (waveAnnounceTimer > 0) drawWaveAnnounce();
+
+        // Draw virtual touch controls overlay
+        touch.draw(ctx, W, H);
 
         // Draw pause overlay
         if (paused) {
@@ -902,7 +923,7 @@ export default function PulseWeaverGame() {
       ctx.fillText('Tune your beam to destroy geometric enemies', W / 2, H * 0.3 + 50);
 
       // Instructions
-      const instructions = isTouchDevice ? [
+      const instructions = isTouch ? [
         'Touch & hold  -  Aim, fire & move',
         'Drag freq bar  -  Adjust frequency',
         '',
@@ -1211,13 +1232,13 @@ export default function PulseWeaverGame() {
       }
     }
 
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isTouch = isTouchDevice();
 
     function drawFrequencyHUD() {
       const fhX = W / 2 - 100;
       const fhY = H - 40;
       const fhW = 200;
-      const fhH = isTouchDevice ? 14 : 8;
+      const fhH = isTouch ? 14 : 8;
 
       // Background bar
       ctx.fillStyle = 'rgba(255,255,255,0.1)';
@@ -1356,6 +1377,7 @@ export default function PulseWeaverGame() {
     return () => {
       cancelAnimationFrame(animId);
       SoundEngine.stopAmbient();
+      touch.destroy();
       canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('mousedown', onMouseDown);
       canvas.removeEventListener('mouseup', onMouseUp);

@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd } from '@/lib/game-events';
+import { TouchController, isTouchDevice } from '@/lib/touch-controls';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -213,7 +215,10 @@ export default function SymbiosisGame() {
     canvas.height = CANVAS_H * dpr;
     ctx.scale(dpr, dpr);
 
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    // Virtual touch controls (D-pad + action button)
+    const touch = new TouchController(canvas);
+
+    const isTouch = isTouchDevice();
 
     // -- Input state --
     const keys: Record<string, boolean> = {};
@@ -353,6 +358,8 @@ export default function SymbiosisGame() {
 
     // space key debounce
     let spaceWasDown = false;
+    // touch action button debounce (for tether toggle)
+    let prevTouchAction = false;
 
     function initGame() {
       paused = false;
@@ -545,6 +552,25 @@ export default function SymbiosisGame() {
       if (keys['s'] || keys['arrowdown']) hdy += 1;
       if (keys['a'] || keys['arrowleft']) hdx -= 1;
       if (keys['d'] || keys['arrowright']) hdx += 1;
+
+      // Apply virtual D-pad input on touch devices
+      if (isTouchDevice()) {
+        if (touch.state.up) { keys['arrowup'] = true; hdy -= 1; }
+        if (touch.state.down) { keys['arrowdown'] = true; hdy += 1; }
+        if (touch.state.left) { keys['arrowleft'] = true; hdx -= 1; }
+        if (touch.state.right) { keys['arrowright'] = true; hdx += 1; }
+        // Action button: toggle parasite.linked on release (true→false transition)
+        if (prevTouchAction && !touch.state.action) {
+          parasite.linked = !parasite.linked;
+          if (!parasite.linked) SoundEngine.play('tetherUnlink');
+          if (parasite.linked) {
+            spawnParticles(parasite.x, parasite.y, FUCHSIA, 6);
+            SoundEngine.play('tetherLink');
+          }
+        }
+        prevTouchAction = touch.state.action;
+      }
+
       if (hdx !== 0 || hdy !== 0) {
         const mag = Math.sqrt(hdx * hdx + hdy * hdy);
         hdx /= mag;
@@ -775,6 +801,7 @@ export default function SymbiosisGame() {
         host.hp = 0;
         if (score > highScore) { highScore = score; newHighScore = true; setHighScore('symbiosis', score); }
         state = 'GameOver';
+        reportGameEnd('symbiosis', score, true, wave);
         SoundEngine.stopAmbient();
         spawnParticles(host.x, host.y, FUCHSIA, 30, 2);
         SoundEngine.play('gameOver');
@@ -1162,7 +1189,7 @@ export default function SymbiosisGame() {
 
       ctx.font = '13px monospace';
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      if (isTouchDevice) {
+      if (isTouch) {
         ctx.fillText('Touch = Move Parasite  |  Double-tap = Link/Unlink', CANVAS_W / 2, CANVAS_H / 2 + 115);
       } else {
         ctx.fillText('WASD = Move Host  |  Mouse = Move Parasite  |  Space = Link/Unlink', CANVAS_W / 2, CANVAS_H / 2 + 115);
@@ -1257,6 +1284,7 @@ export default function SymbiosisGame() {
         mouseClicked = false;
         if (state === 'Menu') {
           state = 'Playing';
+          reportGameStart('symbiosis');
           SoundEngine.startAmbient('organic');
           initGame();
         } else if (state === 'GameOver') {
@@ -1276,6 +1304,9 @@ export default function SymbiosisGame() {
         if ((state as GameState) === 'GameOver') {
           drawGameOver(ctx);
         }
+
+        // Draw virtual touch controls overlay
+        touch.draw(ctx, CANVAS_W, CANVAS_H);
 
         // Draw pause overlay
         if (paused) {
@@ -1312,6 +1343,7 @@ export default function SymbiosisGame() {
       running = false;
       cancelAnimationFrame(animId);
       SoundEngine.stopAmbient();
+      touch.destroy();
       canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('mousedown', onMouseDown);
       canvas.removeEventListener('touchstart', onTouchStart);

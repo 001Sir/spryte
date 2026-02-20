@@ -2,7 +2,10 @@
 
 import { Game } from '@/types/game';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useFavorites } from '@/hooks/useFavorites';
+import { getPlayCount } from '@/lib/playcounts';
+import { getHighScore } from '@/lib/highscores';
 
 const difficultyConfig = {
   Easy: { color: '#4ade80', bg: '#4ade8015', label: 'Easy' },
@@ -14,7 +17,16 @@ export default function GameInfo({ game }: { game: Game }) {
   const [howToPlayOpen, setHowToPlayOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareFailed, setShareFailed] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(game.slug);
+  const [playCount, setPlayCount] = useState(0);
+  const [highScore, setHighScore] = useState(0);
   const diff = difficultyConfig[game.difficulty];
+
+  useEffect(() => {
+    setPlayCount(getPlayCount(game.slug));
+    setHighScore(getHighScore(game.slug));
+  }, [game.slug]);
 
   const handleShare = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -77,6 +89,22 @@ export default function GameInfo({ game }: { game: Game }) {
             Play
           </button>
 
+          {/* Favorite button */}
+          <button
+            onClick={() => toggleFavorite(game.slug)}
+            className={`flex items-center gap-1.5 text-xs px-4 py-2 rounded-full border transition-all duration-200 min-h-[36px] ${
+              favorited
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
+                : 'border-white/[0.06] text-muted hover:text-rose-400 hover:border-rose-500/30 hover:bg-white/[0.03]'
+            }`}
+            aria-label={favorited ? `Remove ${game.title} from favorites` : `Add ${game.title} to favorites`}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={favorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            {favorited ? 'Favorited' : 'Favorite'}
+          </button>
+
           {/* Share button */}
           <button
             onClick={handleShare}
@@ -116,8 +144,8 @@ export default function GameInfo({ game }: { game: Game }) {
         </div>
       </div>
 
-      {/* Controls row */}
-      <div className="mt-4 flex gap-6 text-sm">
+      {/* Controls & stats row */}
+      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
         <div className="flex items-center gap-2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted shrink-0" aria-hidden="true">
             <rect x="2" y="6" width="20" height="12" rx="2" />
@@ -126,6 +154,24 @@ export default function GameInfo({ game }: { game: Game }) {
           <span className="text-muted">Controls:</span>{' '}
           <span className="text-foreground">{game.controls}</span>
         </div>
+        {playCount > 0 && (
+          <div className="flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted shrink-0" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <span className="text-muted">Played:</span>{' '}
+            <span className="text-foreground">{playCount} time{playCount !== 1 ? 's' : ''}</span>
+          </div>
+        )}
+        {highScore > 0 && (
+          <div className="flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-amber-400 shrink-0" aria-hidden="true">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+            <span className="text-muted">High Score:</span>{' '}
+            <span className="text-amber-400 font-semibold">{highScore.toLocaleString()}</span>
+          </div>
+        )}
       </div>
 
       {/* How to Play expandable section */}

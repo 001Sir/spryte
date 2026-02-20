@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd, reportLevelComplete } from '@/lib/game-events';
+import { TouchController, isTouchDevice } from '@/lib/touch-controls';
 
 // ─── Constants ───────────────────────────────────────────────────────
 const W = 800;
@@ -269,6 +271,10 @@ export default function DriftGame() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Virtual touch controls (D-pad + action button)
+    const touch = new TouchController(canvas);
+    let prevAction = false;
+
     // Preload Drift sound files
     SoundEngine.preload('/sounds/drift-launch.wav');
     SoundEngine.preload('/sounds/drift-wall-hit.wav');
@@ -285,7 +291,7 @@ export default function DriftGame() {
     let stars = 0;
     let paused = false;
 
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isTouch = isTouchDevice();
     let highScore = getHighScore('drift');
     let newHighScore = false;
 
@@ -881,6 +887,7 @@ export default function DriftGame() {
           shakeIntensity = 12;
           SoundEngine.play('spikeHit');
           state = 'gameover';
+          reportGameEnd('drift', totalScore, false, currentLevel);
           SoundEngine.play('gameOver');
           SoundEngine.stopMusic();
           return;
@@ -946,6 +953,7 @@ export default function DriftGame() {
         totalScore += levelScore;
         if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('drift', totalScore); }
         state = 'levelComplete';
+        reportLevelComplete('drift', currentLevel, totalScore);
         spawnParticles(lv.exitX, lv.exitY, 25, '#51e2ff', 5);
         SoundEngine.playFile('/sounds/drift-level-complete.wav');
         SoundEngine.pauseMusic();
@@ -1025,6 +1033,53 @@ export default function DriftGame() {
         if (wp.life <= 0) windParticles.splice(i, 1);
       }
       if (windParticles.length > 60) windParticles.splice(0, windParticles.length - 60);
+
+      // ── Virtual touch controls → feed into keysDown + action button ──
+      if (isTouch) {
+        keysDown['ArrowUp'] = touch.state.up;
+        keysDown['ArrowDown'] = touch.state.down;
+        keysDown['ArrowLeft'] = touch.state.left;
+        keysDown['ArrowRight'] = touch.state.right;
+
+        const actionNow = touch.state.action;
+        // Action press (false → true): start charging
+        if (actionNow && !prevAction) {
+          if (onSurface && !kbCharging) {
+            kbAiming = true;
+            kbCharging = true;
+            kbChargePower = 0;
+            SoundEngine.startLoop('charge');
+          }
+        }
+        // Action release (true → false): fire launch
+        if (!actionNow && prevAction) {
+          if (kbCharging) {
+            const power = Math.max(kbChargePower, 0.15);
+            const speed = power * MAX_LAUNCH;
+            gvx = kbDirX * speed;
+            gvy = kbDirY * speed;
+            onSurface = false;
+            launches++;
+
+            // Launch stretch
+            if (Math.abs(gvx) > Math.abs(gvy)) {
+              scaleX = 1.3;
+              scaleY = 0.7;
+            } else {
+              scaleX = 0.7;
+              scaleY = 1.3;
+            }
+
+            spawnParticles(gx, gy, 6, '#51e2ff', 2);
+            SoundEngine.playFile('/sounds/drift-launch.wav');
+            kbCharging = false;
+            SoundEngine.stopLoop('charge');
+            kbAiming = false;
+            kbChargePower = 0;
+          }
+        }
+        prevAction = actionNow;
+      }
 
       // Keyboard aim direction — smooth rotation
       if (onSurface && !isAiming) {
@@ -1150,8 +1205,9 @@ export default function DriftGame() {
 
       ctx.fillStyle = 'rgba(81,226,255,0.4)';
       ctx.font = '13px monospace';
-      if (isTouchDevice) {
-        ctx.fillText('Touch & drag to aim, release to launch', W / 2, 483);
+      if (isTouch) {
+        ctx.fillText('D-pad to aim, A button to charge & launch', W / 2, 472);
+        ctx.fillText('Or touch & drag ghost to aim, release to launch', W / 2, 494);
       } else {
         ctx.fillText('Mouse: Click & drag to aim, release to launch', W / 2, 472);
         ctx.fillText('Keyboard: Arrow Keys / WASD + Space to charge & launch', W / 2, 494);
@@ -1238,7 +1294,7 @@ export default function DriftGame() {
 
       ctx.fillStyle = 'rgba(255,150,100,0.7)';
       ctx.font = '18px monospace';
-      ctx.fillText(isTouchDevice ? 'Tap to retry' : 'Click to retry', W / 2, 360);
+      ctx.fillText(isTouch ? 'Tap to retry' : 'Click to retry', W / 2, 360);
 
       // Draw remaining particles
       for (const p of particles) {
@@ -1323,6 +1379,9 @@ export default function DriftGame() {
       drawHUD(lv);
 
       ctx.restore();
+
+      // Virtual touch controls overlay (drawn outside shake transform)
+      touch.draw(ctx, W, H);
     };
 
     // ── Game Loop ──
@@ -1391,6 +1450,7 @@ export default function DriftGame() {
         // Check play button
         if (pos.x >= W / 2 - 80 && pos.x <= W / 2 + 80 && pos.y >= 400 && pos.y <= 448) {
           state = 'playing';
+          reportGameStart('drift');
           SoundEngine.play('menuSelect');
           currentLevel = 0;
           totalScore = 0;
@@ -1403,6 +1463,7 @@ export default function DriftGame() {
 
       if (state === 'gameover') {
         state = 'playing';
+        reportGameStart('drift');
         initLevel(currentLevel);
         SoundEngine.playMusic('/sounds/drift-music.mp3');
         return;
@@ -1525,6 +1586,7 @@ export default function DriftGame() {
       if (state === 'menu') {
         if (key === ' ' || key === 'Enter') {
           state = 'playing';
+          reportGameStart('drift');
           SoundEngine.play('menuSelect');
           currentLevel = 0;
           totalScore = 0;
@@ -1538,6 +1600,7 @@ export default function DriftGame() {
       if (state === 'gameover') {
         if (key === ' ' || key === 'Enter') {
           state = 'playing';
+          reportGameStart('drift');
           initLevel(currentLevel);
           SoundEngine.playMusic('/sounds/drift-music.mp3');
         }
@@ -1653,6 +1716,7 @@ export default function DriftGame() {
     return () => {
       cancelAnimationFrame(rafId);
       SoundEngine.stopMusic();
+      touch.destroy();
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);

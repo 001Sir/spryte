@@ -3,6 +3,7 @@
 import { useRef, useEffect } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd, reportLevelComplete } from '@/lib/game-events';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1129,6 +1130,7 @@ export default function GravityWellGame() {
           if (collision === 'debris') {
             if (score > highScore) { highScore = score; newHighScore = true; setHighScore('gravity-well', score); }
             state = 'gameover';
+            reportGameEnd('gravity-well', score, true, levelIndex + 1);
             SoundEngine.stopAmbient();
             SoundEngine.play('gameOver');
           } else if (collision === 'goal') {
@@ -1139,6 +1141,7 @@ export default function GravityWellGame() {
             levelScore = (1000 + starsCollected * 200 + timeBonus) * wellMultiplier;
             score += levelScore;
             state = 'levelComplete';
+            reportLevelComplete('gravity-well', levelIndex + 1, score);
             SoundEngine.play('levelComplete');
           }
 
@@ -1198,6 +1201,7 @@ export default function GravityWellGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        reportGameStart('gravity-well');
         SoundEngine.startAmbient('space-gravity');
         score = 0;
         newHighScore = false;
@@ -1209,6 +1213,7 @@ export default function GravityWellGame() {
 
       if (state === 'gameover') {
         state = 'playing';
+        reportGameStart('gravity-well');
         SoundEngine.startAmbient('space-gravity');
         score = 0;
         newHighScore = false;
@@ -1330,6 +1335,7 @@ export default function GravityWellGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        reportGameStart('gravity-well');
         SoundEngine.startAmbient('space-gravity');
         score = 0;
         newHighScore = false;
@@ -1340,6 +1346,7 @@ export default function GravityWellGame() {
 
       if (state === 'gameover') {
         state = 'playing';
+        reportGameStart('gravity-well');
         SoundEngine.startAmbient('space-gravity');
         score = 0;
         newHighScore = false;

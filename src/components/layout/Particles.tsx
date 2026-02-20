@@ -1,6 +1,19 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+const STORAGE_KEY = 'spryte-particles-enabled';
+
+function getStoredPref(): boolean {
+  try {
+    const val = localStorage.getItem(STORAGE_KEY);
+    if (val !== null) return val === 'true';
+    // Default: disabled if user prefers reduced motion
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return true;
+  }
+}
 
 interface Particle {
   x: number;
@@ -13,6 +26,19 @@ interface Particle {
 
 export default function Particles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [enabled, setEnabled] = useState(true);
+  const animIdRef = useRef<number>(0);
+
+  // Hydrate from localStorage
+  useEffect(() => {
+    setEnabled(getStoredPref());
+  }, []);
+
+  const toggle = () => {
+    const next = !enabled;
+    setEnabled(next);
+    try { localStorage.setItem(STORAGE_KEY, String(next)); } catch {}
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -20,7 +46,10 @@ export default function Particles() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!enabled) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
 
     let w = (canvas.width = window.innerWidth);
     let h = (canvas.height = window.innerHeight);
@@ -43,7 +72,6 @@ export default function Particles() {
     function draw() {
       ctx!.clearRect(0, 0, w, h);
 
-      // Draw connections (purple tinted)
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -61,7 +89,6 @@ export default function Particles() {
         }
       }
 
-      // Draw particles (accent tinted)
       for (const p of particles) {
         ctx!.fillStyle = `rgba(233, 69, 96, ${p.o})`;
         ctx!.beginPath();
@@ -81,18 +108,18 @@ export default function Particles() {
       }
     }
 
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
       draw();
       return;
     }
 
-    let animId: number;
     function loop() {
       update();
       draw();
-      animId = requestAnimationFrame(loop);
+      animIdRef.current = requestAnimationFrame(loop);
     }
-    animId = requestAnimationFrame(loop);
+    animIdRef.current = requestAnimationFrame(loop);
 
     const onResize = () => {
       w = canvas!.width = window.innerWidth;
@@ -101,10 +128,40 @@ export default function Particles() {
     window.addEventListener('resize', onResize);
 
     return () => {
-      cancelAnimationFrame(animId);
+      cancelAnimationFrame(animIdRef.current);
       window.removeEventListener('resize', onResize);
     };
-  }, []);
+  }, [enabled]);
 
-  return <canvas ref={canvasRef} className="particles-canvas" aria-hidden="true" />;
+  return (
+    <>
+      <canvas ref={canvasRef} className="particles-canvas" aria-hidden="true" />
+      <button
+        onClick={toggle}
+        className="fixed bottom-6 left-6 z-40 frosted-glass border border-white/[0.06] hover:border-white/[0.12] text-dim hover:text-muted p-2.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 group/particles"
+        aria-label={enabled ? 'Disable background particles' : 'Enable background particles'}
+        title={enabled ? 'Disable particles' : 'Enable particles'}
+      >
+        {enabled ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="4" cy="8" r="1" />
+            <circle cx="20" cy="8" r="1" />
+            <circle cx="7" cy="18" r="1" />
+            <circle cx="17" cy="18" r="1" />
+            <path d="M4 8l8 4M20 8l-8 4M7 18l5-6M17 18l-5-6" opacity="0.4" />
+          </svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="4" cy="8" r="1" />
+            <circle cx="20" cy="8" r="1" />
+            <circle cx="7" cy="18" r="1" />
+            <circle cx="17" cy="18" r="1" />
+            <path d="M2 2l20 20" strokeWidth="2.5" />
+          </svg>
+        )}
+      </button>
+    </>
+  );
 }

@@ -3,7 +3,12 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
-  description: 'Terms of Service for Spryte Games — rules for using our website and games.',
+  description: 'Terms of Service for Spryte Games — rules for using our free browser games and website.',
+  openGraph: {
+    title: 'Terms of Service — Spryte Games',
+    description: 'Terms of Service for Spryte Games — rules for using our website and games.',
+    url: 'https://sprytegames.com/terms',
+  },
   alternates: {
     canonical: 'https://sprytegames.com/terms',
   },
@@ -87,7 +92,7 @@ export default function TermsPage() {
           <h2 className="text-lg font-semibold mb-2">Contact Us</h2>
           <p>
             If you have questions about these Terms of Service, please contact us at{' '}
-            <a href="mailto:contact@sprytegames.com" className="text-accent hover:underline">contact@sprytegames.com</a>.
+            <a href="mailto:contact@sprytegames.com" className="text-accent hover:underline" rel="noopener">contact@sprytegames.com</a>.
           </p>
         </section>
       </div>

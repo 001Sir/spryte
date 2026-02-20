@@ -3,8 +3,14 @@
 import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
+import { useGameEvents } from '@/hooks/useGameEvents';
 import { SoundEngine } from '@/lib/sounds';
+import { incrementPlayCount } from '@/lib/playcounts';
+import { getHighScore } from '@/lib/highscores';
+import { getGameBySlug } from '@/data/games';
+import type { GameEndDetail } from '@/lib/game-events';
 import GameRecorder from './GameRecorder';
+import ShareScoreButton from '@/components/ui/ShareScoreButton';
 
 function LoadingSkeleton() {
   return (
@@ -36,19 +42,44 @@ const gameComponents: Record<string, ReturnType<typeof dynamic>> = {
   'deja-vu': dynamic(() => import('@/games/deja-vu/DejaVuGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
   'slide-devil': dynamic(() => import('@/games/slide-devil/SlideDevilGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
   'whats-missing': dynamic(() => import('@/games/whats-missing/WhatsMissingGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
+  'cascade': dynamic(() => import('@/games/cascade/CascadeGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
+  'ricochet': dynamic(() => import('@/games/ricochet/RicochetGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
+  'burn': dynamic(() => import('@/games/burn/BurnGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
 };
 
 export default function GamePlayer({ slug }: { slug: string }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMuted, setIsMuted] = useState(() => SoundEngine.muted);
+  const [lastScore, setLastScore] = useState<{ score: number; isNewHigh: boolean } | null>(null);
   const { addPlayed } = useRecentlyPlayed();
+  useGameEvents();
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const GameComponent = gameComponents[slug];
+  const gameData = getGameBySlug(slug);
 
-  // Track this game as recently played
+  // Track this game as recently played + increment play count
   useEffect(() => {
     addPlayed(slug);
+    incrementPlayCount(slug);
   }, [slug, addPlayed]);
+
+  // Listen for game-end to show share button
+  useEffect(() => {
+    const handleEnd = (e: Event) => {
+      const detail = (e as CustomEvent<GameEndDetail>).detail;
+      if (detail.slug === slug) {
+        const prevHigh = getHighScore(slug);
+        setLastScore({ score: detail.score, isNewHigh: detail.score > prevHigh });
+      }
+    };
+    const handleStart = () => setLastScore(null);
+    window.addEventListener('spryte:game-end', handleEnd);
+    window.addEventListener('spryte:game-start', handleStart);
+    return () => {
+      window.removeEventListener('spryte:game-end', handleEnd);
+      window.removeEventListener('spryte:game-start', handleStart);
+    };
+  }, [slug]);
 
   // Track fullscreen state changes (with webkit fallback for Safari)
   useEffect(() => {
@@ -184,7 +215,18 @@ export default function GamePlayer({ slug }: { slug: string }) {
         <p className="text-xs text-muted">
           Press <kbd className="px-1.5 py-0.5 bg-card border border-white/[0.06] rounded text-[10px] font-mono">F</kbd> fullscreen · <kbd className="px-1.5 py-0.5 bg-card border border-white/[0.06] rounded text-[10px] font-mono">M</kbd> mute · <kbd className="px-1.5 py-0.5 bg-card border border-white/[0.06] rounded text-[10px] font-mono">P</kbd> pause
         </p>
-        <GameRecorder slug={slug} />
+        <div className="flex items-center gap-2">
+          {lastScore && gameData && (
+            <ShareScoreButton
+              gameTitle={gameData.title}
+              gameSlug={slug}
+              score={lastScore.score}
+              isNewHigh={lastScore.isNewHigh}
+              gameColor={gameData.color}
+            />
+          )}
+          <GameRecorder slug={slug} />
+        </div>
       </div>
     </div>
   );

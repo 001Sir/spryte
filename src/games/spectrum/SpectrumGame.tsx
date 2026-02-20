@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd } from '@/lib/game-events';
+import { remapColor, getColorblindMode } from '@/lib/colorblind';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const W = 800;
@@ -144,6 +146,11 @@ export default function SpectrumGame() {
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
+    // ── Colorblind mode ─────────────────────────────────────────────────────
+    let cbMode = getColorblindMode();
+    const onCbChange = () => { cbMode = getColorblindMode(); };
+    window.addEventListener('spryte:colorblind-changed', onCbChange);
+
     // ── Game state ──────────────────────────────────────────────────────────
     type GameState = 'menu' | 'playing' | 'betting' | 'reveal' | 'roundEnd' | 'finale-intro' | 'gameover';
     let state: GameState = 'menu';
@@ -220,7 +227,7 @@ export default function SpectrumGame() {
     const ambientParticles: AmbientParticle[] = [];
     function initAmbientParticles() {
       ambientParticles.length = 0;
-      const colors = ['#f9731620', '#22c55e15', '#eab30815', '#ef444415', '#84cc1615'];
+      const colors = [remapColor('#f97316', cbMode) + '20', remapColor('#22c55e', cbMode) + '15', remapColor('#eab308', cbMode) + '15', remapColor('#ef4444', cbMode) + '15', remapColor('#84cc16', cbMode) + '15'];
       for (let i = 0; i < 25; i++) {
         ambientParticles.push({
           x: Math.random() * W,
@@ -270,6 +277,7 @@ export default function SpectrumGame() {
 
     // ── Start game ──────────────────────────────────────────────────────────
     function startGame() {
+      reportGameStart('spectrum');
       questions = shuffle(QUESTIONS).slice(0, TOTAL_ROUNDS);
       round = 0;
       totalScore = 0;
@@ -439,17 +447,17 @@ export default function SpectrumGame() {
 
       // Decorative spectrum bar
       const specGrad = ctx.createLinearGradient(100, 0, 700, 0);
-      specGrad.addColorStop(0, '#22c55e');
-      specGrad.addColorStop(0.25, '#84cc16');
-      specGrad.addColorStop(0.5, '#eab308');
-      specGrad.addColorStop(0.75, '#f97316');
-      specGrad.addColorStop(1, '#ef4444');
+      specGrad.addColorStop(0, remapColor('#22c55e', cbMode));
+      specGrad.addColorStop(0.25, remapColor('#84cc16', cbMode));
+      specGrad.addColorStop(0.5, remapColor('#eab308', cbMode));
+      specGrad.addColorStop(0.75, remapColor('#f97316', cbMode));
+      specGrad.addColorStop(1, remapColor('#ef4444', cbMode));
       ctx.fillStyle = specGrad;
       ctx.fillRect(100, 200, 600, 4);
 
       // Animated glow dot on the spectrum
       const dotX = 100 + (Math.sin(menuPulse) * 0.5 + 0.5) * 600;
-      drawGlow(dotX, 202, 30, ORANGE, 0.6);
+      drawGlow(dotX, 202, 30, remapColor(ORANGE, cbMode), 0.6);
       ctx.fillStyle = '#fff';
       ctx.beginPath();
       ctx.arc(dotX, 202, 5, 0, Math.PI * 2);
@@ -457,7 +465,7 @@ export default function SpectrumGame() {
 
       // Title
       ctx.textAlign = 'center';
-      ctx.fillStyle = ORANGE;
+      ctx.fillStyle = remapColor(ORANGE, cbMode);
       ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
       ctx.fillText('SPECTRUM', W / 2, 160);
 
@@ -482,11 +490,11 @@ export default function SpectrumGame() {
       const btnW = 200, btnH = 56, btnX = W / 2 - btnW / 2, btnY = 400;
       const pulse = Math.sin(menuPulse * 2) * 0.15 + 0.85;
       if (hoverStartBtn) {
-        drawGlow(W / 2, btnY + btnH / 2, 60, ORANGE, 0.3);
+        drawGlow(W / 2, btnY + btnH / 2, 60, remapColor(ORANGE, cbMode), 0.3);
       }
       ctx.globalAlpha = pulse;
       drawRoundedRect(btnX, btnY, btnW, btnH, 12);
-      ctx.fillStyle = hoverStartBtn ? '#fb923c' : ORANGE;
+      ctx.fillStyle = hoverStartBtn ? remapColor('#fb923c', cbMode) : remapColor(ORANGE, cbMode);
       ctx.fill();
       ctx.globalAlpha = 1;
 
@@ -519,20 +527,20 @@ export default function SpectrumGame() {
       ctx.font = '12px system-ui, -apple-system, sans-serif';
       const catText = currentQ.category;
       const catMetrics = ctx.measureText(catText);
-      ctx.fillStyle = ORANGE + '33';
+      ctx.fillStyle = remapColor(ORANGE, cbMode) + '33';
       drawRoundedRect(20, 38, catMetrics.width + 16, 24, 6);
       ctx.fill();
-      ctx.fillStyle = ORANGE;
+      ctx.fillStyle = remapColor(ORANGE, cbMode);
       ctx.fillText(catText, 28, 55);
 
       // Finale badge
       if (finaleMode) {
-        ctx.fillStyle = '#eab30833';
+        ctx.fillStyle = remapColor('#eab308', cbMode) + '33';
         const finaleText = 'DOUBLE OR NOTHING';
         const finaleMetrics = ctx.measureText(finaleText);
         drawRoundedRect(20, 66, finaleMetrics.width + 16, 22, 6);
         ctx.fill();
-        ctx.fillStyle = '#eab308';
+        ctx.fillStyle = remapColor('#eab308', cbMode);
         ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
         ctx.fillText(finaleText, 28, 81);
       }
@@ -554,7 +562,7 @@ export default function SpectrumGame() {
         ctx.beginPath();
         ctx.arc(dx + 4, 26, 4, 0, Math.PI * 2);
         if (i < round) {
-          ctx.fillStyle = ORANGE;
+          ctx.fillStyle = remapColor(ORANGE, cbMode);
         } else if (i === round) {
           ctx.fillStyle = '#f5f5f5';
         } else {
@@ -567,12 +575,12 @@ export default function SpectrumGame() {
       if (chainLength > 0) {
         const chainText = `CHAIN x${chainLength}`;
         ctx.textAlign = 'right';
-        ctx.fillStyle = '#ef4444';
+        ctx.fillStyle = remapColor('#ef4444', cbMode);
         ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
         ctx.fillText(chainText, W - 20, 72);
 
         // Fire glow effect
-        drawGlow(W - 40, 66, 20, '#ef4444', 0.3 + Math.sin(Date.now() / 200) * 0.15);
+        drawGlow(W - 40, 66, 20, remapColor('#ef4444', cbMode), 0.3 + Math.sin(Date.now() / 200) * 0.15);
       }
     }
 
@@ -585,9 +593,9 @@ export default function SpectrumGame() {
 
       // Gradient fill on the track
       const trackGrad = ctx.createLinearGradient(NL_X, 0, NL_RIGHT, 0);
-      trackGrad.addColorStop(0, '#22c55e33');
-      trackGrad.addColorStop(0.5, '#eab30833');
-      trackGrad.addColorStop(1, '#ef444433');
+      trackGrad.addColorStop(0, remapColor('#22c55e', cbMode) + '33');
+      trackGrad.addColorStop(0.5, remapColor('#eab308', cbMode) + '33');
+      trackGrad.addColorStop(1, remapColor('#ef4444', cbMode) + '33');
       ctx.fillStyle = trackGrad;
       drawRoundedRect(NL_X - 10, NL_Y - 6, NL_W + 20, 12, 6);
       ctx.fill();
@@ -617,10 +625,10 @@ export default function SpectrumGame() {
         const revealX = lerp(NL_X, ansX, clamp(animT * 2, 0, 1));
 
         // Green glow
-        drawGlow(revealX, NL_Y, 30, '#22c55e', 0.5);
+        drawGlow(revealX, NL_Y, 30, remapColor('#22c55e', cbMode), 0.5);
 
         // Green line
-        ctx.strokeStyle = '#22c55e';
+        ctx.strokeStyle = remapColor('#22c55e', cbMode);
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(revealX, NL_Y - 20);
@@ -632,7 +640,7 @@ export default function SpectrumGame() {
           const labelAlpha = clamp((animT - 0.5) * 4, 0, 1);
           ctx.globalAlpha = labelAlpha;
           ctx.textAlign = 'center';
-          ctx.fillStyle = '#22c55e';
+          ctx.fillStyle = remapColor('#22c55e', cbMode);
           ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
           ctx.fillText(`${formatNumber(currentQ.answer)}${currentQ.unit}`, ansX, NL_Y - 30);
           ctx.globalAlpha = 1;
@@ -646,10 +654,10 @@ export default function SpectrumGame() {
         const zoneLeft = Math.max(NL_X, estX - zonePixels);
         const zoneRight = Math.min(NL_RIGHT, estX + zonePixels);
         ctx.globalAlpha = 0.12;
-        ctx.fillStyle = CONF_COLORS[confidence - 1];
+        ctx.fillStyle = remapColor(CONF_COLORS[confidence - 1], cbMode);
         ctx.fillRect(zoneLeft, NL_Y - 18, zoneRight - zoneLeft, 36);
         ctx.globalAlpha = 0.3;
-        ctx.strokeStyle = CONF_COLORS[confidence - 1];
+        ctx.strokeStyle = remapColor(CONF_COLORS[confidence - 1], cbMode);
         ctx.lineWidth = 1;
         ctx.setLineDash([3, 3]);
         ctx.strokeRect(zoneLeft, NL_Y - 18, zoneRight - zoneLeft, 36);
@@ -661,13 +669,13 @@ export default function SpectrumGame() {
       const estX = NL_X + estimate * NL_W;
       if (!showAnswer || animT < 1) {
         // Glow
-        drawGlow(estX, NL_Y, 25, ORANGE, dragging ? 0.6 : 0.3);
+        drawGlow(estX, NL_Y, 25, remapColor(ORANGE, cbMode), dragging ? 0.6 : 0.3);
       }
 
       // Marker circle
       ctx.beginPath();
       ctx.arc(estX, NL_Y, MARKER_R, 0, Math.PI * 2);
-      ctx.fillStyle = estimateLocked ? ORANGE_DIM : (dragging ? '#fb923c' : ORANGE);
+      ctx.fillStyle = estimateLocked ? remapColor(ORANGE_DIM, cbMode) : (dragging ? remapColor('#fb923c', cbMode) : remapColor(ORANGE, cbMode));
       ctx.fill();
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
@@ -687,7 +695,7 @@ export default function SpectrumGame() {
       drawRoundedRect(tooltipX, tooltipY, tooltipW, tooltipH, 6);
       ctx.fillStyle = '#1a1a1a';
       ctx.fill();
-      ctx.strokeStyle = estimateLocked ? ORANGE_DIM : ORANGE;
+      ctx.strokeStyle = estimateLocked ? remapColor(ORANGE_DIM, cbMode) : remapColor(ORANGE, cbMode);
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
@@ -700,7 +708,7 @@ export default function SpectrumGame() {
       ctx.fill();
 
       // Tooltip text
-      ctx.fillStyle = estimateLocked ? ORANGE_DIM : '#f5f5f5';
+      ctx.fillStyle = estimateLocked ? remapColor(ORANGE_DIM, cbMode) : '#f5f5f5';
       ctx.fillText(displayVal + (currentQ.unit ? currentQ.unit : ''), estX, tooltipY + 18);
 
       // If showing answer, draw distance line between estimate and answer
@@ -708,7 +716,7 @@ export default function SpectrumGame() {
         const ansX = valueToX(currentQ.answer, currentQ);
         const lineAlpha = clamp((animT - 0.6) * 3, 0, 1);
         ctx.globalAlpha = lineAlpha * 0.5;
-        ctx.strokeStyle = chainBroken ? '#ef4444' : '#eab308';
+        ctx.strokeStyle = chainBroken ? remapColor('#ef4444', cbMode) : remapColor('#eab308', cbMode);
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
@@ -775,14 +783,14 @@ export default function SpectrumGame() {
         // Button background
         drawRoundedRect(x, CONF_Y, CONF_BTN_W, CONF_BTN_H, 10);
         if (selected) {
-          ctx.fillStyle = CONF_COLORS[i];
+          ctx.fillStyle = remapColor(CONF_COLORS[i], cbMode);
           ctx.fill();
           // Glow
-          drawGlow(x + CONF_BTN_W / 2, CONF_Y + CONF_BTN_H / 2, 40, CONF_COLORS[i], 0.3);
+          drawGlow(x + CONF_BTN_W / 2, CONF_Y + CONF_BTN_H / 2, 40, remapColor(CONF_COLORS[i], cbMode), 0.3);
         } else {
           ctx.fillStyle = hovered ? '#333' : '#1a1a1a';
           ctx.fill();
-          ctx.strokeStyle = hovered ? CONF_COLORS[i] : '#333';
+          ctx.strokeStyle = hovered ? remapColor(CONF_COLORS[i], cbMode) : '#333';
           ctx.lineWidth = 1.5;
           ctx.stroke();
         }
@@ -804,7 +812,7 @@ export default function SpectrumGame() {
       const btnW = 180, btnH = 44;
       const btnX = W / 2 - btnW / 2, btnY = 520;
       drawRoundedRect(btnX, btnY, btnW, btnH, 10);
-      ctx.fillStyle = hoverLockIn ? '#fb923c' : ORANGE;
+      ctx.fillStyle = hoverLockIn ? remapColor('#fb923c', cbMode) : remapColor(ORANGE, cbMode);
       ctx.fill();
 
       ctx.textAlign = 'center';
@@ -833,9 +841,9 @@ export default function SpectrumGame() {
       ctx.stroke();
 
       // Color based on time remaining
-      let color = '#22c55e';
-      if (fraction < 0.33) color = '#ef4444';
-      else if (fraction < 0.5) color = '#eab308';
+      let color = remapColor('#22c55e', cbMode);
+      if (fraction < 0.33) color = remapColor('#ef4444', cbMode);
+      else if (fraction < 0.5) color = remapColor('#eab308', cbMode);
 
       // Timer arc (shrinks as time depletes)
       ctx.strokeStyle = color;
@@ -874,7 +882,7 @@ export default function SpectrumGame() {
             vy: 10 + Math.random() * 20,
             life: 0.6 + Math.random() * 0.8,
             maxLife: 0.6 + Math.random() * 0.8,
-            color: '#f97316',
+            color: remapColor('#f97316', cbMode),
             size: 2 + Math.random() * 2,
           });
         }
@@ -882,6 +890,7 @@ export default function SpectrumGame() {
         // Chain 3-4: Fire emitters on both sides
         if (chainLength >= 3 && Math.random() < 0.4) {
           const side = Math.random() > 0.5 ? -5 : W + 5;
+          const fireColors = [remapColor('#f97316', cbMode), remapColor('#ef4444', cbMode)];
           fireParticles.push({
             x: side,
             y: Math.random() * H * 0.8,
@@ -889,13 +898,14 @@ export default function SpectrumGame() {
             vy: -(10 + Math.random() * 30),
             life: 0.6 + Math.random() * 0.8,
             maxLife: 0.6 + Math.random() * 0.8,
-            color: ['#f97316', '#ef4444'][Math.floor(Math.random() * 2)],
+            color: fireColors[Math.floor(Math.random() * 2)],
             size: 2 + Math.random() * 3,
           });
         }
 
         // Chain 5+: Embers rising from bottom
         if (chainLength >= 5 && Math.random() < 0.5) {
+          const emberColors = [remapColor('#f97316', cbMode), remapColor('#ef4444', cbMode), remapColor('#eab308', cbMode)];
           fireParticles.push({
             x: Math.random() * W,
             y: H + 5,
@@ -903,7 +913,7 @@ export default function SpectrumGame() {
             vy: -(40 + Math.random() * 60),
             life: 1.0 + Math.random() * 1.5,
             maxLife: 1.0 + Math.random() * 1.5,
-            color: ['#f97316', '#ef4444', '#eab308'][Math.floor(Math.random() * 3)],
+            color: emberColors[Math.floor(Math.random() * 3)],
             size: 2 + Math.random() * 4,
           });
         }
@@ -942,7 +952,7 @@ export default function SpectrumGame() {
         const intensity = Math.min(chainLength / 5, 1);
         const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
         ctx.globalAlpha = intensity * 0.35 * pulse;
-        const color = chainLength >= 5 ? '#ef4444' : (chainLength >= 3 ? '#f97316' : '#f9731680');
+        const color = chainLength >= 5 ? remapColor('#ef4444', cbMode) : (chainLength >= 3 ? remapColor('#f97316', cbMode) : remapColor('#f97316', cbMode) + '80');
         ctx.strokeStyle = color;
         ctx.lineWidth = chainLength >= 5 ? 4 : (chainLength >= 3 ? 3 : 2);
         drawRoundedRect(4, 4, W - 8, H - 8, 12);
@@ -954,7 +964,7 @@ export default function SpectrumGame() {
       if (finaleMode && state !== 'finale-intro') {
         const pulse = Math.sin(Date.now() / 300) * 0.2 + 0.8;
         ctx.globalAlpha = 0.25 * pulse;
-        ctx.strokeStyle = '#eab308';
+        ctx.strokeStyle = remapColor('#eab308', cbMode);
         ctx.lineWidth = 3;
         drawRoundedRect(4, 4, W - 8, H - 8, 12);
         ctx.stroke();
@@ -976,25 +986,25 @@ export default function SpectrumGame() {
         // Spawn particles at answer location
         const ansX = valueToX(currentQ.answer, currentQ);
         if (chainBroken) {
-          spawnParticles(ansX, NL_Y, 30, '#ef4444', 4);
+          spawnParticles(ansX, NL_Y, 30, remapColor('#ef4444', cbMode), 4);
           // Chain break: burst of red particles + screen shake
-          spawnParticles(ansX, NL_Y - 20, 15, '#ef4444', 3);
+          spawnParticles(ansX, NL_Y - 20, 15, remapColor('#ef4444', cbMode), 3);
           shakeIntensity = 8;
           shakeTime = 0.4;
           SoundEngine.play('playerDamage');
         } else if (chainLength > 0 && confidence >= HIGH_CONF_MIN) {
-          spawnParticles(ansX, NL_Y, 20, ORANGE, 3);
-          spawnParticles(ansX, NL_Y, 10, '#eab308', 2);
+          spawnParticles(ansX, NL_Y, 20, remapColor(ORANGE, cbMode), 3);
+          spawnParticles(ansX, NL_Y, 10, remapColor('#eab308', cbMode), 2);
           SoundEngine.play('comboUp');
         } else {
-          spawnParticles(ansX, NL_Y, 12, '#22c55e', 2);
+          spawnParticles(ansX, NL_Y, 12, remapColor('#22c55e', cbMode), 2);
           SoundEngine.play('collectGem');
         }
 
         // Finale gold particle burst
         if (finaleMode) {
-          spawnParticles(ansX, NL_Y, 25, '#eab308', 4);
-          spawnParticles(ansX, NL_Y, 15, '#fbbf24', 3);
+          spawnParticles(ansX, NL_Y, 25, remapColor('#eab308', cbMode), 4);
+          spawnParticles(ansX, NL_Y, 15, remapColor('#fbbf24', cbMode), 3);
         }
       }
 
@@ -1015,12 +1025,12 @@ export default function SpectrumGame() {
         ctx.textAlign = 'center';
         let feedbackText = '';
         let feedbackColor = '';
-        if (roundAccuracy >= 0.98) { feedbackText = 'PERFECT!'; feedbackColor = '#22c55e'; }
-        else if (roundAccuracy >= 0.90) { feedbackText = 'Spot On!'; feedbackColor = '#22c55e'; }
-        else if (roundAccuracy >= 0.80) { feedbackText = 'Very Close!'; feedbackColor = '#84cc16'; }
-        else if (roundAccuracy >= 0.65) { feedbackText = 'Close!'; feedbackColor = '#eab308'; }
-        else if (roundAccuracy >= 0.45) { feedbackText = 'Not Bad'; feedbackColor = '#f97316'; }
-        else { feedbackText = 'Way Off!'; feedbackColor = '#ef4444'; }
+        if (roundAccuracy >= 0.98) { feedbackText = 'PERFECT!'; feedbackColor = remapColor('#22c55e', cbMode); }
+        else if (roundAccuracy >= 0.90) { feedbackText = 'Spot On!'; feedbackColor = remapColor('#22c55e', cbMode); }
+        else if (roundAccuracy >= 0.80) { feedbackText = 'Very Close!'; feedbackColor = remapColor('#84cc16', cbMode); }
+        else if (roundAccuracy >= 0.65) { feedbackText = 'Close!'; feedbackColor = remapColor('#eab308', cbMode); }
+        else if (roundAccuracy >= 0.45) { feedbackText = 'Not Bad'; feedbackColor = remapColor('#f97316', cbMode); }
+        else { feedbackText = 'Way Off!'; feedbackColor = remapColor('#ef4444', cbMode); }
 
         ctx.fillStyle = feedbackColor;
         ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
@@ -1034,21 +1044,21 @@ export default function SpectrumGame() {
         ctx.fillText(`Base: ${roundBaseScore}`, W / 2 - 120, centerY);
 
         // Multiplier
-        ctx.fillStyle = CONF_COLORS[confidence - 1];
+        ctx.fillStyle = remapColor(CONF_COLORS[confidence - 1], cbMode);
         ctx.fillText(`x${confidence} = ${roundBaseScore * confidence}`, W / 2, centerY);
 
         // Chain bonus or penalty
         if (chainBroken) {
-          ctx.fillStyle = '#ef4444';
+          ctx.fillStyle = remapColor('#ef4444', cbMode);
           ctx.fillText('CHAIN BROKEN! -50%', W / 2 + 130, centerY);
         } else if (chainBonus > 0) {
-          ctx.fillStyle = '#eab308';
+          ctx.fillStyle = remapColor('#eab308', cbMode);
           ctx.fillText(`Chain +${chainBonus}`, W / 2 + 130, centerY);
         }
 
         // Quick Draw bonus indicator
         if (quickDraw) {
-          ctx.fillStyle = '#06b6d4';
+          ctx.fillStyle = remapColor('#06b6d4', cbMode);
           ctx.font = '13px system-ui, -apple-system, sans-serif';
           ctx.fillText(`Quick Draw +${QUICK_DRAW_BONUS}`, W / 2 - 120, centerY + 18);
         }
@@ -1056,11 +1066,11 @@ export default function SpectrumGame() {
         // Finale scoring indicator
         if (finaleMode) {
           if (roundAccuracy >= 0.80) {
-            ctx.fillStyle = '#eab308';
+            ctx.fillStyle = remapColor('#eab308', cbMode);
             ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
             ctx.fillText('SCORE DOUBLED!', W / 2 + 120, centerY + 18);
           } else if (roundAccuracy < 0.40) {
-            ctx.fillStyle = '#ef4444';
+            ctx.fillStyle = remapColor('#ef4444', cbMode);
             ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
             ctx.fillText('PENALTY -50%', W / 2 + 120, centerY + 18);
           }
@@ -1138,7 +1148,7 @@ export default function SpectrumGame() {
       ctx.textAlign = 'center';
 
       // Title
-      ctx.fillStyle = ORANGE;
+      ctx.fillStyle = remapColor(ORANGE, cbMode);
       ctx.font = 'bold 40px system-ui, -apple-system, sans-serif';
       ctx.fillText('GAME OVER', W / 2, 120);
 
@@ -1153,10 +1163,10 @@ export default function SpectrumGame() {
 
       // New high score indicator
       if (newHighScore) {
-        ctx.fillStyle = '#eab308';
+        ctx.fillStyle = remapColor('#eab308', cbMode);
         ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
         ctx.fillText('NEW HIGH SCORE!', W / 2, 290);
-        spawnParticles(W / 2, 280, 1, '#eab308', 2);
+        spawnParticles(W / 2, 280, 1, remapColor('#eab308', cbMode), 2);
       } else if (highScore > 0) {
         ctx.fillStyle = '#525252';
         ctx.font = '14px system-ui, -apple-system, sans-serif';
@@ -1166,12 +1176,12 @@ export default function SpectrumGame() {
       // Accuracy grade
       const avgAcc = totalAccuracy / TOTAL_ROUNDS;
       let grade = 'F';
-      let gradeColor = '#ef4444';
-      if (avgAcc >= 0.95) { grade = 'S'; gradeColor = '#eab308'; }
-      else if (avgAcc >= 0.85) { grade = 'A'; gradeColor = '#22c55e'; }
-      else if (avgAcc >= 0.70) { grade = 'B'; gradeColor = '#84cc16'; }
-      else if (avgAcc >= 0.55) { grade = 'C'; gradeColor = '#eab308'; }
-      else if (avgAcc >= 0.40) { grade = 'D'; gradeColor = '#f97316'; }
+      let gradeColor = remapColor('#ef4444', cbMode);
+      if (avgAcc >= 0.95) { grade = 'S'; gradeColor = remapColor('#eab308', cbMode); }
+      else if (avgAcc >= 0.85) { grade = 'A'; gradeColor = remapColor('#22c55e', cbMode); }
+      else if (avgAcc >= 0.70) { grade = 'B'; gradeColor = remapColor('#84cc16', cbMode); }
+      else if (avgAcc >= 0.55) { grade = 'C'; gradeColor = remapColor('#eab308', cbMode); }
+      else if (avgAcc >= 0.40) { grade = 'D'; gradeColor = remapColor('#f97316', cbMode); }
 
       ctx.fillStyle = gradeColor;
       ctx.font = 'bold 36px system-ui, -apple-system, sans-serif';
@@ -1185,8 +1195,8 @@ export default function SpectrumGame() {
       ctx.font = '13px system-ui, -apple-system, sans-serif';
       const stats = [
         { label: `Avg: ${Math.round(totalScore / TOTAL_ROUNDS)}`, color: '#a3a3a3' },
-        { label: `${perfectCount} Perfect${perfectCount !== 1 ? 's' : ''}`, color: '#22c55e' },
-        { label: bestChain > 0 ? `Chain x${bestChain}` : 'No chains', color: bestChain > 0 ? '#ef4444' : '#525252' },
+        { label: `${perfectCount} Perfect${perfectCount !== 1 ? 's' : ''}`, color: remapColor('#22c55e', cbMode) },
+        { label: bestChain > 0 ? `Chain x${bestChain}` : 'No chains', color: bestChain > 0 ? remapColor('#ef4444', cbMode) : '#525252' },
       ];
       const statsSpacing = 130;
       const statsStartX = W / 2 - ((stats.length - 1) * statsSpacing) / 2;
@@ -1198,7 +1208,7 @@ export default function SpectrumGame() {
       // Play again button
       const btnW = 200, btnH = 56, btnX = W / 2 - btnW / 2, btnY = 420;
       drawRoundedRect(btnX, btnY, btnW, btnH, 12);
-      ctx.fillStyle = hoverPlayAgain ? '#fb923c' : ORANGE;
+      ctx.fillStyle = hoverPlayAgain ? remapColor('#fb923c', cbMode) : remapColor(ORANGE, cbMode);
       ctx.fill();
 
       ctx.fillStyle = '#000';
@@ -1206,13 +1216,13 @@ export default function SpectrumGame() {
       ctx.fillText('PLAY AGAIN', W / 2, btnY + 36);
 
       // Decorative spectrum bar
-      const specGrad = ctx.createLinearGradient(100, 0, 700, 0);
-      specGrad.addColorStop(0, '#22c55e');
-      specGrad.addColorStop(0.25, '#84cc16');
-      specGrad.addColorStop(0.5, '#eab308');
-      specGrad.addColorStop(0.75, '#f97316');
-      specGrad.addColorStop(1, '#ef4444');
-      ctx.fillStyle = specGrad;
+      const specGrad2 = ctx.createLinearGradient(100, 0, 700, 0);
+      specGrad2.addColorStop(0, remapColor('#22c55e', cbMode));
+      specGrad2.addColorStop(0.25, remapColor('#84cc16', cbMode));
+      specGrad2.addColorStop(0.5, remapColor('#eab308', cbMode));
+      specGrad2.addColorStop(0.75, remapColor('#f97316', cbMode));
+      specGrad2.addColorStop(1, remapColor('#ef4444', cbMode));
+      ctx.fillStyle = specGrad2;
       ctx.fillRect(100, 520, 600, 3);
     }
 
@@ -1318,7 +1328,7 @@ export default function SpectrumGame() {
       if (state === 'betting' && confidence >= 3) {
         const intensity = (confidence - 2) / 3; // 0.33 at 3x, 0.67 at 4x, 1.0 at 5x
         ctx.globalAlpha = intensity * 0.04;
-        ctx.fillStyle = CONF_COLORS[confidence - 1];
+        ctx.fillStyle = remapColor(CONF_COLORS[confidence - 1], cbMode);
         ctx.fillRect(0, 0, W, H);
         ctx.globalAlpha = 1;
 
@@ -1326,7 +1336,7 @@ export default function SpectrumGame() {
         if (confidence >= 4) {
           const vGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.7);
           vGrad.addColorStop(0, 'transparent');
-          vGrad.addColorStop(1, CONF_COLORS[confidence - 1] + '12');
+          vGrad.addColorStop(1, remapColor(CONF_COLORS[confidence - 1], cbMode) + '12');
           ctx.fillStyle = vGrad;
           ctx.fillRect(0, 0, W, H);
         }
@@ -1352,7 +1362,7 @@ export default function SpectrumGame() {
           // Gold pulsing border
           const fiPulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
           ctx.globalAlpha = fiPulse * 0.6;
-          ctx.strokeStyle = '#eab308';
+          ctx.strokeStyle = remapColor('#eab308', cbMode);
           ctx.lineWidth = 4;
           drawRoundedRect(4, 4, W - 8, H - 8, 12);
           ctx.stroke();
@@ -1360,11 +1370,11 @@ export default function SpectrumGame() {
 
           // Banner
           ctx.textAlign = 'center';
-          ctx.fillStyle = '#eab308';
+          ctx.fillStyle = remapColor('#eab308', cbMode);
           ctx.font = 'bold 38px system-ui, -apple-system, sans-serif';
           ctx.fillText('FINAL QUESTION', W / 2, H / 2 - 30);
 
-          ctx.fillStyle = '#ef4444';
+          ctx.fillStyle = remapColor('#ef4444', cbMode);
           ctx.font = 'bold 26px system-ui, -apple-system, sans-serif';
           ctx.fillText('DOUBLE OR NOTHING!', W / 2, H / 2 + 20);
 
@@ -1378,7 +1388,7 @@ export default function SpectrumGame() {
             spawnParticles(
               W / 2 + (Math.random() - 0.5) * 400,
               H / 2 + (Math.random() - 0.5) * 100,
-              1, '#eab308', 2
+              1, remapColor('#eab308', cbMode), 2
             );
           }
 
@@ -1416,7 +1426,7 @@ export default function SpectrumGame() {
             const liBtnW = 200, liBtnH = 46;
             const liBtnX = W / 2 - liBtnW / 2, liBtnY = 420;
             drawRoundedRect(liBtnX, liBtnY, liBtnW, liBtnH, 10);
-            ctx.fillStyle = hoverLockIn ? '#fb923c' : ORANGE;
+            ctx.fillStyle = hoverLockIn ? remapColor('#fb923c', cbMode) : remapColor(ORANGE, cbMode);
             ctx.fill();
             ctx.textAlign = 'center';
             ctx.fillStyle = '#000';
@@ -1580,7 +1590,7 @@ export default function SpectrumGame() {
         x: ansX,
         y: NL_Y - 50,
         life: 2.0,
-        color: roundMultipliedScore >= 0 ? '#f5f5f5' : '#ef4444',
+        color: roundMultipliedScore >= 0 ? '#f5f5f5' : remapColor('#ef4444', cbMode),
         fontSize: mainFontSize,
       });
 
@@ -1591,7 +1601,7 @@ export default function SpectrumGame() {
           x: ansX,
           y: NL_Y - 20,
           life: 2.0,
-          color: '#eab308',
+          color: remapColor('#eab308', cbMode),
           fontSize: 18,
         });
       }
@@ -1603,7 +1613,7 @@ export default function SpectrumGame() {
           x: ansX,
           y: NL_Y - 20,
           life: 2.0,
-          color: '#ef4444',
+          color: remapColor('#ef4444', cbMode),
           fontSize: 20,
         });
       }
@@ -1615,7 +1625,7 @@ export default function SpectrumGame() {
           x: ansX,
           y: NL_Y - 80,
           life: 2.0,
-          color: '#06b6d4',
+          color: remapColor('#06b6d4', cbMode),
           fontSize: 16,
         });
       }
@@ -1627,7 +1637,7 @@ export default function SpectrumGame() {
           x: W / 2,
           y: NL_Y - 80,
           life: 2.5,
-          color: '#eab308',
+          color: remapColor('#eab308', cbMode),
           fontSize: 26,
         });
       } else if (finaleMode && roundAccuracy < 0.40) {
@@ -1636,7 +1646,7 @@ export default function SpectrumGame() {
           x: W / 2,
           y: NL_Y - 80,
           life: 2.5,
-          color: '#ef4444',
+          color: remapColor('#ef4444', cbMode),
           fontSize: 26,
         });
       }
@@ -1651,6 +1661,7 @@ export default function SpectrumGame() {
       round++;
       if (round >= TOTAL_ROUNDS) {
         state = 'gameover';
+        reportGameEnd('spectrum', totalScore, true, round);
         SoundEngine.stopAmbient();
         SoundEngine.play('gameOver');
       } else {
@@ -1852,6 +1863,7 @@ export default function SpectrumGame() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', updateRect);
       window.removeEventListener('scroll', updateRect);
+      window.removeEventListener('spryte:colorblind-changed', onCbChange);
     };
   }, []);
 

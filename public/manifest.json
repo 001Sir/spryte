@@ -1,14 +1,25 @@
 {
-  "name": "Spryte Games",
+  "name": "Spryte Games — Free Browser Games",
   "short_name": "Spryte Games",
-  "description": "Play free browser games instantly on SpryteGames.com. No downloads, no installs — just fun.",
+  "description": "Play free browser games instantly on SpryteGames.com. No downloads, no installs — just fun. Action, puzzle, arcade & strategy games.",
   "start_url": "/",
   "id": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
   "theme_color": "#e94560",
   "orientation": "any",
+  "lang": "en",
+  "dir": "ltr",
   "categories": ["games", "entertainment"],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Spryte Games homepage showing free browser games"
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192x192.png",

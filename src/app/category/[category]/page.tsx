@@ -30,6 +30,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `Free ${label} Games — Spryte Games`,
       description: `Play free ${label} games in your browser. No downloads required.`,
       url: `https://sprytegames.com/category/${category}`,
+      images: [
+        {
+          url: '/og-image.png',
+          width: 1200,
+          height: 630,
+          alt: `Free ${label} Games on Spryte Games`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `Free ${label} Games — Spryte Games`,
+      description: `Play free ${label} games in your browser. No downloads required.`,
+      images: ['/og-image.png'],
     },
     alternates: {
       canonical: `https://sprytegames.com/category/${category}`,
@@ -46,8 +60,54 @@ export default async function CategoryPage({ params }: Props) {
   const color = getCategoryColor(category);
   const icon = getCategoryIcon(category);
 
+  const categoryJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `Free ${label} Games`,
+    description: `Play free ${label} games in your browser on Spryte Games. No downloads, no installs.`,
+    url: `https://sprytegames.com/category/${category}`,
+    mainEntity: {
+      '@type': 'ItemList',
+      name: `${label} Games`,
+      numberOfItems: catGames.length,
+      itemListElement: catGames.map((game, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: game.title,
+        url: `https://sprytegames.com/games/${game.slug}`,
+      })),
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://sprytegames.com',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: `${label} Games`,
+        item: `https://sprytegames.com/category/${category}`,
+      },
+    ],
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(categoryJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm text-muted mb-5" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-foreground transition-colors">
@@ -72,7 +132,7 @@ export default async function CategoryPage({ params }: Props) {
           <span className="text-3xl mb-2 block" aria-hidden="true">{icon}</span>
           <h1 className="text-3xl font-bold" style={{ textShadow: '0 1px 12px rgba(0,0,0,0.3)' }}>{label} Games</h1>
           <p className="text-muted mt-1">
-            {catGames.length} game{catGames.length !== 1 ? 's' : ''} in this category
+            {catGames.length} free {label.toLowerCase()} game{catGames.length !== 1 ? 's' : ''} to play instantly in your browser — no downloads required.
           </p>
         </div>
       </div>

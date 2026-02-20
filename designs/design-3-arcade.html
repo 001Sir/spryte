@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spryte Games — Design 3: Retro Arcade</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0812;--surface:#110f1e;--card:#161428;--border:rgba(255,255,255,.06);
+  --text:#e8e4f0;--sub:#a09cb5;--dim:#6a6580;
+  --neon-red:#ff2d55;--neon-blue:#00d4ff;--neon-green:#39ff14;
+  --neon-purple:#bf5af2;--neon-yellow:#ffe600;--neon-orange:#ff9500;
+  --pixel-font:'Press Start 2P',monospace;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+
+/* CRT Effect overlay */
+.crt{position:fixed;inset:0;z-index:9999;pointer-events:none}
+.crt::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
+}
+.crt::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.3));
+}
+
+/* Animated neon border around viewport */
+.neon-frame{position:fixed;inset:8px;z-index:9998;pointer-events:none;border:1px solid rgba(191,90,242,.1);border-radius:12px}
+
+/* Canvas stars */
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,8,18,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1300px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo-pixel{font-family:var(--pixel-font);font-size:.7rem;color:var(--neon-red);text-shadow:0 0 10px var(--neon-red),0 0 30px rgba(255,45,85,.3);letter-spacing:.05em}
+.logo-sub{font-size:.65rem;color:var(--neon-blue);text-shadow:0 0 8px var(--neon-blue);font-family:var(--pixel-font)}
+.nav-cats{display:flex;gap:6px}
+.nav-cat{
+  font-family:var(--pixel-font);font-size:.45rem;letter-spacing:.05em;
+  padding:8px 14px;color:var(--dim);cursor:pointer;
+  border:1px solid transparent;transition:all .2s;text-decoration:none;
+  text-transform:uppercase;
+}
+.nav-cat:hover,.nav-cat.active{color:var(--neon-blue);border-color:rgba(0,212,255,.2);text-shadow:0 0 6px var(--neon-blue);background:rgba(0,212,255,.04)}
+.nav-search{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  border:1px solid var(--border);background:rgba(255,255,255,.02);
+}
+.nav-search input{background:none;border:none;outline:none;color:var(--text);font-family:var(--pixel-font);font-size:.45rem;width:120px;letter-spacing:.05em}
+.nav-search input::placeholder{color:var(--dim)}
+
+.page{max-width:1300px;margin:0 auto;padding:32px;position:relative;z-index:1}
+
+/* HERO — Arcade marquee style */
+.marquee{
+  position:relative;border-radius:4px;overflow:hidden;margin-bottom:48px;
+  border:2px solid rgba(191,90,242,.15);
+  background:var(--surface);
+}
+.marquee-top{
+  height:6px;
+  background:repeating-linear-gradient(90deg,var(--neon-red),var(--neon-orange),var(--neon-yellow),var(--neon-green),var(--neon-blue),var(--neon-purple),var(--neon-red));
+  background-size:300% 100%;animation:rainbow 4s linear infinite;
+}
+@keyframes rainbow{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+.marquee-body{display:grid;grid-template-columns:1fr 1fr;min-height:380px}
+.marquee-left{padding:48px;display:flex;flex-direction:column;justify-content:center}
+.marquee-label{
+  font-family:var(--pixel-font);font-size:.5rem;color:var(--neon-green);
+  text-shadow:0 0 8px var(--neon-green);
+  text-transform:uppercase;letter-spacing:.15em;margin-bottom:20px;
+  animation:blink-text 1.5s step-end infinite;
+}
+@keyframes blink-text{50%{opacity:.6}}
+.marquee h1{font-family:var(--pixel-font);font-size:1.6rem;line-height:1.5;margin-bottom:16px;color:var(--neon-red);text-shadow:0 0 20px rgba(255,45,85,.4),0 0 60px rgba(255,45,85,.15)}
+.marquee p{color:var(--sub);font-size:.9rem;line-height:1.7;margin-bottom:28px;max-width:420px}
+.marquee-stats{display:flex;gap:24px;margin-bottom:28px}
+.m-stat{text-align:center}
+.m-stat-val{font-family:var(--pixel-font);font-size:.65rem;color:var(--neon-yellow);text-shadow:0 0 6px var(--neon-yellow);margin-bottom:4px}
+.m-stat-label{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+.marquee-btns{display:flex;gap:12px}
+.btn-insert{
+  font-family:var(--pixel-font);font-size:.55rem;letter-spacing:.08em;
+  padding:14px 28px;cursor:pointer;border:none;
+  background:var(--neon-red);color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+  box-shadow:0 0 20px rgba(255,45,85,.3),0 4px 0 #b01030,inset 0 1px 0 rgba(255,255,255,.2);
+  transition:all .15s;text-transform:uppercase;
+}
+.btn-insert:hover{transform:translateY(-2px);box-shadow:0 0 30px rgba(255,45,85,.5),0 6px 0 #b01030,inset 0 1px 0 rgba(255,255,255,.2)}
+.btn-insert:active{transform:translateY(2px);box-shadow:0 0 15px rgba(255,45,85,.3),0 1px 0 #b01030,inset 0 1px 0 rgba(255,255,255,.2)}
+.btn-info{
+  font-family:var(--pixel-font);font-size:.55rem;letter-spacing:.08em;
+  padding:14px 24px;cursor:pointer;
+  background:transparent;border:2px solid var(--neon-blue);
+  color:var(--neon-blue);text-shadow:0 0 6px var(--neon-blue);
+  text-transform:uppercase;transition:all .2s;
+}
+.btn-info:hover{background:rgba(0,212,255,.08);box-shadow:0 0 15px rgba(0,212,255,.2)}
+.marquee-right{position:relative;overflow:hidden}
+.marquee-right img{width:100%;height:100%;object-fit:cover;opacity:.5;filter:saturate(1.3)}
+.marquee-right::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,var(--surface),transparent 50%)}
+
+/* Section */
+.section-head{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.section-title{font-family:var(--pixel-font);font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--neon-blue);text-shadow:0 0 8px var(--neon-blue)}
+.section-line{flex:1;height:1px;background:linear-gradient(to right,rgba(0,212,255,.2),transparent)}
+.section-count{font-family:var(--pixel-font);font-size:.45rem;color:var(--neon-purple);text-shadow:0 0 6px var(--neon-purple)}
+
+/* GAME GRID */
+.game-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:56px}
+.gc{
+  border:1px solid var(--border);background:var(--card);
+  overflow:hidden;cursor:pointer;transition:all .3s;position:relative;
+}
+.gc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .3s}
+.gc:hover{border-color:rgba(255,45,85,.2);box-shadow:0 0 30px rgba(255,45,85,.08)}
+.gc:hover::before{opacity:1}
+.gc:hover .gc-img{transform:scale(1.05)}
+.gc:hover .gc-play{opacity:1}
+.gc:nth-child(1)::before{background:var(--neon-purple)}
+.gc:nth-child(2)::before{background:var(--neon-red)}
+.gc:nth-child(3)::before{background:var(--neon-blue)}
+.gc:nth-child(4)::before{background:var(--neon-yellow)}
+.gc:nth-child(5)::before{background:var(--neon-green)}
+.gc:nth-child(6)::before{background:var(--neon-blue)}
+.gc:nth-child(7)::before{background:var(--neon-purple)}
+.gc:nth-child(8)::before{background:var(--neon-blue)}
+.gc:nth-child(9)::before{background:var(--neon-orange)}
+.gc:nth-child(10)::before{background:var(--neon-green)}
+.gc:nth-child(11)::before{background:var(--neon-red)}
+.gc:nth-child(12)::before{background:var(--neon-purple)}
+.gc-img-wrap{position:relative;aspect-ratio:4/3;overflow:hidden}
+.gc-img{width:100%;height:100%;object-fit:cover;transition:transform .5s cubic-bezier(.16,1,.3,1)}
+.gc-play{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(10,8,18,.6);opacity:0;transition:opacity .3s;
+}
+.gc-play span{
+  font-family:var(--pixel-font);font-size:.5rem;color:var(--neon-green);
+  text-shadow:0 0 8px var(--neon-green);text-transform:uppercase;letter-spacing:.15em;
+  border:1px solid rgba(57,255,20,.3);padding:10px 20px;
+}
+.gc-badge{
+  position:absolute;top:8px;left:8px;z-index:1;
+  font-family:var(--pixel-font);font-size:.35rem;text-transform:uppercase;letter-spacing:.08em;
+  padding:4px 8px;backdrop-filter:blur(6px);
+}
+.gc-body{padding:12px 14px;border-top:1px solid var(--border)}
+.gc-title{font-size:.85rem;font-weight:700;margin-bottom:4px}
+.gc-meta{display:flex;align-items:center;gap:8px;font-size:.7rem;color:var(--dim)}
+.gc-dot{width:5px;height:5px;border-radius:50%}
+.dot-easy{background:var(--neon-green);box-shadow:0 0 4px var(--neon-green)}
+.dot-medium{background:var(--neon-yellow);box-shadow:0 0 4px var(--neon-yellow)}
+.dot-hard{background:var(--neon-red);box-shadow:0 0 4px var(--neon-red)}
+.badge-new{background:rgba(57,255,20,.15);color:var(--neon-green);border:1px solid rgba(57,255,20,.2)}
+.badge-feat{background:rgba(255,45,85,.15);color:var(--neon-red);border:1px solid rgba(255,45,85,.2)}
+
+/* HIGH SCORE TICKER */
+.ticker{
+  margin-bottom:48px;padding:14px 24px;
+  border:1px solid rgba(191,90,242,.1);background:rgba(191,90,242,.03);
+  display:flex;align-items:center;gap:16px;overflow:hidden;
+}
+.ticker-label{font-family:var(--pixel-font);font-size:.45rem;color:var(--neon-purple);text-shadow:0 0 6px var(--neon-purple);white-space:nowrap;text-transform:uppercase;letter-spacing:.1em}
+.ticker-scroll{flex:1;overflow:hidden;position:relative}
+.ticker-content{
+  display:flex;gap:40px;white-space:nowrap;
+  animation:scroll-ticker 20s linear infinite;
+}
+@keyframes scroll-ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{font-size:.75rem;color:var(--sub)}
+.ticker-item span{color:var(--neon-yellow);text-shadow:0 0 4px var(--neon-yellow);font-weight:700}
+
+/* CATEGORIES */
+.cat-row{display:flex;gap:12px;margin-bottom:48px}
+.cat-block{
+  flex:1;padding:20px;text-align:center;
+  border:1px solid var(--border);background:var(--card);
+  cursor:pointer;transition:all .3s;position:relative;overflow:hidden;
+}
+.cat-block::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;opacity:.4;transition:opacity .3s}
+.cat-block:hover::after{opacity:1}
+.cat-block:nth-child(1)::after{background:var(--neon-red)}
+.cat-block:nth-child(2)::after{background:var(--neon-blue)}
+.cat-block:nth-child(3)::after{background:var(--neon-blue)}
+.cat-block:nth-child(4)::after{background:var(--neon-purple)}
+.cat-block:nth-child(5)::after{background:var(--neon-orange)}
+.cat-block:hover{border-color:rgba(255,255,255,.1)}
+.cat-block-icon{font-size:1.5rem;margin-bottom:8px}
+.cat-block-name{font-family:var(--pixel-font);font-size:.45rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.cat-block-count{font-size:.7rem;color:var(--dim)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);margin-top:40px}
+.footer-inner{max-width:1300px;margin:0 auto;padding:28px 32px;display:flex;justify-content:space-between;align-items:center}
+.footer-text{color:var(--dim);font-size:.75rem}
+.footer-pixel{font-family:var(--pixel-font);font-size:.4rem;color:var(--neon-purple);text-shadow:0 0 4px var(--neon-purple);letter-spacing:.05em}
+
+@media(max-width:1024px){.game-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){
+  .game-grid{grid-template-columns:repeat(2,1fr)}.nav-cats{display:none}
+  .marquee-body{grid-template-columns:1fr}.marquee-right{display:none}
+  .marquee h1{font-size:1rem}.cat-row{flex-wrap:wrap}.cat-block{flex:0 0 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+
+<div class="crt"></div>
+<div class="neon-frame"></div>
+<canvas id="stars"></canvas>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <div><div class="logo-pixel">SPRYTE</div><div class="logo-sub">GAMES</div></div>
+    </a>
+    <div class="nav-cats">
+      <a href="#" class="nav-cat active">Home</a>
+      <a href="#" class="nav-cat">Action</a>
+      <a href="#" class="nav-cat">Puzzle</a>
+      <a href="#" class="nav-cat">Physics</a>
+      <a href="#" class="nav-cat">Strategy</a>
+      <a href="#" class="nav-cat">Arcade</a>
+    </div>
+    <div class="nav-search"><input placeholder="SEARCH..."></div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- MARQUEE HERO -->
+  <div class="marquee">
+    <div class="marquee-top"></div>
+    <div class="marquee-body">
+      <div class="marquee-left">
+        <div class="marquee-label">▶ Insert Coin to Play</div>
+        <h1>GRAVITY<br>WELL</h1>
+        <p>Place gravity attractors and repulsors to guide a drifting particle to the goal. Careful — your wells also pull hazard debris into the path.</p>
+        <div class="marquee-stats">
+          <div class="m-stat"><div class="m-stat-val">12</div><div class="m-stat-label">Games</div></div>
+          <div class="m-stat"><div class="m-stat-val">5</div><div class="m-stat-label">Genres</div></div>
+          <div class="m-stat"><div class="m-stat-val">FREE</div><div class="m-stat-label">Forever</div></div>
+        </div>
+        <div class="marquee-btns">
+          <button class="btn-insert">▶ START GAME</button>
+          <button class="btn-info">? HOW TO PLAY</button>
+        </div>
+      </div>
+      <div class="marquee-right">
+        <img src="../public/thumbnails/gravity-well.svg" alt="Gravity Well">
+      </div>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-label">▶ Live Feed</div>
+    <div class="ticker-scroll">
+      <div class="ticker-content">
+        <span class="ticker-item">Gravity Well — <span>High Score: 12,450</span></span>
+        <span class="ticker-item">Pulse Weaver — <span>High Score: 8,320</span></span>
+        <span class="ticker-item">Chroma Flood — <span>Record: 14 moves</span></span>
+        <span class="ticker-item">Echo Chamber — <span>Cleared Level 8</span></span>
+        <span class="ticker-item">Slide Devil — <span>Beaten by 3% of players</span></span>
+        <span class="ticker-item">Déjà Vu — <span>30 round streak!</span></span>
+        <span class="ticker-item">Gravity Well — <span>High Score: 12,450</span></span>
+        <span class="ticker-item">Pulse Weaver — <span>High Score: 8,320</span></span>
+        <span class="ticker-item">Chroma Flood — <span>Record: 14 moves</span></span>
+        <span class="ticker-item">Echo Chamber — <span>Cleared Level 8</span></span>
+        <span class="ticker-item">Slide Devil — <span>Beaten by 3% of players</span></span>
+        <span class="ticker-item">Déjà Vu — <span>30 round streak!</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <div class="section-head"><span class="section-title">Select Genre</span><span class="section-line"></span><span class="section-count">05</span></div>
+  <div class="cat-row">
+    <div class="cat-block"><div class="cat-block-icon">⚔️</div><div class="cat-block-name">Action</div><div class="cat-block-count">3 games</div></div>
+    <div class="cat-block"><div class="cat-block-icon">🧩</div><div class="cat-block-name">Puzzle</div><div class="cat-block-count">6 games</div></div>
+    <div class="cat-block"><div class="cat-block-icon">🌀</div><div class="cat-block-name">Physics</div><div class="cat-block-count">3 games</div></div>
+    <div class="cat-block"><div class="cat-block-icon">🧠</div><div class="cat-block-name">Strategy</div><div class="cat-block-count">2 games</div></div>
+    <div class="cat-block"><div class="cat-block-icon">👾</div><div class="cat-block-name">Arcade</div><div class="cat-block-count">2 games</div></div>
+  </div>
+
+  <!-- ALL GAMES -->
+  <div class="section-head"><span class="section-title">Game Select</span><span class="section-line"></span><span class="section-count">12 titles</span></div>
+  <div class="game-grid">
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/gravity-well.svg" alt=""><div class="gc-badge badge-feat">★ Featured</div><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Gravity Well</div><div class="gc-meta">Physics <span class="gc-dot dot-medium"></span> Medium</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/chroma-flood.svg" alt=""><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Chroma Flood</div><div class="gc-meta">Puzzle <span class="gc-dot dot-easy"></span> Easy</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/echo-chamber.svg" alt=""><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Echo Chamber</div><div class="gc-meta">Puzzle <span class="gc-dot dot-medium"></span> Medium</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/terravore.svg" alt=""><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Terravore</div><div class="gc-meta">Arcade <span class="gc-dot dot-medium"></span> Medium</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/pulse-weaver.svg" alt=""><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Pulse Weaver</div><div class="gc-meta">Action <span class="gc-dot dot-hard"></span> Hard</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/orbit-keeper.svg" alt=""><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Orbit Keeper</div><div class="gc-meta">Strategy <span class="gc-dot dot-hard"></span> Hard</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/symbiosis.svg" alt=""><div class="gc-badge badge-new">New</div><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Symbiosis</div><div class="gc-meta">Action <span class="gc-dot dot-medium"></span> Medium</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/drift.svg" alt=""><div class="gc-badge badge-new">New</div><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Drift</div><div class="gc-meta">Puzzle <span class="gc-dot dot-medium"></span> Medium</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/spectrum.svg" alt=""><div class="gc-badge badge-new">New</div><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Spectrum</div><div class="gc-meta">Puzzle <span class="gc-dot dot-medium"></span> Medium</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/deja-vu.svg" alt=""><div class="gc-badge badge-new">New</div><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Déjà Vu</div><div class="gc-meta">Puzzle <span class="gc-dot dot-medium"></span> Medium</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/slide-devil.svg" alt=""><div class="gc-badge badge-new">New</div><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">Slide Devil</div><div class="gc-meta">Arcade <span class="gc-dot dot-hard"></span> Hard</div></div></div>
+    <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/whats-missing.svg" alt=""><div class="gc-badge badge-new">New</div><div class="gc-play"><span>▶ Play</span></div></div><div class="gc-body"><div class="gc-title">What's Missing?</div><div class="gc-meta">Puzzle <span class="gc-dot dot-medium"></span> Medium</div></div></div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-text">&copy; 2026 Spryte Games</span>
+    <span class="footer-pixel">FREE PLAY // NO COINS REQUIRED</span>
+  </div>
+</footer>
+
+<script>
+// Twinkling stars
+const c=document.getElementById('stars'),x=c.getContext('2d');
+function rs(){c.width=innerWidth;c.height=innerHeight}
+rs();addEventListener('resize',rs);
+const stars=Array.from({length:100},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.2+.3,s:Math.random()*.005+.002,o:Math.random(),d:Math.random()>.5?1:-1}));
+function draw(){
+  x.clearRect(0,0,c.width,c.height);
+  for(const s of stars){
+    s.o+=s.s*s.d;
+    if(s.o>=1||s.o<=.1)s.d*=-1;
+    x.beginPath();x.arc(s.x,s.y,s.r,0,Math.PI*2);
+    x.fillStyle=`rgba(191,90,242,${s.o*.4})`;x.fill();
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

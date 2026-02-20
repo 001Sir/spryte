@@ -3,6 +3,8 @@
 import { useRef, useEffect } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd, reportLevelComplete } from '@/lib/game-events';
+import { TouchController, isTouchDevice } from '@/lib/touch-controls';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const W = 800;
@@ -132,7 +134,10 @@ export default function TerravoreGame() {
     // menu terrain art animation
     let menuTime = 0;
 
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const touch = new TouchController(canvas);
+    let prevTouchAction = false;
+
+    const isTouchDev = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     // keys
     const keys: Record<string, boolean> = {};
@@ -267,6 +272,7 @@ export default function TerravoreGame() {
       paused = false;
       generateLevel(0);
       state = 'Playing';
+      reportGameStart('terravore');
       SoundEngine.startAmbient('underground');
       SoundEngine.play('menuSelect');
     }
@@ -540,6 +546,7 @@ export default function TerravoreGame() {
         if (level < LEVELS.length - 1) {
           level++;
           state = 'LevelComplete';
+          reportLevelComplete('terravore', level, totalScore);
           SoundEngine.play('levelComplete');
           levelTransitionTimer = 120;
         } else {
@@ -547,6 +554,7 @@ export default function TerravoreGame() {
           totalScore += health * 50; // bonus for remaining health
           if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('terravore', totalScore); }
           state = 'GameOver';
+          reportGameEnd('terravore', totalScore, true, level + 1);
           SoundEngine.stopAmbient();
         }
       }
@@ -718,6 +726,20 @@ export default function TerravoreGame() {
         }
       }
 
+      // D-pad touch overlay state
+      if (isTouchDevice()) {
+        if (touch.state.left) keys['arrowleft'] = true;
+        if (touch.state.right) keys['arrowright'] = true;
+        if (touch.state.up) keys['arrowup'] = true;
+        if (touch.state.down) keys['arrowdown'] = true;
+
+        // Action button edge detection → trigger dig
+        if (touch.state.action && !prevTouchAction) {
+          tryDig();
+        }
+        prevTouchAction = touch.state.action;
+      }
+
       // Input handling
       if (!digging) {
         if (keys['arrowup'] || keys['w']) tryMove(DIR.UP);
@@ -765,6 +787,7 @@ export default function TerravoreGame() {
         totalScore += score;
         if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('terravore', totalScore); }
         state = 'GameOver';
+        reportGameEnd('terravore', totalScore, true, level + 1);
         SoundEngine.stopAmbient();
         SoundEngine.play('gameOver');
       }
@@ -1221,9 +1244,9 @@ export default function TerravoreGame() {
       // Instructions
       ctx.fillStyle = '#94a3b8';
       ctx.font = '14px monospace';
-      const instructions = isTouchDevice ? [
-        'Swipe  -  Move',
-        'Tap  -  Dig in facing direction',
+      const instructions = isTouchDev ? [
+        'Swipe / D-pad  -  Move',
+        'Tap / A button  -  Dig in facing direction',
         '',
         'Collect gems buried in the earth',
         'Avoid water floods and lava flows',
@@ -1244,7 +1267,7 @@ export default function TerravoreGame() {
       ctx.fillStyle = LIME;
       ctx.globalAlpha = 0.6 + Math.sin(menuTime * 0.06) * 0.4;
       ctx.font = 'bold 22px monospace';
-      ctx.fillText(isTouchDevice ? '[ Tap to Start ]' : '[ Click to Start ]', W / 2, H - 50);
+      ctx.fillText(isTouchDev ? '[ Tap to Start ]' : '[ Click to Start ]', W / 2, H - 50);
       ctx.globalAlpha = 1;
     }
 
@@ -1321,7 +1344,7 @@ export default function TerravoreGame() {
       ctx.textAlign = 'center';
       ctx.globalAlpha = 0.6 + Math.sin(frameCount * 0.06) * 0.4;
       ctx.font = 'bold 20px monospace';
-      ctx.fillText(isTouchDevice ? '[ Tap to Restart ]' : '[ Click to Restart ]', W / 2, H - 60);
+      ctx.fillText(isTouchDev ? '[ Tap to Restart ]' : '[ Click to Restart ]', W / 2, H - 60);
       ctx.globalAlpha = 1;
     }
 
@@ -1478,6 +1501,9 @@ export default function TerravoreGame() {
 
       ctx.restore();
 
+      // ── Touch D-pad overlay ──
+      touch.draw(ctx, W, H);
+
       // Draw HUD on top (not affected by camera)
       drawHUD();
     }
@@ -1495,6 +1521,7 @@ export default function TerravoreGame() {
     return () => {
       cancelAnimationFrame(animId);
       SoundEngine.stopAmbient();
+      touch.destroy();
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('touchstart', onTouchStart);

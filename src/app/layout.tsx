@@ -6,6 +6,11 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ScrollToTop from "@/components/layout/ScrollToTop";
 import Particles from "@/components/layout/Particles";
+import PageTransition from "@/components/layout/PageTransition";
+import AchievementProvider from "@/components/providers/AchievementProvider";
+import OfflineIndicator from "@/components/ui/OfflineIndicator";
+import PwaPrompt from "@/components/layout/PwaPrompt";
+import { SwRegistration } from "@/components/providers/SwRegistration";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -104,14 +109,27 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
       >
+        <noscript>
+          <div style={{ padding: '2rem', textAlign: 'center', background: '#06050e', color: '#eeedf5' }}>
+            <h1>Spryte Games — Free Browser Games</h1>
+            <p>Play free browser games instantly. Please enable JavaScript to play our games.</p>
+          </div>
+        </noscript>
         <a href="#main-content" className="skip-nav">
           Skip to content
         </a>
+        <AchievementProvider>
         <Particles />
+        <OfflineIndicator />
         <Navbar />
-        <main id="main-content" className="relative z-10 animate-fade-in">{children}</main>
+        <main id="main-content" className="relative z-10">
+          <PageTransition>{children}</PageTransition>
+        </main>
         <Footer />
         <ScrollToTop />
+        <PwaPrompt />
+        <SwRegistration />
+        </AchievementProvider>
       </body>
     </html>
   );

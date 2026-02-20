@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spryte Games — Design 4: Modern Storefront</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafbfc;--surface:#ffffff;--card:#ffffff;--muted-bg:#f4f5f7;
+  --border:#e8eaed;--border-hover:#d0d3d9;
+  --text:#1a1d23;--sub:#5f6571;--dim:#8c919d;
+  --accent:#e94560;--accent-bg:#fff1f3;--accent-dark:#c1354c;
+  --purple:#7c3aed;--blue:#3b82f6;--cyan:#0891b2;--green:#16a34a;--amber:#d97706;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 2px 8px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 30px rgba(0,0,0,.08);
+  --shadow-xl:0 16px 48px rgba(0,0,0,.1);
+  --radius:12px;
+}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav-inner{max-width:1320px;margin:0 auto;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{width:32px;height:32px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:14px;height:14px;fill:#fff}
+.logo-text{font-size:1.05rem;font-weight:700;color:var(--text)}
+.nav-center{display:flex;gap:4px}
+.nav-tab{
+  padding:8px 16px;border-radius:8px;font-size:.85rem;font-weight:500;
+  color:var(--sub);cursor:pointer;transition:all .15s;text-decoration:none;
+  border:none;background:none;font-family:inherit;
+}
+.nav-tab:hover{color:var(--text);background:var(--muted-bg)}
+.nav-tab.active{color:var(--text);background:var(--muted-bg);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:12px}
+.search-light{
+  display:flex;align-items:center;gap:8px;padding:8px 16px;
+  border-radius:10px;border:1px solid var(--border);background:var(--muted-bg);
+  transition:all .2s;width:240px;
+}
+.search-light:focus-within{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(233,69,96,.08)}
+.search-light svg{width:16px;height:16px;stroke:var(--dim);fill:none;stroke-width:2;flex-shrink:0}
+.search-light input{background:none;border:none;outline:none;font-size:.85rem;width:100%;font-family:inherit;color:var(--text)}
+.search-light input::placeholder{color:var(--dim)}
+
+.page{max-width:1320px;margin:0 auto;padding:32px}
+
+/* HERO — Clean magazine style */
+.hero{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+  border-radius:20px;overflow:hidden;
+  border:1px solid var(--border);background:var(--surface);
+  box-shadow:var(--shadow-lg);margin-bottom:48px;
+}
+.hero-visual{position:relative;min-height:400px;overflow:hidden}
+.hero-visual img{width:100%;height:100%;object-fit:cover}
+.hero-visual::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(233,69,96,.05))}
+.hero-play-float{
+  position:absolute;bottom:24px;right:24px;z-index:2;
+  width:64px;height:64px;border-radius:50%;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 4px 20px rgba(233,69,96,.35);transition:all .3s;
+}
+.hero-play-float:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(233,69,96,.4)}
+.hero-play-float svg{width:22px;height:22px;fill:#fff;margin-left:3px}
+.hero-body{padding:48px;display:flex;flex-direction:column;justify-content:center}
+.hero-chips{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.chip{font-size:.7rem;font-weight:600;padding:5px 12px;border-radius:8px}
+.chip-featured{background:var(--accent-bg);color:var(--accent)}
+.chip-cat{background:var(--muted-bg);color:var(--sub)}
+.chip-diff{display:flex;align-items:center;gap:4px}
+.chip-diff .dot{width:6px;height:6px;border-radius:50%}
+.hero h1{font-size:2.4rem;font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:12px}
+.hero p{color:var(--sub);font-size:1rem;line-height:1.7;margin-bottom:28px}
+.hero-btns{display:flex;gap:12px}
+.btn-solid{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 28px;border-radius:12px;border:none;cursor:pointer;
+  background:var(--accent);color:#fff;font-size:.9rem;font-weight:700;font-family:inherit;
+  box-shadow:0 2px 8px rgba(233,69,96,.25);transition:all .2s;
+}
+.btn-solid:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(233,69,96,.3)}
+.btn-solid svg{width:16px;height:16px;fill:currentColor}
+.btn-outlined{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 24px;border-radius:12px;cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-size:.85rem;font-weight:600;font-family:inherit;transition:all .2s;
+}
+.btn-outlined:hover{background:var(--muted-bg);border-color:var(--border-hover)}
+
+/* SECTION */
+.section{margin-bottom:48px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.section-title{font-size:1.15rem;font-weight:700;letter-spacing:-.01em}
+.section-pills{display:flex;gap:4px}
+.s-pill{
+  font-size:.75rem;font-weight:500;padding:6px 14px;border-radius:8px;
+  color:var(--sub);cursor:pointer;transition:all .15s;border:none;
+  background:none;font-family:inherit;
+}
+.s-pill:hover{background:var(--muted-bg);color:var(--text)}
+.s-pill.active{background:var(--text);color:#fff}
+.section-link{color:var(--accent);font-size:.85rem;font-weight:600;text-decoration:none}
+.section-link:hover{text-decoration:underline}
+
+/* GAME GRID */
+.game-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.gc{
+  border-radius:16px;overflow:hidden;background:var(--card);
+  border:1px solid var(--border);cursor:pointer;transition:all .3s;
+}
+.gc:hover{transform:translateY(-4px);box-shadow:var(--shadow-xl);border-color:transparent}
+.gc:hover .gc-img{transform:scale(1.04)}
+.gc:hover .gc-actions{opacity:1;transform:translateY(0)}
+.gc-img-wrap{position:relative;aspect-ratio:16/10;overflow:hidden}
+.gc-img{width:100%;height:100%;object-fit:cover;transition:transform .4s cubic-bezier(.16,1,.3,1)}
+.gc-badges{position:absolute;top:10px;left:10px;display:flex;gap:4px;z-index:1}
+.gc-badge{font-size:.6rem;font-weight:700;padding:4px 10px;border-radius:6px}
+.badge-new{background:rgba(22,163,74,.1);color:var(--green);border:1px solid rgba(22,163,74,.15)}
+.badge-feat{background:var(--accent-bg);color:var(--accent);border:1px solid rgba(233,69,96,.1)}
+.gc-actions{
+  position:absolute;bottom:10px;right:10px;z-index:2;opacity:0;
+  transform:translateY(6px);transition:all .25s;
+}
+.gc-action-btn{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--accent);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 10px rgba(233,69,96,.3);
+}
+.gc-action-btn svg{width:16px;height:16px;fill:#fff;margin-left:2px}
+.gc-body{padding:14px 16px}
+.gc-title{font-size:.9rem;font-weight:700;margin-bottom:4px}
+.gc-desc{font-size:.78rem;color:var(--sub);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px}
+.gc-foot{display:flex;align-items:center;justify-content:space-between}
+.gc-tags{display:flex;gap:4px}
+.gc-tag{font-size:.65rem;font-weight:500;padding:3px 8px;border-radius:6px;background:var(--muted-bg);color:var(--sub)}
+.gc-diff{display:flex;align-items:center;gap:4px;font-size:.7rem;font-weight:500;color:var(--sub)}
+.gc-diff .dot{width:6px;height:6px;border-radius:50%}
+.dot-easy{background:var(--green)}.dot-medium{background:var(--amber)}.dot-hard{background:var(--accent)}
+
+/* CATEGORY CARDS */
+.cat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.cat-card{
+  padding:24px 20px;border-radius:16px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;transition:all .25s;
+  text-align:center;position:relative;overflow:hidden;
+}
+.cat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:transparent}
+.cat-card-icon{font-size:1.6rem;margin-bottom:10px}
+.cat-card-name{font-weight:700;font-size:.9rem;margin-bottom:2px}
+.cat-card-count{font-size:.75rem;color:var(--dim)}
+.cat-card-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0}
+
+/* PROMO BANNER */
+.promo{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:28px 36px;border-radius:16px;margin-bottom:48px;
+  background:linear-gradient(135deg,#1a1d23,#2d3039);color:#fff;
+  border:1px solid rgba(255,255,255,.06);
+}
+.promo-text{max-width:500px}
+.promo h3{font-size:1.2rem;font-weight:800;margin-bottom:6px}
+.promo p{color:rgba(255,255,255,.6);font-size:.9rem}
+.promo-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 24px;border-radius:10px;border:none;cursor:pointer;
+  background:#fff;color:var(--text);font-size:.85rem;font-weight:700;font-family:inherit;
+  transition:all .2s;
+}
+.promo-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.2)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);margin-top:40px;background:var(--surface)}
+.footer-inner{max-width:1320px;margin:0 auto;padding:40px 32px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px}
+.footer-logo{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.footer-logo-icon{width:28px;height:28px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+.footer-logo-icon svg{width:12px;height:12px;fill:#fff}
+.footer-logo-text{font-weight:700;font-size:.95rem}
+.footer-desc{color:var(--sub);font-size:.8rem;line-height:1.6;max-width:280px}
+.footer-col h5{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:14px}
+.footer-col a{display:block;color:var(--sub);font-size:.85rem;text-decoration:none;margin-bottom:8px;transition:color .2s}
+.footer-col a:hover{color:var(--text)}
+.footer-bottom{padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:.75rem;color:var(--dim)}
+
+@media(max-width:1024px){.game-grid{grid-template-columns:repeat(3,1fr)}.cat-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr}.hero-visual{min-height:240px}
+  .game-grid{grid-template-columns:repeat(2,1fr)}.cat-grid{grid-template-columns:repeat(2,1fr)}
+  .nav-center{display:none}.footer-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+      <span class="logo-text">Spryte Games</span>
+    </a>
+    <div class="nav-center">
+      <button class="nav-tab active">Discover</button>
+      <button class="nav-tab">Action</button>
+      <button class="nav-tab">Puzzle</button>
+      <button class="nav-tab">Physics</button>
+      <button class="nav-tab">Strategy</button>
+      <button class="nav-tab">Arcade</button>
+    </div>
+    <div class="nav-right">
+      <div class="search-light">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input placeholder="Search games...">
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-visual">
+      <img src="../public/thumbnails/gravity-well.svg" alt="Gravity Well">
+      <div class="hero-play-float"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+    </div>
+    <div class="hero-body">
+      <div class="hero-chips">
+        <span class="chip chip-featured">Featured</span>
+        <span class="chip chip-cat">Physics</span>
+        <span class="chip chip-cat">Puzzle</span>
+        <span class="chip chip-diff chip-cat"><span class="dot dot-medium"></span> Medium</span>
+      </div>
+      <h1>Gravity Well</h1>
+      <p>Place gravity attractors and repulsors to guide a drifting particle to the goal. Careful — your wells also pull hazard debris into the path.</p>
+      <div class="hero-btns">
+        <button class="btn-solid"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Play Now</button>
+        <button class="btn-outlined">How to Play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMO -->
+  <div class="promo">
+    <div class="promo-text">
+      <h3>12 Games. Zero Downloads. Completely Free.</h3>
+      <p>All games run in your browser using HTML5 — no accounts, no plugins, no installs.</p>
+    </div>
+    <button class="promo-btn">Browse All Games</button>
+  </div>
+
+  <!-- CATEGORIES -->
+  <div class="section">
+    <div class="section-head"><span class="section-title">Categories</span></div>
+    <div class="cat-grid">
+      <div class="cat-card"><div class="cat-card-bar" style="background:var(--accent)"></div><div class="cat-card-icon">⚔️</div><div class="cat-card-name">Action</div><div class="cat-card-count">3 games</div></div>
+      <div class="cat-card"><div class="cat-card-bar" style="background:var(--cyan)"></div><div class="cat-card-icon">🧩</div><div class="cat-card-name">Puzzle</div><div class="cat-card-count">6 games</div></div>
+      <div class="cat-card"><div class="cat-card-bar" style="background:var(--blue)"></div><div class="cat-card-icon">🌀</div><div class="cat-card-name">Physics</div><div class="cat-card-count">3 games</div></div>
+      <div class="cat-card"><div class="cat-card-bar" style="background:var(--purple)"></div><div class="cat-card-icon">🧠</div><div class="cat-card-name">Strategy</div><div class="cat-card-count">2 games</div></div>
+      <div class="cat-card"><div class="cat-card-bar" style="background:var(--amber)"></div><div class="cat-card-icon">👾</div><div class="cat-card-name">Arcade</div><div class="cat-card-count">2 games</div></div>
+    </div>
+  </div>
+
+  <!-- ALL GAMES -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">All Games</span>
+      <div class="section-pills">
+        <button class="s-pill active">All</button>
+        <button class="s-pill">Popular</button>
+        <button class="s-pill">New</button>
+        <button class="s-pill">A-Z</button>
+      </div>
+    </div>
+    <div class="game-grid">
+      <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/gravity-well.svg" alt=""><div class="gc-badges"><span class="gc-badge badge-feat">Featured</span></div><div class="gc-actions"><button class="gc-action-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div></div><div class="gc-body"><div class="gc-title">Gravity Well</div><div class="gc-desc">Place gravity wells to guide particles through obstacle courses.</div><div class="gc-foot"><div class="gc-tags"><span class="gc-tag">Physics</span><span class="gc-tag">Puzzle</span></div><div class="gc-diff"><span class="dot dot-medium"></span>Med</div></div></div></div>
+      <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/pulse-weaver.svg" alt=""><div class="gc-actions"><button class="gc-action-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div></div><div class="gc-body"><div class="gc-title">Pulse Weaver</div><div class="gc-desc">Shoot sine-wave beams at geometric enemies and tune frequency.</div><div class="gc-foot"><div class="gc-tags"><span class="gc-tag">Action</span></div><div class="gc-diff"><span class="dot dot-hard"></span>Hard</div></div></div></div>
+      <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/chroma-flood.svg" alt=""><div class="gc-actions"><button class="gc-action-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div></div><div class="gc-body"><div class="gc-title">Chroma Flood</div><div class="gc-desc">Flood-fill colored regions from corners to conquer the board.</div><div class="gc-foot"><div class="gc-tags"><span class="gc-tag">Puzzle</span></div><div class="gc-diff"><span class="dot dot-easy"></span>Easy</div></div></div></div>
+      <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/echo-chamber.svg" alt=""><div class="gc-actions"><button class="gc-action-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div></div><div class="gc-body"><div class="gc-title">Echo Chamber</div><div class="gc-desc">Navigate dark rooms using sound-wave pulses that freeze enemies.</div><div class="gc-foot"><div class="gc-tags"><span class="gc-tag">Puzzle</span></div><div class="gc-diff"><span class="dot dot-medium"></span>Med</div></div></div></div>
+      <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/symbiosis.svg" alt=""><div class="gc-badges"><span class="gc-badge badge-new">New</span></div><div class="gc-actions"><button class="gc-action-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div></div><div class="gc-body"><div class="gc-title">Symbiosis</div><div class="gc-desc">Control two linked organisms using elastic tether mechanics.</div><div class="gc-foot"><div class="gc-tags"><span class="gc-tag">Action</span></div><div class="gc-diff"><span class="dot dot-medium"></span>Med</div></div></div></div>
+      <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/orbit-keeper.svg" alt=""><div class="gc-actions"><button class="gc-action-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div></div><div class="gc-body"><div class="gc-title">Orbit Keeper</div><div class="gc-desc">Keep planets in stable orbits while asteroids create chaos.</div><div class="gc-foot"><div class="gc-tags"><span class="gc-tag">Strategy</span></div><div class="gc-diff"><span class="dot dot-hard"></span>Hard</div></div></div></div>
+      <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/drift.svg" alt=""><div class="gc-badges"><span class="gc-badge badge-new">New</span></div><div class="gc-actions"><button class="gc-action-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div></div><div class="gc-body"><div class="gc-title">Drift</div><div class="gc-desc">Zero-friction momentum puzzle — push off walls, no brakes.</div><div class="gc-foot"><div class="gc-tags"><span class="gc-tag">Puzzle</span></div><div class="gc-diff"><span class="dot dot-medium"></span>Med</div></div></div></div>
+      <div class="gc"><div class="gc-img-wrap"><img class="gc-img" src="../public/thumbnails/terravore.svg" alt=""><div class="gc-actions"><button class="gc-action-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div></div><div class="gc-body"><div class="gc-title">Terravore</div><div class="gc-desc">Dig tunnels as a terrain-devouring creature, avoid water & lava.</div><div class="gc-foot"><div class="gc-tags"><span class="gc-tag">Arcade</span></div><div class="gc-diff"><span class="dot dot-medium"></span>Med</div></div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div><div class="footer-logo"><div class="footer-logo-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><span class="footer-logo-text">Spryte Games</span></div><p class="footer-desc">Free browser games. No downloads, no installs, no accounts. Just pick a game and play.</p></div>
+      <div class="footer-col"><h5>Games</h5><a href="#">Gravity Well</a><a href="#">Pulse Weaver</a><a href="#">Chroma Flood</a><a href="#">View all →</a></div>
+      <div class="footer-col"><h5>Categories</h5><a href="#">Action</a><a href="#">Puzzle</a><a href="#">Physics</a><a href="#">Strategy</a></div>
+      <div class="footer-col"><h5>Legal</h5><a href="#">Privacy</a><a href="#">Terms</a></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2026 Spryte Games</span><span>Free to play. No plugins.</span></div>
+  </div>
+</footer>
+
+</body>
+</html>

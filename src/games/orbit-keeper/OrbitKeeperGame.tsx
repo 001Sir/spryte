@@ -3,6 +3,7 @@
 import { useRef, useEffect } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd } from '@/lib/game-events';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -1118,6 +1119,7 @@ export default function OrbitKeeperGame() {
         gameWon = false;
         if (score > highScore) { highScore = score; newHighScore = true; setHighScore('orbit-keeper', score); }
         state = 'gameover';
+        reportGameEnd('orbit-keeper', score, true, level);
         SoundEngine.stopAmbient();
         SoundEngine.play('gameOver');
         return;
@@ -1142,6 +1144,7 @@ export default function OrbitKeeperGame() {
           gameWon = true;
           if (score > highScore) { highScore = score; newHighScore = true; setHighScore('orbit-keeper', score); }
           state = 'gameover';
+          reportGameEnd('orbit-keeper', score, true, level);
           SoundEngine.stopAmbient();
           SoundEngine.play('levelComplete');
           return;
@@ -1258,6 +1261,7 @@ export default function OrbitKeeperGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        reportGameStart('orbit-keeper');
         SoundEngine.startAmbient('cosmic-orbit');
         score = 0;
         newHighScore = false;
@@ -1326,6 +1330,7 @@ export default function OrbitKeeperGame() {
 
       if (state === 'menu') {
         state = 'playing';
+        reportGameStart('orbit-keeper');
         SoundEngine.startAmbient('cosmic-orbit');
         score = 0;
         newHighScore = false;

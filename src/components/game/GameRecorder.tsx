@@ -2,17 +2,44 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 
+const PRESETS = [
+  { label: '5s', ms: 5000 },
+  { label: '10s', ms: 10000 },
+  { label: '15s', ms: 15000 },
+];
+
 export default function GameRecorder({ slug }: { slug: string }) {
+  const [active, setActive] = useState(false);
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [saved, setSaved] = useState(false);
+  const [fileSize, setFileSize] = useState<string | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Only show in development
-  const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev) return null;
+  // Activate via Ctrl+Shift+R or URL param ?record=1
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('record') === '1') setActive(true);
+    }
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+        e.preventDefault();
+        setActive((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+
+  // Also show in development mode
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') setActive(true);
+  }, []);
 
   const findCanvas = useCallback((): HTMLCanvasElement | null => {
     const container = document.getElementById('game-container');
@@ -20,7 +47,12 @@ export default function GameRecorder({ slug }: { slug: string }) {
     return container.querySelector('canvas');
   }, []);
 
-  const startRecording = useCallback(() => {
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const startRecording = useCallback((durationMs?: number) => {
     const canvas = findCanvas();
     if (!canvas) {
       alert('No game canvas found — start the game first.');
@@ -29,9 +61,10 @@ export default function GameRecorder({ slug }: { slug: string }) {
 
     chunksRef.current = [];
     setSaved(false);
+    setFileSize(null);
     setElapsed(0);
 
-    const stream = canvas.captureStream(30); // 30 fps
+    const stream = canvas.captureStream(30);
     const recorder = new MediaRecorder(stream, {
       mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
         ? 'video/webm;codecs=vp9'
@@ -45,6 +78,7 @@ export default function GameRecorder({ slug }: { slug: string }) {
 
     recorder.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      setFileSize(formatSize(blob.size));
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -56,14 +90,20 @@ export default function GameRecorder({ slug }: { slug: string }) {
       setSaved(true);
     };
 
-    recorder.start(100); // collect data every 100ms
+    recorder.start(100);
     recorderRef.current = recorder;
     setRecording(true);
 
-    // Timer
     timerRef.current = setInterval(() => {
       setElapsed((prev) => prev + 1);
     }, 1000);
+
+    // Auto-stop after preset duration
+    if (durationMs) {
+      autoStopRef.current = setTimeout(() => {
+        stopRecording();
+      }, durationMs);
+    }
   }, [findCanvas, slug]);
 
   const stopRecording = useCallback(() => {
@@ -76,6 +116,10 @@ export default function GameRecorder({ slug }: { slug: string }) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    if (autoStopRef.current) {
+      clearTimeout(autoStopRef.current);
+      autoStopRef.current = null;
+    }
   }, []);
 
   // Cleanup on unmount
@@ -85,6 +129,7 @@ export default function GameRecorder({ slug }: { slug: string }) {
         recorderRef.current.stop();
       }
       if (timerRef.current) clearInterval(timerRef.current);
+      if (autoStopRef.current) clearTimeout(autoStopRef.current);
     };
   }, []);
 
@@ -94,8 +139,10 @@ export default function GameRecorder({ slug }: { slug: string }) {
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
+  if (!active) return null;
+
   return (
-    <div className="flex items-center gap-2 mt-2">
+    <div className="flex items-center gap-2">
       {recording ? (
         <button
           onClick={stopRecording}
@@ -105,21 +152,33 @@ export default function GameRecorder({ slug }: { slug: string }) {
           Recording {formatTime(elapsed)} — Click to stop & save
         </button>
       ) : (
-        <button
-          onClick={startRecording}
-          className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-dim hover:text-foreground hover:bg-white/[0.06] transition-colors font-medium"
-          title="Record gameplay for hero preview"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <circle cx="12" cy="12" r="4" fill="currentColor" />
-          </svg>
-          Record Preview
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => startRecording()}
+            className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-dim hover:text-foreground hover:bg-white/[0.06] transition-colors font-medium"
+            title="Record gameplay preview (unlimited)"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="4" fill="currentColor" />
+            </svg>
+            Record
+          </button>
+          {PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              onClick={() => startRecording(preset.ms)}
+              className="text-[10px] px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-dim hover:text-foreground hover:bg-white/[0.06] transition-colors font-medium"
+              title={`Record ${preset.label} preview`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
       )}
       {saved && (
         <span className="text-xs text-green-400">
-          Saved! Move to public/previews/{slug}.webm
+          Saved{fileSize ? ` (${fileSize})` : ''}! Move to public/previews/{slug}.webm
         </span>
       )}
     </div>

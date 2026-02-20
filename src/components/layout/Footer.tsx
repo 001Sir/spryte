@@ -37,7 +37,7 @@ export default function Footer() {
               Games
             </h4>
             <nav aria-label="Popular games" className="flex flex-col gap-2.5">
-              {games.slice(0, 5).map((game) => (
+              {games.map((game) => (
                 <Link
                   key={game.slug}
                   href={`/games/${game.slug}`}
@@ -46,12 +46,6 @@ export default function Footer() {
                   {game.title}
                 </Link>
               ))}
-              <Link
-                href="/#games"
-                className="text-sm text-accent hover:text-accent-hover transition-colors mt-1"
-              >
-                View all games
-              </Link>
             </nav>
           </div>
 
@@ -87,8 +81,20 @@ export default function Footer() {
               <Link href="/search" className="text-sm text-dim hover:text-foreground transition-colors">
                 Search Games
               </Link>
-              <Link href="/#games" className="text-sm text-dim hover:text-foreground transition-colors">
+              <Link href="/games" className="text-sm text-dim hover:text-foreground transition-colors">
                 All Games
+              </Link>
+              <Link href="/achievements" className="text-sm text-dim hover:text-foreground transition-colors">
+                Achievements
+              </Link>
+              <Link href="/stats" className="text-sm text-dim hover:text-foreground transition-colors">
+                Statistics
+              </Link>
+              <Link href="/about" className="text-sm text-dim hover:text-foreground transition-colors">
+                About
+              </Link>
+              <Link href="/faq" className="text-sm text-dim hover:text-foreground transition-colors">
+                FAQ
               </Link>
             </nav>
           </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd, reportLevelComplete } from '@/lib/game-events';
 
 // ─── Constants ───────────────────────────────────────────────────────
 const W = 800;
@@ -204,29 +205,29 @@ function makeLevels(): LevelConfig[] {
       platforms: [
         ...border(),
         { x: 50, y: 480, w: 200, h: 14 },     // 4: start
-        { x: 300, y: 420, w: 200, h: 14 },     // 5 (60px gap — gravity flip handles upper plats)
-        { x: 300, y: 200, w: 200, h: 14 },     // 6 (reached via gravity flip)
-        { x: 550, y: 120, w: 200, h: 14 },     // 7 (reached via gravity flip)
+        { x: 280, y: 420, w: 220, h: 14 },     // 5: approach — wide enough to slow down
+        { x: 200, y: 200, w: 400, h: 14 },     // 6: big landing zone after gravity flip
+        { x: 480, y: 120, w: 300, h: 14 },     // 7: wide platform to reach exit
       ],
       spikes: [
-        { x: 350, y: 14, w: 436, h: 14, dir: 'down' },   // ceiling spikes right half — deadly after gravity flip!
-        { x: 14, y: H - 28, w: 300, h: 14, dir: 'up' },  // floor spikes left half
+        { x: 620, y: 14, w: 166, h: 14, dir: 'down' },   // ceiling spikes — far right only (safe landing zone left of it)
+        { x: 14, y: H - 28, w: 250, h: 14, dir: 'up' },  // floor spikes left half
       ],
       startX: 120, startY: 450,
-      exitX: 680, exitY: 90,
+      exitX: 600, exitY: 90,
       traps: [
         makeTrap(
           { type: 'playerPassX', value: 400 },
           { type: 'flipGravity' }
         ),
+        // Reverse controls DELAYED — gives player time to process the flip first
         makeTrap(
-          { type: 'playerPassX', value: 400 },
-          { type: 'reverseControls', duration: 3 }
+          { type: 'timer', value: 4 },
+          { type: 'reverseControls', duration: 2.5 }
         ),
-        // Screen shake when everything flips — total disorientation
         makeTrap(
           { type: 'playerPassX', value: 400 },
-          { type: 'shakeScreen', intensity: 8 }
+          { type: 'shakeScreen', intensity: 6 }
         ),
       ],
       deathQuote: DEATH_QUOTES[3],
@@ -506,30 +507,30 @@ function makeLevels(): LevelConfig[] {
       name: 'Gravity Ping-Pong',
       platforms: [
         ...border(),
-        { x: 100, y: 480, w: 200, h: 14 },    // 4: bottom left
-        { x: 100, y: 106, w: 200, h: 14 },     // 5: top left
-        { x: 400, y: 300, w: 150, h: 14 },     // 6: middle
-        { x: 600, y: 480, w: 180, h: 14 },     // 7: bottom right
-        { x: 600, y: 106, w: 180, h: 14 },     // 8: top right
+        { x: 50, y: 480, w: 300, h: 14 },     // 4: bottom left (wide — safe landing)
+        { x: 50, y: 106, w: 300, h: 14 },      // 5: top left (wide — safe landing)
+        { x: 330, y: 290, w: 200, h: 14 },     // 6: middle (wider)
+        { x: 550, y: 480, w: 236, h: 14 },     // 7: bottom right (wider)
+        { x: 550, y: 106, w: 236, h: 14 },     // 8: top right (wider)
       ],
       spikes: [
-        { x: 350, y: H - 28, w: 200, h: 14, dir: 'up' },    // bottom middle
-        { x: 350, y: 14, w: 200, h: 14, dir: 'down' },       // top middle
-        { x: 14, y: 200, w: 14, h: 200, dir: 'right' },      // left wall spikes
+        { x: 370, y: H - 28, w: 140, h: 14, dir: 'up' },    // bottom middle (narrower)
+        { x: 370, y: 14, w: 140, h: 14, dir: 'down' },       // top middle (narrower)
+        { x: 14, y: 250, w: 14, h: 120, dir: 'right' },      // left wall spikes (shorter)
       ],
       startX: 150, startY: 450,
       exitX: 700, exitY: 450,
       traps: [
-        makeTrap({ type: 'timer', value: 3.0 }, { type: 'flipGravity' }),
-        makeTrap({ type: 'timer', value: 3.0 }, { type: 'shakeScreen', intensity: 4 }),
-        makeTrap({ type: 'timer', value: 6.0 }, { type: 'flipGravity' }),
-        makeTrap({ type: 'timer', value: 6.0 }, { type: 'shakeScreen', intensity: 4 }),
-        makeTrap({ type: 'timer', value: 9.0 }, { type: 'flipGravity' }),
-        makeTrap({ type: 'timer', value: 9.0 }, { type: 'shakeScreen', intensity: 4 }),
-        makeTrap({ type: 'timer', value: 12.0 }, { type: 'flipGravity' }),
-        makeTrap({ type: 'timer', value: 12.0 }, { type: 'shakeScreen', intensity: 4 }),
-        // Wind burst at the midpoint — pushes toward wall spikes
-        makeTrap({ type: 'timer', value: 7.0 }, { type: 'windBurst', windFx: -250, windFy: 0 }),
+        makeTrap({ type: 'timer', value: 5.0 }, { type: 'flipGravity' }),
+        makeTrap({ type: 'timer', value: 5.0 }, { type: 'shakeScreen', intensity: 4 }),
+        makeTrap({ type: 'timer', value: 10.0 }, { type: 'flipGravity' }),
+        makeTrap({ type: 'timer', value: 10.0 }, { type: 'shakeScreen', intensity: 4 }),
+        makeTrap({ type: 'timer', value: 15.0 }, { type: 'flipGravity' }),
+        makeTrap({ type: 'timer', value: 15.0 }, { type: 'shakeScreen', intensity: 4 }),
+        makeTrap({ type: 'timer', value: 20.0 }, { type: 'flipGravity' }),
+        makeTrap({ type: 'timer', value: 20.0 }, { type: 'shakeScreen', intensity: 4 }),
+        // Wind burst — delayed and weaker
+        makeTrap({ type: 'timer', value: 12.0 }, { type: 'windBurst', windFx: -150, windFy: 0 }),
       ],
       deathQuote: DEATH_QUOTES[11],
     },
@@ -616,44 +617,41 @@ function makeLevels(): LevelConfig[] {
       name: 'Final Slide',
       platforms: [
         ...border(),
-        { x: 30, y: 500, w: 150, h: 14 },     // 4: start
-        { x: 220, y: 440, w: 120, h: 14 },     // 5: crumbles (60px gap)
-        { x: 380, y: 380, w: 120, h: 14 },     // 6: crumbles (60px gap)
-        { x: 540, y: 320, w: 120, h: 14 },     // 7 (60px gap)
-        { x: 400, y: 260, w: 120, h: 14 },     // 8 (60px gap — gravity flip assists)
-        { x: 200, y: 200, w: 120, h: 14 },     // 9 (60px gap)
-        { x: 600, y: 140, w: 170, h: 14 },     // 10 (60px gap)
+        { x: 30, y: 500, w: 180, h: 14 },     // 4: start (wider)
+        { x: 220, y: 440, w: 150, h: 14 },     // 5: crumbles (wider)
+        { x: 380, y: 380, w: 150, h: 14 },     // 6: crumbles (wider)
+        { x: 540, y: 320, w: 180, h: 14 },     // 7: approach to flip zone (wider)
+        { x: 350, y: 240, w: 220, h: 14 },     // 8: big landing after gravity flip
+        { x: 120, y: 170, w: 200, h: 14 },     // 9: upper left
+        { x: 550, y: 120, w: 230, h: 14 },     // 10: exit platform (wider)
       ],
       spikes: [
         { x: 14, y: H - 28, w: W - 28, h: 14, dir: 'up' },
-        { x: 14, y: 200, w: 14, h: 200, dir: 'right' },    // left wall spikes
+        { x: 14, y: 280, w: 14, h: 140, dir: 'right' },    // left wall spikes (shorter, repositioned)
       ],
       startX: 80, startY: 470,
-      exitX: 700, exitY: 110,
+      exitX: 680, exitY: 90,
       traps: [
         makeTrap({ type: 'playerOnPlatform', platformIndex: 5 }, { type: 'removePlatform', platformIndex: 5 }),
-        // Screen shake when first platform crumbles
         makeTrap({ type: 'playerOnPlatform', platformIndex: 5 }, { type: 'shakeScreen', intensity: 4 }),
         makeTrap({ type: 'playerOnPlatform', platformIndex: 6 }, { type: 'removePlatform', platformIndex: 6 }),
         makeTrap({ type: 'playerPassX', value: 500 }, { type: 'flipGravity' }),
-        // Big shake on gravity flip
-        makeTrap({ type: 'playerPassX', value: 500 }, { type: 'shakeScreen', intensity: 8 }),
-        makeTrap(
-          { type: 'playerNearExit', threshold: 100 },
-          { type: 'moveExit', exitX: 250, exitY: 130 }
-        ),
+        makeTrap({ type: 'playerPassX', value: 500 }, { type: 'shakeScreen', intensity: 6 }),
+        // Exit moves twice (not three times)
         makeTrap(
           { type: 'playerNearExit', threshold: 80 },
-          { type: 'moveExit', exitX: 650, exitY: 50 }
+          { type: 'moveExit', exitX: 200, exitY: 140 }
         ),
         makeTrap(
           { type: 'playerNearExit', threshold: 60 },
-          { type: 'moveExit', exitX: 100, exitY: 80 }
+          { type: 'moveExit', exitX: 650, exitY: 60 }
         ),
-        makeTrap({ type: 'timer', value: 8 }, { type: 'reverseControls', duration: 3 }),
-        // Wind burst at the halfway mark — pushes toward wall spikes
-        makeTrap({ type: 'timer', value: 10 }, { type: 'windBurst', windFx: -300, windFy: 0 }),
-        makeTrap({ type: 'timer', value: 15 }, { type: 'spawnSpikes', spikes: [
+        // Reverse controls later — gives time to handle the flip first
+        makeTrap({ type: 'timer', value: 12 }, { type: 'reverseControls', duration: 2.5 }),
+        // Wind burst later and weaker
+        makeTrap({ type: 'timer', value: 14 }, { type: 'windBurst', windFx: -200, windFy: 0 }),
+        // Ceiling spikes spawn much later
+        makeTrap({ type: 'timer', value: 20 }, { type: 'spawnSpikes', spikes: [
           { x: 14, y: 14, w: W - 28, h: 14, dir: 'down' },
         ]}),
       ],
@@ -708,6 +706,7 @@ export default function SlideDevilGame() {
     let eyeTrackX = 0, eyeTrackY = 0;
     let wasOnGround = false;
     let gravityFlipVisual = 0; // rotation tween for gravity flip feedback
+    let gravityFlipFlash = 0; // full-screen purple flash on gravity flip
 
     // Particles & trail
     let particles: Particle[] = [];
@@ -806,6 +805,7 @@ export default function SlideDevilGame() {
       scaleY = 1;
       wasOnGround = false;
       gravityFlipVisual = 0;
+      gravityFlipFlash = 0;
       removedPlatforms = new Set();
       platformFadeTimers = new Map();
       spawnedSpikes = [];
@@ -972,8 +972,12 @@ export default function SlideDevilGame() {
         case 'flipGravity':
           gravityDir *= -1;
           gravityFlipVisual = Math.PI; // Start rotation animation
-          shakeIntensity = 6;
+          gravityFlipFlash = 0.4; // Purple screen flash
+          shakeIntensity = 8;
           SoundEngine.play('gravityFlip');
+          // Dramatic particle burst around player
+          spawnParticles(px + PLAYER_SIZE / 2, py + PLAYER_SIZE / 2, 20, '#8b5cf6', 6);
+          spawnParticles(px + PLAYER_SIZE / 2, py + PLAYER_SIZE / 2, 10, '#c084fc', 4);
           break;
         case 'moveExit':
           exitTargetX = e.exitX ?? exitX;
@@ -1118,7 +1122,8 @@ export default function SlideDevilGame() {
           scaleX = 1.3;
           scaleY = 0.7;
           shakeIntensity = Math.min(impactSpeed * 0.01, 4);
-          spawnParticles(px + PLAYER_SIZE / 2, py + PLAYER_SIZE, 3 + Math.floor(impactSpeed / 100), '#ffffff', 2);
+          const landY = gravityDir === 1 ? py + PLAYER_SIZE : py;
+          spawnParticles(px + PLAYER_SIZE / 2, landY, 3 + Math.floor(impactSpeed / 100), '#ffffff', 2);
         }
       }
       wasOnGround = onGround;
@@ -1166,7 +1171,8 @@ export default function SlideDevilGame() {
           scaleX = 0.7;
           scaleY = 1.3;
           SoundEngine.play('launch');
-          spawnParticles(px + PLAYER_SIZE / 2, py + PLAYER_SIZE, 5, '#ffffff', 2);
+          const jumpY = gravityDir === 1 ? py + PLAYER_SIZE : py;
+          spawnParticles(px + PLAYER_SIZE / 2, jumpY, 5, '#ffffff', 2);
         } else if (onWallLeft) {
           // Wall jump off left wall
           pvx = WALL_JUMP_VX;
@@ -1215,6 +1221,7 @@ export default function SlideDevilGame() {
           setHighScore('slide-devil', totalScore);
         }
         state = 'levelComplete';
+        reportLevelComplete('slide-devil', currentLevel, totalScore);
         spawnParticles(exitX, exitY, 20, '#22c55e', 5);
         spawnParticles(exitX, exitY, 15, '#ffffff', 3);
         SoundEngine.play('levelComplete');
@@ -1348,9 +1355,9 @@ export default function SlideDevilGame() {
       ctx.save();
       ctx.translate(cx, cy);
 
-      // Gravity flip rotation tween
+      // Gravity flip rotation tween (slower for dramatic effect)
       if (gravityFlipVisual > 0.01) {
-        gravityFlipVisual = lerp(gravityFlipVisual, 0, 8 * dt);
+        gravityFlipVisual = lerp(gravityFlipVisual, 0, 4 * dt);
         ctx.rotate(gravityFlipVisual);
       }
 
@@ -1364,21 +1371,29 @@ export default function SlideDevilGame() {
       ctx.scale(scaleX, scaleY);
 
       // Flip upside down when gravity reversed
-      if (gravityDir === -1) ctx.scale(1, -1);
+      const flipped = gravityDir === -1;
+      if (flipped) ctx.scale(1, -1);
 
       const hs = PLAYER_SIZE / 2;
 
-      // Red glow
-      ctx.shadowColor = '#dc2626';
-      ctx.shadowBlur = 12;
+      // Glow changes color when gravity is flipped
+      ctx.shadowColor = flipped ? '#8b5cf6' : '#dc2626';
+      ctx.shadowBlur = flipped ? 18 : 12;
 
-      // Body (white square)
-      ctx.fillStyle = '#ffffff';
+      // Body (tinted slightly purple when flipped)
+      ctx.fillStyle = flipped ? '#e8dff5' : '#ffffff';
       ctx.fillRect(-hs, -hs, PLAYER_SIZE, PLAYER_SIZE);
       ctx.shadowBlur = 0;
 
-      // Devil horns
-      ctx.fillStyle = '#dc2626';
+      // Purple outline when flipped for extra clarity
+      if (flipped) {
+        ctx.strokeStyle = '#8b5cf6';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(-hs, -hs, PLAYER_SIZE, PLAYER_SIZE);
+      }
+
+      // Devil horns (purple when flipped)
+      ctx.fillStyle = flipped ? '#8b5cf6' : '#dc2626';
       // Left horn
       ctx.beginPath();
       ctx.moveTo(-hs + 2, -hs);
@@ -1410,8 +1425,8 @@ export default function SlideDevilGame() {
       ctx.arc(4 + eyeTrackX, -2 + eyeTrackY, 2.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Red pupil dots
-      ctx.fillStyle = '#dc2626';
+      // Pupil dots (purple when flipped)
+      ctx.fillStyle = flipped ? '#8b5cf6' : '#dc2626';
       ctx.beginPath();
       ctx.arc(-4 + eyeTrackX, -2 + eyeTrackY, 1, 0, Math.PI * 2);
       ctx.fill();
@@ -1461,12 +1476,29 @@ export default function SlideDevilGame() {
         ctx.fillText('CONTROLS REVERSED', W / 2, 55);
       }
 
-      // Gravity flipped indicator
+      // Gravity flipped indicator — prominent pulsing banner
       if (gravityDir === -1) {
-        ctx.fillStyle = 'rgba(139,92,246,0.8)';
-        ctx.font = 'bold 12px monospace';
+        const pulse = 0.6 + Math.sin(Date.now() / 200) * 0.2;
+        const bannerY = controlsReversed ? 62 : 42;
+        // Background bar
+        ctx.fillStyle = `rgba(139,92,246,${pulse * 0.25})`;
+        ctx.fillRect(W / 2 - 110, bannerY - 10, 220, 18);
+        // Border
+        ctx.strokeStyle = `rgba(139,92,246,${pulse * 0.6})`;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(W / 2 - 110, bannerY - 10, 220, 18);
+        // Text
+        ctx.fillStyle = `rgba(139,92,246,${pulse})`;
+        ctx.font = 'bold 13px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('GRAVITY FLIPPED', W / 2, controlsReversed ? 70 : 55);
+        ctx.fillText('\u2191 GRAVITY FLIPPED \u2191', W / 2, bannerY + 3);
+      }
+
+      // Gravity flip flash overlay (decays over time)
+      if (gravityFlipFlash > 0) {
+        ctx.fillStyle = `rgba(139,92,246,${gravityFlipFlash * 0.5})`;
+        ctx.fillRect(0, 0, W, H);
+        gravityFlipFlash -= 1 / 60 * 2; // ~0.4s fade
       }
 
       ctx.textAlign = 'left';
@@ -1976,6 +2008,7 @@ export default function SlideDevilGame() {
       if (state === 'menu') {
         if (pos.x >= W / 2 - 80 && pos.x <= W / 2 + 80 && pos.y >= 380 && pos.y <= 428) {
           state = 'playing';
+          reportGameStart('slide-devil');
           SoundEngine.startAmbient('slide-chaos');
           SoundEngine.play('menuSelect');
           currentLevel = 0;
@@ -2041,6 +2074,7 @@ export default function SlideDevilGame() {
     const advanceLevel = () => {
       if (currentLevel >= levels.length - 1) {
         state = 'victory';
+        reportGameEnd('slide-devil', totalScore, true, currentLevel);
         SoundEngine.stopAmbient();
         SoundEngine.play('victoryFanfare');
         if (newHighScore) setTimeout(() => SoundEngine.play('newHighScore'), 500);
@@ -2078,6 +2112,7 @@ export default function SlideDevilGame() {
       if (state === 'menu') {
         if (key === ' ' || key === 'Enter') {
           state = 'playing';
+          reportGameStart('slide-devil');
           SoundEngine.startAmbient('slide-chaos');
           SoundEngine.play('menuSelect');
           currentLevel = 0;

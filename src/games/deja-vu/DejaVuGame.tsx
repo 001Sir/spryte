@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd } from '@/lib/game-events';
+import { remapColor, getColorblindMode } from '@/lib/colorblind';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const W = 800;
@@ -243,13 +245,14 @@ function applyPattern(ctx: CanvasRenderingContext2D, pattern: ShapePattern, colo
   }
 }
 
-function drawShape(ctx: CanvasRenderingContext2D, shape: Shape, x: number, y: number, scale: number = 1) {
+function drawShape(ctx: CanvasRenderingContext2D, shape: Shape, x: number, y: number, scale: number = 1, cbMode?: string) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate((shape.rotation * Math.PI) / 180);
   ctx.scale(scale, scale);
+  const mappedColor = cbMode && cbMode !== 'none' ? remapColor(shape.color, cbMode as Parameters<typeof remapColor>[1]) : shape.color;
   drawShapeForm(ctx, shape.form, shape.size);
-  applyPattern(ctx, shape.pattern, shape.color, shape.size);
+  applyPattern(ctx, shape.pattern, mappedColor, shape.size);
   if (shape.pattern !== 'ring') {
     ctx.strokeStyle = 'rgba(255,255,255,0.15)';
     ctx.lineWidth = 1.5;
@@ -272,6 +275,11 @@ export default function DejaVuGame() {
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
+
+    // ── Colorblind mode ─────────────────────────────────────────────────
+    let cbMode = getColorblindMode();
+    const onCbChange = () => { cbMode = getColorblindMode(); };
+    window.addEventListener('spryte:colorblind-changed', onCbChange);
 
     // ─── Game state ───────────────────────────────────────────────────
     let state: GameState = 'menu';
@@ -395,6 +403,7 @@ export default function DejaVuGame() {
     // ─── Start game ───────────────────────────────────────────────────
     function startGame() {
       state = 'playing';
+      reportGameStart('deja-vu');
       SoundEngine.startAmbient('memory-ethereal');
       round = 0;
       score = 0;
@@ -477,8 +486,8 @@ export default function DejaVuGame() {
         if (streak === 5 || streak === 10) SoundEngine.play('streakRise');
 
         // Particles + popup
-        spawnParticles(W / 2, H / 2 - 40, TEAL, 15);
-        spawnScorePopup(W / 2, H / 2 - 60, `+${pts}`, TEAL);
+        spawnParticles(W / 2, H / 2 - 40, remapColor(TEAL, cbMode), 15);
+        spawnScorePopup(W / 2, H / 2 - 60, `+${pts}`, remapColor(TEAL, cbMode));
       } else {
         lives--;
         streak = 0;
@@ -490,7 +499,7 @@ export default function DejaVuGame() {
         shakeTimer = 0.3;
         lifeLostFlash = 0.5;
         wrongFlash = 0.15;
-        spawnParticles(W / 2, H / 2 - 40, '#ef4444', 12);
+        spawnParticles(W / 2, H / 2 - 40, remapColor('#ef4444', cbMode), 12);
       }
 
       feedbackFade = 0;
@@ -527,6 +536,7 @@ export default function DejaVuGame() {
 
     function endGame() {
       state = 'gameover';
+      reportGameEnd('deja-vu', score, true);
       SoundEngine.stopAmbient();
       const isNewHigh = score > highScore;
       if (isNewHigh) {
@@ -713,7 +723,7 @@ export default function DejaVuGame() {
       // Wrong answer red flash overlay
       if (wrongFlash > 0) {
         ctx.globalAlpha = wrongFlash * 0.4;
-        ctx.fillStyle = '#ef4444';
+        ctx.fillStyle = remapColor('#ef4444', cbMode);
         ctx.fillRect(0, 0, W, H);
         ctx.globalAlpha = 1;
       }
@@ -753,15 +763,15 @@ export default function DejaVuGame() {
         const y = H / 2 + Math.sin(angle) * 120 + bob;
         const pulse = 0.12 + 0.05 * Math.sin(menuTime * 0.8 + i * 2.1);
         ctx.globalAlpha = pulse;
-        drawShape(ctx, s, x, y, 0.8);
+        drawShape(ctx, s, x, y, 0.8, cbMode);
         ctx.globalAlpha = 1;
       }
 
       // Title with glow
       ctx.save();
-      ctx.shadowColor = TEAL;
+      ctx.shadowColor = remapColor(TEAL, cbMode);
       ctx.shadowBlur = 30;
-      ctx.fillStyle = TEAL;
+      ctx.fillStyle = remapColor(TEAL, cbMode);
       ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -788,7 +798,7 @@ export default function DejaVuGame() {
       const bx = W / 2 - bw / 2, by = H / 2 + 20;
       ctx.save();
       ctx.globalAlpha = hoverStart ? 1 : btnPulse;
-      drawButton(ctx, 'START', bx, by, bw, bh, TEAL, hoverStart, btnStartRect);
+      drawButton(ctx, 'START', bx, by, bw, bh, remapColor(TEAL, cbMode), hoverStart, btnStartRect);
       ctx.restore();
 
       // Controls hint
@@ -812,7 +822,7 @@ export default function DejaVuGame() {
       const progFill = ((round + 1) / TOTAL_ROUNDS) * progW;
       if (progFill > 1) {
         drawRoundedRect(ctx, progX, progY, progFill, progH, 2);
-        ctx.fillStyle = TEAL;
+        ctx.fillStyle = remapColor(TEAL, cbMode);
         ctx.fill();
       }
       ctx.fillStyle = '#666';
@@ -833,7 +843,7 @@ export default function DejaVuGame() {
           ctx.fillStyle = `rgba(239, 68, 68, ${flash})`;
           ctx.font = `${18 + flash * 4}px system-ui, -apple-system, sans-serif`;
         } else {
-          ctx.fillStyle = i < lives ? '#ef4444' : '#333';
+          ctx.fillStyle = i < lives ? remapColor('#ef4444', cbMode) : '#333';
           ctx.font = '18px system-ui, -apple-system, sans-serif';
         }
         ctx.textAlign = 'center';
@@ -848,7 +858,7 @@ export default function DejaVuGame() {
 
       // Streak
       if (streak >= 2) {
-        ctx.fillStyle = TEAL;
+        ctx.fillStyle = remapColor(TEAL, cbMode);
         ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'right';
         const mult = Math.min(2.0, 1.0 + streak * 0.1).toFixed(1);
@@ -898,7 +908,7 @@ export default function DejaVuGame() {
       }
 
       ctx.globalAlpha = shapeAlpha;
-      drawShape(ctx, currentShape, W / 2, shapeY, shapeScale * 1.5);
+      drawShape(ctx, currentShape, W / 2, shapeY, shapeScale * 1.5, cbMode);
       ctx.globalAlpha = 1;
 
       // Timer bar (below shape)
@@ -915,11 +925,11 @@ export default function DejaVuGame() {
         ctx.fill();
 
         // Bar fill with urgency glow
-        const timerColor = ratio > 0.5 ? TEAL : ratio > 0.25 ? '#eab308' : '#ef4444';
+        const timerColor = ratio > 0.5 ? remapColor(TEAL, cbMode) : ratio > 0.25 ? remapColor('#eab308', cbMode) : remapColor('#ef4444', cbMode);
         ctx.save();
         if (ratio <= 0.25) {
           const urgencyPulse = 0.5 + 0.5 * Math.sin(menuTime * 10);
-          ctx.shadowColor = '#ef4444';
+          ctx.shadowColor = remapColor('#ef4444', cbMode);
           ctx.shadowBlur = 8 + urgencyPulse * 8;
         }
         if (barW * ratio > 1) {
@@ -930,7 +940,7 @@ export default function DejaVuGame() {
         ctx.restore();
 
         // Timer text
-        const timerTextColor = ratio <= 0.25 ? '#ef4444' : '#888';
+        const timerTextColor = ratio <= 0.25 ? remapColor('#ef4444', cbMode) : '#888';
         ctx.fillStyle = timerTextColor;
         ctx.font = `${ratio <= 0.25 ? 'bold ' : ''}12px system-ui, -apple-system, sans-serif`;
         ctx.textAlign = 'center';
@@ -943,9 +953,9 @@ export default function DejaVuGame() {
         ctx.textAlign = 'center';
         if (lastAnswer === 'correct') {
           ctx.save();
-          ctx.shadowColor = TEAL;
+          ctx.shadowColor = remapColor(TEAL, cbMode);
           ctx.shadowBlur = 12 * feedbackFade;
-          ctx.fillStyle = TEAL;
+          ctx.fillStyle = remapColor(TEAL, cbMode);
           ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
           ctx.fillText(lastAnswerDetail, W / 2, shapeY + 110);
           ctx.restore();
@@ -955,7 +965,7 @@ export default function DejaVuGame() {
             ctx.fillText(`+${lastPoints}`, W / 2, shapeY + 140);
           }
         } else {
-          ctx.fillStyle = '#ef4444';
+          ctx.fillStyle = remapColor('#ef4444', cbMode);
           ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
           ctx.fillText(lastAnswerDetail, W / 2, shapeY + 110);
           ctx.fillStyle = '#888';
@@ -973,8 +983,8 @@ export default function DejaVuGame() {
         const bx = W / 2 - totalW / 2;
         const by = H - 90;
 
-        drawButton(ctx, 'NEW (N)', bx, by, bw, bh, '#3b82f6', hoverNew, btnNewRect);
-        drawButton(ctx, 'SEEN (S)', bx + bw + gap, by, bw, bh, '#f59e0b', hoverSeen, btnSeenRect);
+        drawButton(ctx, 'NEW (N)', bx, by, bw, bh, remapColor('#3b82f6', cbMode), hoverNew, btnNewRect);
+        drawButton(ctx, 'SEEN (S)', bx + bw + gap, by, bw, bh, remapColor('#f59e0b', cbMode), hoverSeen, btnSeenRect);
 
         // Keyboard hint
         ctx.fillStyle = '#444';
@@ -994,7 +1004,7 @@ export default function DejaVuGame() {
         const x = W / 2 + Math.cos(angle) * 280;
         const y = H / 2 + Math.sin(angle) * 180;
         ctx.globalAlpha = 0.06;
-        drawShape(ctx, s, x, y, 0.6);
+        drawShape(ctx, s, x, y, 0.6, cbMode);
         ctx.globalAlpha = 1;
       }
 
@@ -1004,9 +1014,9 @@ export default function DejaVuGame() {
       const titleAlpha = clamp(gameOverTime / 0.3, 0, 1);
       ctx.save();
       ctx.globalAlpha = titleAlpha;
-      ctx.shadowColor = survived ? '#fbbf24' : TEAL;
+      ctx.shadowColor = survived ? remapColor('#fbbf24', cbMode) : remapColor(TEAL, cbMode);
       ctx.shadowBlur = 20;
-      ctx.fillStyle = survived ? '#fbbf24' : TEAL;
+      ctx.fillStyle = survived ? remapColor('#fbbf24', cbMode) : remapColor(TEAL, cbMode);
       ctx.font = 'bold 42px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(titleText, W / 2, 90);
@@ -1024,9 +1034,9 @@ export default function DejaVuGame() {
         const pulse = 0.7 + 0.3 * Math.sin(menuTime * 3);
         ctx.globalAlpha = scoreAlpha * pulse;
         ctx.save();
-        ctx.shadowColor = TEAL;
+        ctx.shadowColor = remapColor(TEAL, cbMode);
         ctx.shadowBlur = 15;
-        ctx.fillStyle = TEAL;
+        ctx.fillStyle = remapColor(TEAL, cbMode);
         ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
         ctx.fillText('NEW HIGH SCORE!', W / 2, 195);
         ctx.restore();
@@ -1067,7 +1077,7 @@ export default function DejaVuGame() {
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        ctx.fillStyle = TEAL;
+        ctx.fillStyle = remapColor(TEAL, cbMode);
         ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(stats[i].value, sx, statsY + 30 + slideUp);
@@ -1083,7 +1093,7 @@ export default function DejaVuGame() {
       const bw = 200, bh = 56;
       const bx = W / 2 - bw / 2, by = statsY + 100;
       ctx.globalAlpha = btnAlpha;
-      drawButton(ctx, 'PLAY AGAIN', bx, by, bw, bh, TEAL, hoverPlayAgain, btnPlayAgainRect);
+      drawButton(ctx, 'PLAY AGAIN', bx, by, bw, bh, remapColor(TEAL, cbMode), hoverPlayAgain, btnPlayAgainRect);
 
       ctx.fillStyle = '#555';
       ctx.font = '13px system-ui, -apple-system, sans-serif';
@@ -1230,6 +1240,7 @@ export default function DejaVuGame() {
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('spryte:colorblind-changed', onCbChange);
     };
   }, []);
 

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getAllCategories } from '@/data/games';
+import Settings from '@/components/ui/Settings';
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -91,8 +92,38 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop categories */}
-        <div className="hidden md:flex items-center gap-8" role="list" aria-label="Game categories">
+        {/* Desktop nav links */}
+        <div className="hidden md:flex items-center gap-8" role="list" aria-label="Navigation">
+          <Link
+            href="/"
+            role="listitem"
+            className={`relative text-[0.85rem] font-medium transition-colors py-1 ${
+              pathname === '/'
+                ? 'text-foreground'
+                : 'text-dim hover:text-foreground'
+            }`}
+            aria-current={pathname === '/' ? 'page' : undefined}
+          >
+            Home
+            {pathname === '/' && (
+              <span className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-accent rounded-full" />
+            )}
+          </Link>
+          <Link
+            href="/games"
+            role="listitem"
+            className={`relative text-[0.85rem] font-medium transition-colors py-1 ${
+              pathname === '/games'
+                ? 'text-foreground'
+                : 'text-dim hover:text-foreground'
+            }`}
+            aria-current={pathname === '/games' ? 'page' : undefined}
+          >
+            All Games
+            {pathname === '/games' && (
+              <span className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-accent rounded-full" />
+            )}
+          </Link>
           {categories.map((cat) => (
             <Link
               key={cat}
@@ -113,17 +144,44 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Desktop search button */}
-        <Link
-          href="/search"
-          className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-[10px] bg-white/[0.04] border border-white/[0.06] text-dim hover:bg-white/[0.08] hover:text-foreground transition-all duration-200 text-[0.8rem]"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-          </svg>
-          Search
-          <kbd className="hidden lg:inline-block text-[0.65rem] px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.06] text-dim font-mono">/</kbd>
-        </Link>
+        {/* Desktop right-side buttons */}
+        <div className="hidden sm:flex items-center gap-2">
+          {/* Stats icon */}
+          <Link
+            href="/stats"
+            className="p-2 text-dim hover:text-foreground transition-colors rounded-lg hover:bg-white/[0.04]"
+            aria-label="Statistics"
+            title="Statistics"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M18 20V10M12 20V4M6 20v-6" />
+            </svg>
+          </Link>
+          {/* Achievements icon */}
+          <Link
+            href="/achievements"
+            className="p-2 text-dim hover:text-foreground transition-colors rounded-lg hover:bg-white/[0.04]"
+            aria-label="Achievements"
+            title="Achievements"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 22V12M14 22V12" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+            </svg>
+          </Link>
+          {/* Settings */}
+          <Settings />
+          {/* Search */}
+          <Link
+            href="/search"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] bg-white/[0.04] border border-white/[0.06] text-dim hover:bg-white/[0.08] hover:text-foreground transition-all duration-200 text-[0.8rem]"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+            </svg>
+            Search
+            <kbd className="hidden lg:inline-block text-[0.65rem] px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.06] text-dim font-mono">/</kbd>
+          </Link>
+        </div>
 
         {/* Hamburger button */}
         <button
@@ -177,6 +235,28 @@ export default function Navbar() {
             >
               Home
             </Link>
+
+            {/* Stats & Achievements links */}
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/stats"
+                onClick={closeMobile}
+                role="menuitem"
+                className="px-3 py-2.5 text-sm rounded-lg text-muted hover:text-foreground bg-white/[0.04] hover:bg-white/[0.06] transition-colors text-center min-h-[44px] flex items-center justify-center gap-1.5"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M18 20V10M12 20V4M6 20v-6" /></svg>
+                Stats
+              </Link>
+              <Link
+                href="/achievements"
+                onClick={closeMobile}
+                role="menuitem"
+                className="px-3 py-2.5 text-sm rounded-lg text-muted hover:text-foreground bg-white/[0.04] hover:bg-white/[0.06] transition-colors text-center min-h-[44px] flex items-center justify-center gap-1.5"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 22V12M14 22V12" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></svg>
+                Achievements
+              </Link>
+            </div>
 
             {/* Mobile category links */}
             <div className="grid grid-cols-2 gap-2">

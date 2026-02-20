@@ -33,12 +33,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `${game.description} No downloads required.`,
       url: `https://sprytegames.com/games/${slug}`,
       type: 'website',
-      images: [{ url: game.thumbnail, alt: game.title }],
     },
     twitter: {
-      card: 'summary',
-      title: `${game.title} — Spryte Games`,
-      description: game.description,
+      card: 'summary_large_image',
+      title: `${game.title} — Play Free on Spryte Games`,
+      description: `${game.description} No downloads required.`,
     },
     alternates: {
       canonical: `https://sprytegames.com/games/${slug}`,
@@ -59,10 +58,14 @@ export default async function GamePage({ params }: Props) {
     name: game.title,
     description: game.description,
     url: `https://sprytegames.com/games/${slug}`,
+    image: `https://sprytegames.com${game.thumbnail}`,
     genre: game.categories,
     gamePlatform: 'Web Browser',
     applicationCategory: 'Game',
     operatingSystem: 'Any',
+    playMode: 'SinglePlayer',
+    numberOfPlayers: 1,
+    inLanguage: 'en',
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -73,8 +76,42 @@ export default async function GamePage({ params }: Props) {
       '@type': 'Organization',
       name: 'Spryte Games',
       url: 'https://sprytegames.com',
+      logo: 'https://sprytegames.com/logo.png',
     },
   };
+
+  const faqJsonLd = game.howToPlay
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: `How do you play ${game.title}?`,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: game.howToPlay.join(' '),
+            },
+          },
+          {
+            '@type': 'Question',
+            name: `What are the controls for ${game.title}?`,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: game.controls,
+            },
+          },
+          {
+            '@type': 'Question',
+            name: `Is ${game.title} free to play?`,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: `Yes, ${game.title} is completely free to play in your browser on Spryte Games. No downloads or installs required.`,
+            },
+          },
+        ],
+      }
+    : null;
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -111,6 +148,12 @@ export default async function GamePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm text-muted mb-5" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-foreground transition-colors">
@@ -133,6 +176,33 @@ export default async function GamePage({ params }: Props) {
 
       <GamePlayer slug={game.slug} />
       <GameInfo game={game} />
+
+      {/* SEO content section — crawlable text with cross-links */}
+      <section className="mt-8 bg-card border border-white/[0.06] rounded-xl p-6">
+        <h2 className="text-lg font-bold mb-3">About {game.title}</h2>
+        <p className="text-sm text-muted leading-relaxed mb-4">
+          {game.title} is a free {game.categories.map(c => c.toLowerCase()).join(' and ')}{' '}
+          game you can play instantly in your browser on Spryte Games. {game.description}{' '}
+          No downloads, no installs, and no account needed — just click play and enjoy.
+        </p>
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-dim">Browse more:</span>
+          {game.categories.map((cat) => (
+            <Link
+              key={cat}
+              href={`/category/${cat.toLowerCase()}`}
+              className="text-accent hover:underline"
+            >
+              Free {cat} Games
+            </Link>
+          ))}
+          <span className="text-dim">·</span>
+          <Link href="/games" className="text-accent hover:underline">
+            All Games
+          </Link>
+        </div>
+      </section>
+
       <RelatedGames currentGame={game} />
     </div>
   );

@@ -2,6 +2,9 @@ import { games, getAllCategories, getGamesByCategory } from '@/data/games';
 import { categoryColors, categoryIcons } from '@/data/categories';
 import GameCard from '@/components/game/GameCard';
 import RecentlyPlayed from '@/components/game/RecentlyPlayed';
+import Favorites from '@/components/game/Favorites';
+import DailyChallenge from '@/components/game/DailyChallenge';
+import ScrollableRow from '@/components/layout/ScrollableRow';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -39,6 +42,14 @@ export default function Home() {
     name: 'Spryte Games',
     url: 'https://sprytegames.com',
     logo: 'https://sprytegames.com/logo.png',
+    sameAs: [
+      'https://twitter.com/SpryteGames',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'contact@sprytegames.com',
+      contactType: 'customer service',
+    },
   };
 
   const gameListJsonLd = {
@@ -76,6 +87,8 @@ export default function Home() {
 
       {/* ── Hero — Full viewport cinematic ── */}
       <section className="relative min-h-screen flex items-end overflow-hidden">
+        {/* Shimmer skeleton — visible until video/image loads */}
+        <div className="absolute inset-0 z-[0] animate-shimmer bg-gradient-to-r from-transparent via-white/[0.02] to-transparent" />
         {/* Blurred backdrop — video if preview exists, otherwise thumbnail */}
         <div className="absolute inset-0 z-[1]">
           {featured.preview ? (
@@ -105,21 +118,21 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-[70%] z-[3]" style={{ background: 'linear-gradient(to top, #06050e 0%, #06050e 15%, rgba(6,5,14,0.8) 40%, transparent)' }} />
 
         <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-10 pb-20 pt-32">
-          {/* Eyebrow with pulsing dot */}
+          {/* H1 with pulsing dot — primary SEO heading */}
           <div className="flex items-center gap-2 mb-5">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse-dot" />
-            <span className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-accent">
-              Now Playing
-            </span>
+            <h1 className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-accent">
+              Free Browser Games — Play Instantly
+            </h1>
           </div>
 
-          {/* Title with accent word */}
-          <h1
+          {/* Featured game title */}
+          <h2
             className="text-[clamp(2.5rem,7vw,4.5rem)] font-black leading-[1] tracking-tight mb-4 max-w-[700px]"
             style={{ letterSpacing: '-0.03em' }}
           >
             {firstWord} <span className="text-accent">{restWords}</span>
-          </h1>
+          </h2>
 
           <p className="text-muted text-[1.05rem] leading-relaxed max-w-[500px] mb-9">
             {featured.description}
@@ -166,9 +179,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Game preview card — floating on right (desktop) */}
-        <div className="hidden lg:block absolute right-10 xl:right-20 bottom-24 z-10">
-          <div className="relative w-[320px] rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5)] group/preview">
+        {/* Game preview card — floating on right (tablet + desktop) */}
+        <div className="hidden md:block absolute right-6 md:right-8 lg:right-10 xl:right-20 bottom-24 z-10">
+          <div className="relative w-[240px] lg:w-[320px] rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5)] group/preview">
             <div className="aspect-[16/10] relative overflow-hidden">
               {featured.preview ? (
                 <video
@@ -184,7 +197,7 @@ export default function Home() {
                   src={featured.thumbnail}
                   alt={`${featured.title} preview`}
                   fill
-                  sizes="320px"
+                  sizes="(max-width: 1024px) 240px, 320px"
                   className="object-cover"
                 />
               )}
@@ -217,6 +230,11 @@ export default function Home() {
       </section>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-10">
+        {/* ── Daily Challenge ── */}
+        <div className="pt-12">
+          <DailyChallenge />
+        </div>
+
         {/* ── New Releases — Horizontal Showcase ── */}
         {newGames.length > 0 && (
           <section className="mb-20 pt-12">
@@ -226,7 +244,7 @@ export default function Home() {
                 <span className="text-dim text-[0.85rem]">{newGames.length} games just dropped</span>
               </div>
             </div>
-            <div className="flex gap-5 overflow-x-auto pb-4 snap-scroll-x">
+            <ScrollableRow className="flex gap-5 overflow-x-auto pb-4 snap-scroll-x">
               {newGames.map((game) => (
                 <Link
                   key={game.slug}
@@ -282,19 +300,22 @@ export default function Home() {
                   </div>
                 </Link>
               ))}
-            </div>
+            </ScrollableRow>
           </section>
         )}
 
         {/* ── Recently Played ── */}
         <RecentlyPlayed />
 
+        {/* ── Favorites ── */}
+        <Favorites />
+
         {/* ── Category Strip ── */}
         <section className="mb-20">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-[1.3rem] font-bold tracking-tight">Browse Categories</h2>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+          <ScrollableRow className="flex gap-3 overflow-x-auto pb-2" >
             {categories.map((cat) => {
               const catGames = getGamesByCategory(cat);
               const color = categoryColors[cat] || '#e94560';
@@ -316,7 +337,7 @@ export default function Home() {
                 </Link>
               );
             })}
-          </div>
+          </ScrollableRow>
         </section>
 
         {/* ── All Games ── */}

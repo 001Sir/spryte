@@ -2,6 +2,7 @@
 import { useRef, useEffect } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd } from '@/lib/game-events';
 
 // ─── Constants ───
 const W = 800;
@@ -1380,6 +1381,7 @@ export default function WhatsMissingGame() {
 
     function endGame() {
       state = 'gameover';
+      reportGameEnd('whats-missing', score, true);
       SoundEngine.stopAmbient();
       const isNewHigh = score > highScore;
       if (isNewHigh) {
@@ -2035,6 +2037,7 @@ export default function WhatsMissingGame() {
         const btnX = W / 2 - btnW / 2, btnY = 360;
         if (pos.x >= btnX && pos.x <= btnX + btnW && pos.y >= btnY && pos.y <= btnY + btnH) {
           state = 'playing';
+          reportGameStart('whats-missing');
           SoundEngine.startAmbient('missing-tension');
           round = 0;
           score = 0;
@@ -2054,6 +2057,7 @@ export default function WhatsMissingGame() {
         const btnX = W / 2 - btnW / 2, btnY = 360;
         if (pos.x >= btnX && pos.x <= btnX + btnW && pos.y >= btnY && pos.y <= btnY + btnH) {
           state = 'playing';
+          reportGameStart('whats-missing');
           SoundEngine.startAmbient('missing-tension');
           round = 0;
           score = 0;
@@ -2093,6 +2097,7 @@ export default function WhatsMissingGame() {
         if (state === 'menu' || state === 'gameover') {
           e.preventDefault();
           state = 'playing';
+          reportGameStart('whats-missing');
           SoundEngine.startAmbient('missing-tension');
           round = 0;
           score = 0;

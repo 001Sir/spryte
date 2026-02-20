@@ -25,13 +25,22 @@ type SoundName =
   | 'estimateSlide' | 'lockIn' | 'bullseye' | 'nerveChain'
   // Slide Devil
   | 'trollActivate' | 'gravityFlip' | 'floorCrumble'
+  // Cascade
+  | 'cascadeMatch' | 'cascadeChain' | 'cascadeLand'
+  // Ricochet
+  | 'ricochetFire' | 'ricochetHit' | 'ricochetSplit'
+  // Burn
+  | 'ignite' | 'fireSpread' | 'extinguish' | 'windShift'
   // Shared
-  | 'streakRise' | 'victoryFanfare' | 'newHighScore';
+  | 'streakRise' | 'victoryFanfare' | 'newHighScore'
+  // Achievements
+  | 'achievementUnlock';
 
 type AmbientTheme =
   | 'space-gravity' | 'colorful-puzzle' | 'dark-cave' | 'underground'
   | 'synth-combat' | 'cosmic-orbit' | 'organic' | 'quiz-ambient'
-  | 'memory-ethereal' | 'missing-tension' | 'slide-chaos';
+  | 'memory-ethereal' | 'missing-tension' | 'slide-chaos'
+  | 'cascade-drop' | 'neon-ricochet' | 'fire-crackle';
 
 type OscType = OscillatorType;
 
@@ -64,6 +73,7 @@ function osc(
 }
 
 /** White noise burst */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function noise(
   ctx: AudioContext, dest: AudioNode,
   start: number, dur: number,
@@ -786,6 +796,114 @@ const recipes: Record<SoundName, SoundRecipe> = {
       osc(ctx, master, 'sine', 400, t + 0.15, 0.15, 0.06); // warm bass
     },
   },
+
+  // ── Cascade ──
+  cascadeLand: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      osc(ctx, master, 'sine', 200, t, 0.08, 0.2);
+      osc(ctx, master, 'triangle', 400, t, 0.05, 0.1);
+      filteredNoise(ctx, master, 'lowpass', 800, t, 0.06, 0.08);
+    },
+  },
+  cascadeMatch: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      osc(ctx, master, 'sine', 600, t, 0.06, 0.2);
+      osc(ctx, master, 'sine', 900, t + 0.04, 0.06, 0.18);
+      osc(ctx, master, 'triangle', 1200, t + 0.08, 0.06, 0.12);
+      filteredNoise(ctx, master, 'highpass', 3000, t, 0.04, 0.06);
+    },
+  },
+  cascadeChain: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      osc(ctx, master, 'sine', 800, t, 0.05, 0.22);
+      osc(ctx, master, 'sine', 1000, t + 0.03, 0.05, 0.22);
+      osc(ctx, master, 'sine', 1300, t + 0.06, 0.06, 0.25);
+      osc(ctx, master, 'sine', 1600, t + 0.09, 0.08, 0.2);
+      chord(ctx, master, 'sine', [800, 1200, 1600], t + 0.12, 0.15, 0.15);
+      osc(ctx, master, 'triangle', 2400, t + 0.1, 0.08, 0.04);
+    },
+  },
+  // ── Ricochet ──
+  ricochetFire: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      sweep(ctx, master, 'sawtooth', 400, 100, t, 0.12, 0.15, 'lowpass', 2000);
+      filteredNoise(ctx, master, 'bandpass', 1500, t, 0.08, 0.12, 3);
+      osc(ctx, master, 'sine', 150, t, 0.1, 0.15);
+    },
+  },
+  ricochetHit: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      osc(ctx, master, 'sine', 880, t, 0.05, 0.2);
+      osc(ctx, master, 'sine', 1320, t + 0.03, 0.06, 0.18);
+      osc(ctx, master, 'triangle', 1760, t + 0.06, 0.08, 0.12);
+      filteredNoise(ctx, master, 'highpass', 5000, t, 0.04, 0.05);
+      chord(ctx, master, 'sine', [880, 1100, 1320], t + 0.08, 0.12, 0.12);
+    },
+  },
+  ricochetSplit: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      osc(ctx, master, 'sine', 600, t, 0.04, 0.18);
+      osc(ctx, master, 'sine', 900, t + 0.02, 0.04, 0.15);
+      sweep(ctx, master, 'triangle', 400, 1200, t, 0.1, 0.1);
+      sweep(ctx, master, 'triangle', 400, 800, t + 0.02, 0.08, 0.08);
+    },
+  },
+  // ── Burn ──
+  ignite: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      sweep(ctx, master, 'sawtooth', 100, 600, t, 0.15, 0.12, 'bandpass', 800);
+      filteredNoise(ctx, master, 'bandpass', 2000, t, 0.2, 0.15, 2);
+      osc(ctx, master, 'sine', 200, t, 0.1, 0.08);
+    },
+  },
+  fireSpread: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      filteredNoise(ctx, master, 'bandpass', 1200, t, 0.12, 0.06, 1.5);
+      osc(ctx, master, 'sawtooth', 180, t, 0.08, 0.04);
+    },
+  },
+  extinguish: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      sweep(ctx, master, 'sine', 800, 100, t, 0.3, 0.15);
+      filteredNoise(ctx, master, 'lowpass', 600, t, 0.25, 0.12);
+      osc(ctx, master, 'sine', 150, t + 0.1, 0.2, 0.1);
+    },
+  },
+  windShift: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      sweep(ctx, master, 'sine', 300, 500, t, 0.3, 0.1, 'bandpass', 400);
+      sweep(ctx, master, 'triangle', 500, 300, t + 0.15, 0.25, 0.08);
+      filteredNoise(ctx, master, 'bandpass', 800, t, 0.35, 0.05, 0.8);
+    },
+  },
+
+  achievementUnlock: {
+    play(ctx, master) {
+      const t = ctx.currentTime;
+      // Ascending celebratory chime
+      osc(ctx, master, 'sine', 523, t, 0.08, 0.15);        // C5
+      osc(ctx, master, 'sine', 659, t + 0.07, 0.08, 0.15);  // E5
+      osc(ctx, master, 'sine', 784, t + 0.14, 0.08, 0.15);  // G5
+      osc(ctx, master, 'sine', 1047, t + 0.21, 0.12, 0.2);  // C6
+      // Shimmer on top
+      osc(ctx, master, 'triangle', 1568, t + 0.25, 0.15, 0.06);
+      osc(ctx, master, 'sine', 2093, t + 0.28, 0.1, 0.03);
+      // Warm bass note
+      osc(ctx, master, 'sine', 262, t + 0.21, 0.2, 0.08);
+      // Final sparkle chord
+      chord(ctx, master, 'sine', [1047, 1319, 1568], t + 0.3, 0.25, 0.12);
+    },
+  },
 };
 
 // Loopable sounds use repeated scheduling
@@ -955,6 +1073,45 @@ const ambientThemes: Record<AmbientTheme, AmbientConfig> = {
     volume: 0.09,
     subBass: 49,
     detune: 8,
+  },
+  'cascade-drop': {
+    pads: [
+      { freq: 196, type: 'sine', vol: 0.2 },         // G3 playful
+      { freq: 293.66, type: 'sine', vol: 0.15 },      // D4
+      { freq: 392, type: 'triangle', vol: 0.1 },      // G4
+    ],
+    filterFreq: 650,
+    lfoSpeed: 0.18,
+    lfoDepth: 0.25,
+    volume: 0.08,
+    shimmer: 784,
+    detune: 4,
+  },
+  'neon-ricochet': {
+    pads: [
+      { freq: 110, type: 'sawtooth', vol: 0.08 },    // A2 edgy
+      { freq: 220, type: 'sine', vol: 0.18 },         // A3
+      { freq: 330, type: 'triangle', vol: 0.1 },      // E4
+    ],
+    filterFreq: 550,
+    lfoSpeed: 0.22,
+    lfoDepth: 0.3,
+    volume: 0.08,
+    subBass: 55,
+    detune: 6,
+  },
+  'fire-crackle': {
+    pads: [
+      { freq: 82.41, type: 'sine', vol: 0.25 },      // E2 deep warmth
+      { freq: 164.81, type: 'sawtooth', vol: 0.07 },  // E3 gritty
+      { freq: 246.94, type: 'sine', vol: 0.12 },      // B3
+    ],
+    filterFreq: 400,
+    lfoSpeed: 0.15,
+    lfoDepth: 0.45,
+    volume: 0.09,
+    subBass: 41.2,
+    detune: 10,
   },
 };
 

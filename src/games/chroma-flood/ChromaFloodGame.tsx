@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { SoundEngine } from '@/lib/sounds';
 import { getHighScore, setHighScore } from '@/lib/highscores';
+import { reportGameStart, reportGameEnd } from '@/lib/game-events';
+import { remapColor, getColorblindMode, drawPattern, colorPatterns } from '@/lib/colorblind';
 
 // ---------------------------------------------------------------------------
 // Types & Constants
@@ -31,6 +33,16 @@ const PALETTE_NAMES = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple'];
 
 const CYAN = '#06b6d4';
 const BG_DARK = '#0a0a0f';
+
+// Map hex palette colors to named keys for colorblind pattern lookup
+const COLOR_TO_NAME: Record<string, string> = {
+  '#ef4444': 'red',
+  '#f97316': 'orange',
+  '#eab308': 'yellow',
+  '#22c55e': 'green',
+  '#3b82f6': 'blue',
+  '#a855f7': 'purple',
+};
 
 // ---------------------------------------------------------------------------
 // Level Definitions (5+)
@@ -132,6 +144,11 @@ export default function ChromaFloodGame() {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     let highScore = getHighScore('chroma-flood');
     let newHighScore = false;
+
+    // --- Colorblind mode -----------------------------------------------
+    let cbMode = getColorblindMode();
+    const onColorblindChanged = () => { cbMode = getColorblindMode(); };
+    window.addEventListener('spryte:colorblind-changed', onColorblindChanged);
 
     // --- State machine -------------------------------------------------
     type GameState = 'menu' | 'playing' | 'gameover';
@@ -432,6 +449,7 @@ export default function ChromaFloodGame() {
 
         winTimeoutId = setTimeout(() => {
           state = 'gameover';
+          reportGameEnd('chroma-flood', totalScore, true, currentLevel + 1);
           SoundEngine.stopAmbient();
           winTimeoutId = null;
         }, 600);
@@ -457,10 +475,17 @@ export default function ChromaFloodGame() {
         if (b.y > CANVAS_H) b.y = -b.h;
 
         ctx.globalAlpha = 0.15;
-        ctx.fillStyle = b.color;
+        const blockDisplayColor = remapColor(b.color, cbMode);
+        ctx.fillStyle = blockDisplayColor;
         ctx.beginPath();
         ctx.roundRect(b.x, b.y, b.w, b.h, 6);
         ctx.fill();
+        if (cbMode !== 'none') {
+          ctx.globalAlpha = 0.15; // keep low alpha for menu bg blocks
+          const bName = COLOR_TO_NAME[b.color.toLowerCase()] || 'solid';
+          const bPattern = colorPatterns[bName] || 'solid';
+          drawPattern(ctx, b.x, b.y, b.w, b.h, bPattern, '#ffffff');
+        }
       }
       ctx.globalAlpha = 1;
 
@@ -486,10 +511,15 @@ export default function ChromaFloodGame() {
       const swatchY = 320;
       for (let i = 0; i < 6; i++) {
         const sx = CANVAS_W / 2 - 150 + i * 60;
-        ctx.fillStyle = PALETTE[i];
+        ctx.fillStyle = remapColor(PALETTE[i], cbMode);
         ctx.beginPath();
         ctx.roundRect(sx, swatchY, 40, 40, 8);
         ctx.fill();
+        if (cbMode !== 'none') {
+          const swName = COLOR_TO_NAME[PALETTE[i].toLowerCase()] || 'solid';
+          const swPattern = colorPatterns[swName] || 'solid';
+          drawPattern(ctx, sx, swatchY, 40, 40, swPattern, '#ffffff');
+        }
       }
 
       // Start prompt
@@ -545,7 +575,8 @@ export default function ChromaFloodGame() {
           const px = gridOffsetX + x * cellSize;
           const py = gridOffsetY + y * cellSize;
           const colorIdx = grid[y][x];
-          let color = PALETTE[colorIdx];
+          const baseHex = PALETTE[colorIdx];
+          let color = remapColor(baseHex, cbMode);
 
           // Flash effect
           const flashT = flashMap.get(`${x},${y}`);
@@ -560,6 +591,13 @@ export default function ChromaFloodGame() {
 
           ctx.fillStyle = color;
           ctx.fillRect(px + 1, py + 1, cellSize - 2, cellSize - 2);
+
+          // Colorblind pattern overlay
+          if (cbMode !== 'none') {
+            const cName = COLOR_TO_NAME[baseHex.toLowerCase()] || 'solid';
+            const cPattern = colorPatterns[cName] || 'solid';
+            drawPattern(ctx, px + 1, py + 1, cellSize - 2, cellSize - 2, cPattern, '#ffffff');
+          }
 
           // Locked cell pattern: diagonal lines
           if (locked[y][x]) {
@@ -671,14 +709,30 @@ export default function ChromaFloodGame() {
         }
 
         // Main circle
+        const palRadius = isHovered ? PALETTE_RADIUS + 2 : PALETTE_RADIUS;
+        const palDisplayColor = remapColor(PALETTE[i], cbMode);
         ctx.beginPath();
-        ctx.arc(bx, by, isHovered ? PALETTE_RADIUS + 2 : PALETTE_RADIUS, 0, Math.PI * 2);
-        ctx.fillStyle = isCurrentColor ? brighten(PALETTE[i], -0.3) : PALETTE[i];
+        ctx.arc(bx, by, palRadius, 0, Math.PI * 2);
+        ctx.fillStyle = isCurrentColor ? brighten(palDisplayColor, -0.3) : palDisplayColor;
         ctx.fill();
+
+        // Colorblind pattern overlay on palette button
+        if (cbMode !== 'none') {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(bx, by, palRadius, 0, Math.PI * 2);
+          ctx.clip();
+          const pName = COLOR_TO_NAME[PALETTE[i].toLowerCase()] || 'solid';
+          const pPattern = colorPatterns[pName] || 'solid';
+          drawPattern(ctx, bx - palRadius, by - palRadius, palRadius * 2, palRadius * 2, pPattern, '#ffffff');
+          ctx.restore();
+        }
 
         // Border
         ctx.strokeStyle = isCurrentColor ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)';
         ctx.lineWidth = isCurrentColor ? 3 : 1.5;
+        ctx.beginPath();
+        ctx.arc(bx, by, palRadius, 0, Math.PI * 2);
         ctx.stroke();
 
         // Dim current color
@@ -927,6 +981,7 @@ export default function ChromaFloodGame() {
           currentLevel = 0;
           totalScore = 0;
           newHighScore = false;
+          reportGameStart('chroma-flood');
           startLevel(currentLevel);
           SoundEngine.play('menuSelect');
           break;
@@ -1034,6 +1089,7 @@ export default function ChromaFloodGame() {
           currentLevel = 0;
           totalScore = 0;
           newHighScore = false;
+          reportGameStart('chroma-flood');
           startLevel(currentLevel);
           break;
 
@@ -1139,6 +1195,7 @@ export default function ChromaFloodGame() {
         clearTimeout(winTimeoutId);
       }
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('spryte:colorblind-changed', onColorblindChanged);
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('touchstart', handleTouchStart);

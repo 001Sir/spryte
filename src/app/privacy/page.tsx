@@ -3,7 +3,12 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'Privacy Policy for Spryte Games — how we handle your data.',
+  description: 'Privacy Policy for Spryte Games — how we handle your data when you play free browser games.',
+  openGraph: {
+    title: 'Privacy Policy — Spryte Games',
+    description: 'Privacy Policy for Spryte Games — how we handle your data.',
+    url: 'https://sprytegames.com/privacy',
+  },
   alternates: {
     canonical: 'https://sprytegames.com/privacy',
   },
@@ -82,7 +87,7 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-semibold mb-2">Contact Us</h2>
           <p>
             If you have questions about this Privacy Policy, please contact us at{' '}
-            <a href="mailto:contact@sprytegames.com" className="text-accent hover:underline">contact@sprytegames.com</a>.
+            <a href="mailto:contact@sprytegames.com" className="text-accent hover:underline" rel="noopener">contact@sprytegames.com</a>.
           </p>
         </section>
       </div>
