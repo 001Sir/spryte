@@ -18,12 +18,11 @@ type CardSize = 'default' | 'large' | 'wide';
 
 export function GameCardSkeleton({ size = 'default' }: { size?: CardSize }) {
   return (
-    <div className={`bg-card border border-white/[0.06] rounded-[14px] overflow-hidden ${size === 'large' ? 'h-full' : ''}`}>
-      <div className={`${size === 'large' ? 'aspect-[4/3]' : size === 'wide' ? 'aspect-[16/7]' : 'aspect-[4/3]'} bg-white/[0.02] animate-skeleton-pulse`} />
-      <div className="p-3 space-y-2">
-        <div className="h-4 w-2/3 bg-white/[0.04] rounded animate-skeleton-pulse" />
-        <div className="h-3 w-full bg-white/[0.03] rounded animate-skeleton-pulse" />
-        <div className="h-3 w-1/2 bg-white/[0.03] rounded animate-skeleton-pulse" />
+    <div className={`bg-card border border-white/[0.06] rounded-xl overflow-hidden ${size === 'large' ? 'h-full' : ''}`}>
+      <div className={`${size === 'large' ? 'aspect-[4/3]' : size === 'wide' ? 'aspect-[16/7]' : 'aspect-[16/10]'} bg-white/[0.02] animate-skeleton-pulse`} />
+      <div className="p-2.5 space-y-1.5">
+        <div className="h-3.5 w-2/3 bg-white/[0.04] rounded animate-skeleton-pulse" />
+        <div className="h-2.5 w-full bg-white/[0.03] rounded animate-skeleton-pulse" />
       </div>
     </div>
   );
@@ -78,7 +77,7 @@ export default function GameCard({ game, size = 'default' }: { game: Game; size?
     <Link
       ref={cardRef}
       href={`/games/${game.slug}`}
-      className={`group block bg-card border border-white/[0.06] rounded-[14px] overflow-hidden card-glow hover:border-white/[0.1] focus-visible:-translate-y-1 ${size === 'large' ? 'h-full' : ''}`}
+      className={`group block bg-card border border-white/[0.06] rounded-xl overflow-hidden card-glow hover:border-white/[0.1] focus-visible:-translate-y-1 ${size === 'large' ? 'h-full' : ''}`}
       style={{
         '--glow-color': `${game.color}30`,
         transition: 'box-shadow 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.2s ease-out',
@@ -89,7 +88,7 @@ export default function GameCard({ game, size = 'default' }: { game: Game; size?
       onMouseMove={handleMouseMove}
     >
       <div
-        className={`${size === 'large' ? 'aspect-[4/3]' : size === 'wide' ? 'aspect-[16/7]' : 'aspect-[4/3]'} relative overflow-hidden`}
+        className={`${size === 'large' ? 'aspect-[16/10]' : size === 'wide' ? 'aspect-[16/7]' : 'aspect-[16/10]'} relative overflow-hidden`}
         style={{
           background: `linear-gradient(135deg, ${game.color}22, ${game.color}44)`,
           viewTransitionName: `game-thumb-${game.slug}`,
@@ -167,9 +166,9 @@ export default function GameCard({ game, size = 'default' }: { game: Game; size?
         )}
       </div>
       {/* Card body */}
-      <div className="p-3">
+      <div className="p-2.5">
         <div className="flex items-center gap-1">
-          <h3 className="font-semibold text-[0.85rem] text-foreground group-hover:text-accent transition-colors truncate flex-1">
+          <h3 className="font-semibold text-[0.8rem] text-foreground group-hover:text-accent transition-colors truncate flex-1">
             {game.title}
           </h3>
           <button
@@ -178,30 +177,24 @@ export default function GameCard({ game, size = 'default' }: { game: Game; size?
               e.stopPropagation();
               toggleFavorite(game.slug);
             }}
-            className={`shrink-0 p-1 rounded-full transition-all duration-200 hover:scale-110 ${
+            className={`shrink-0 p-0.5 rounded-full transition-all duration-200 hover:scale-110 ${
               favorited ? 'text-rose-400' : 'text-dim/40 hover:text-rose-400/60'
             }`}
             aria-label={favorited ? `Remove ${game.title} from favorites` : `Add ${game.title} to favorites`}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill={favorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill={favorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
           </button>
         </div>
-        <p className="text-[0.7rem] text-dim mt-1 line-clamp-2 leading-relaxed">{game.description}</p>
-        {/* Footer: tags + difficulty */}
-        <div className="flex items-center gap-1.5 mt-2">
-          {game.categories.map((cat) => (
-            <span
-              key={cat}
-              className="text-[0.6rem] text-dim px-2 py-0.5 rounded bg-white/[0.04]"
-            >
-              {cat}
-            </span>
-          ))}
+        {/* Footer: category + difficulty */}
+        <div className="flex items-center gap-1.5 mt-1.5">
+          <span className="text-[0.6rem] text-dim px-1.5 py-0.5 rounded bg-white/[0.04]">
+            {game.categories[0]}
+          </span>
           <span className="flex items-center gap-1 ml-auto shrink-0">
             <span
-              className="w-[5px] h-[5px] rounded-full"
+              className="w-[4px] h-[4px] rounded-full"
               style={{ background: difficultyDot[game.difficulty] || '#9896a8' }}
             />
             <span

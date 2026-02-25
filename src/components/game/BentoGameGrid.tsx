@@ -19,7 +19,7 @@ export default function BentoGameGrid({ games }: BentoGameGridProps) {
   return (
     <div
       ref={ref}
-      className={`grid grid-cols-2 md:grid-cols-4 gap-4 stagger-fade ${inView ? 'in-view' : ''}`}
+      className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 stagger-fade ${inView ? 'in-view' : ''}`}
     >
       {/* Featured game — 2×2 span */}
       {featured && (
@@ -28,9 +28,9 @@ export default function BentoGameGrid({ games }: BentoGameGridProps) {
         </div>
       )}
 
-      {/* New games — 2×1 span */}
+      {/* New games — 2×1 span on lg, full width on sm */}
       {newGames.map((game) => (
-        <div key={game.slug} className="col-span-2 md:col-span-2">
+        <div key={game.slug} className="col-span-2 lg:col-span-2">
           <GameCard game={game} size="wide" />
         </div>
       ))}
