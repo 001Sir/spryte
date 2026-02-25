@@ -387,14 +387,26 @@ canvas {
 }
 
 .stagger-fade.in-view > *:nth-child(1) { transition-delay: 0ms; }
-.stagger-fade.in-view > *:nth-child(2) { transition-delay: 50ms; }
-.stagger-fade.in-view > *:nth-child(3) { transition-delay: 100ms; }
-.stagger-fade.in-view > *:nth-child(4) { transition-delay: 150ms; }
-.stagger-fade.in-view > *:nth-child(5) { transition-delay: 200ms; }
-.stagger-fade.in-view > *:nth-child(6) { transition-delay: 250ms; }
-.stagger-fade.in-view > *:nth-child(7) { transition-delay: 300ms; }
-.stagger-fade.in-view > *:nth-child(8) { transition-delay: 350ms; }
-.stagger-fade.in-view > *:nth-child(n+9) { transition-delay: 400ms; }
+.stagger-fade.in-view > *:nth-child(2) { transition-delay: 40ms; }
+.stagger-fade.in-view > *:nth-child(3) { transition-delay: 80ms; }
+.stagger-fade.in-view > *:nth-child(4) { transition-delay: 120ms; }
+.stagger-fade.in-view > *:nth-child(5) { transition-delay: 160ms; }
+.stagger-fade.in-view > *:nth-child(6) { transition-delay: 200ms; }
+.stagger-fade.in-view > *:nth-child(7) { transition-delay: 240ms; }
+.stagger-fade.in-view > *:nth-child(8) { transition-delay: 280ms; }
+.stagger-fade.in-view > *:nth-child(9) { transition-delay: 320ms; }
+.stagger-fade.in-view > *:nth-child(10) { transition-delay: 360ms; }
+.stagger-fade.in-view > *:nth-child(11) { transition-delay: 400ms; }
+.stagger-fade.in-view > *:nth-child(12) { transition-delay: 440ms; }
+.stagger-fade.in-view > *:nth-child(13) { transition-delay: 480ms; }
+.stagger-fade.in-view > *:nth-child(14) { transition-delay: 520ms; }
+.stagger-fade.in-view > *:nth-child(15) { transition-delay: 560ms; }
+.stagger-fade.in-view > *:nth-child(16) { transition-delay: 600ms; }
+.stagger-fade.in-view > *:nth-child(17) { transition-delay: 640ms; }
+.stagger-fade.in-view > *:nth-child(18) { transition-delay: 680ms; }
+.stagger-fade.in-view > *:nth-child(19) { transition-delay: 720ms; }
+.stagger-fade.in-view > *:nth-child(20) { transition-delay: 760ms; }
+.stagger-fade.in-view > *:nth-child(n+21) { transition-delay: 800ms; }
 
 /* View Transitions API */
 ::view-transition-old(root) {

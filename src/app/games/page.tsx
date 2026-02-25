@@ -85,7 +85,7 @@ export default function GamesPage() {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 sm:px-10 py-8">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-10 pt-16 pb-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(gamesListJsonLd) }}

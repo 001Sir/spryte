@@ -30,93 +30,83 @@ export default function DailyChallenge() {
     return () => window.removeEventListener('spryte:stats-updated', handler);
   }, []);
 
-  if (!challenge) return null;
+  // Skeleton placeholder during hydration — prevents empty cell flash
+  if (!challenge) {
+    return (
+      <div className="h-full flex flex-col justify-center px-6 py-5 bg-gradient-to-br from-accent/[0.08] to-[#7c6bff]/[0.06]">
+        <div className="h-2.5 w-24 bg-white/[0.06] rounded animate-skeleton-pulse mb-3" />
+        <div className="h-4 w-48 bg-white/[0.04] rounded animate-skeleton-pulse mb-2" />
+        <div className="h-3 w-32 bg-white/[0.03] rounded animate-skeleton-pulse" />
+      </div>
+    );
+  }
 
   return (
-    <section className="mb-12">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[1.3rem] font-bold tracking-tight">Daily Challenge</h2>
-      </div>
-      <div
-        className={`relative rounded-2xl border overflow-hidden transition-all duration-300 ${
-          completed
-            ? 'bg-green-500/[0.06] border-green-500/20'
-            : 'bg-card border-white/[0.06]'
-        }`}
-      >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5">
-          {/* Game icon area */}
-          <div
-            className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0 ${
-              completed ? 'bg-green-500/20' : 'bg-accent/10'
-            }`}
-          >
-            {completed ? (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" aria-hidden="true">
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
-            ) : (
-              <span aria-hidden="true">🎯</span>
-            )}
-          </div>
-
-          {/* Challenge info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
-                Today&apos;s Challenge
-              </span>
-              {completed && (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-green-400">
-                  Completed
-                </span>
-              )}
-            </div>
-            <p className="font-semibold text-foreground">
-              {challenge.description} in {challenge.gameTitle}
-            </p>
-            <p className="text-xs text-muted mt-0.5">
-              {challenge.type === 'score' && `Target: ${challenge.target} points`}
-              {challenge.type === 'level' && `Target: Level ${challenge.target}`}
-              {challenge.type === 'completion' && `Complete ${challenge.target} session${challenge.target > 1 ? 's' : ''}`}
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Streak counter */}
-            <button
-              onClick={() => setShowCalendar(!showCalendar)}
-              className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-colors"
-              aria-label={`${streak} day streak. Click to view calendar.`}
-            >
-              <span className="text-orange-400">🔥</span>
-              <span className="font-semibold text-foreground">{streak}</span>
-              <span className="text-xs text-muted">streak</span>
-            </button>
-
-            {/* Play button */}
-            {!completed && (
-              <Link
-                href={`/games/${challenge.gameSlug}`}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-white font-semibold text-sm hover:-translate-y-0.5 transition-all shadow-[0_4px_16px_rgba(233,69,96,0.3)]"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-                Play
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Calendar dropdown */}
-        {showCalendar && (
-          <div className="border-t border-white/[0.06] p-5 animate-fade-in">
-            <ChallengeCalendar />
-          </div>
+    <div
+      className={`relative h-full flex flex-col justify-center px-6 py-5 transition-all duration-300 ${
+        completed
+          ? 'bg-green-500/[0.06]'
+          : 'bg-gradient-to-br from-accent/[0.08] to-[#7c6bff]/[0.06]'
+      }`}
+    >
+      {/* Label */}
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-accent">
+          {completed ? '✓' : '🎯'} Daily Challenge
+        </span>
+        {completed && (
+          <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-green-400">
+            Completed
+          </span>
         )}
       </div>
-    </section>
+
+      {/* Title */}
+      <p className="font-bold text-foreground text-[1.05rem] leading-snug mb-1">
+        {challenge.description} in {challenge.gameTitle}
+      </p>
+
+      {/* Target */}
+      <p className="text-[0.72rem] text-dim mb-3">
+        {challenge.type === 'score' && `Target: ${challenge.target} points`}
+        {challenge.type === 'level' && `Target: Level ${challenge.target}`}
+        {challenge.type === 'completion' && `Complete ${challenge.target} session${challenge.target > 1 ? 's' : ''}`}
+      </p>
+
+      {/* Bottom row: streak + play */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setShowCalendar(!showCalendar)}
+          className="flex items-center gap-1 text-sm font-bold hover:opacity-80 transition-opacity"
+          aria-label={`${streak} day streak. Click to view calendar.`}
+        >
+          <span className="text-orange-400">🔥</span>
+          <span className="text-foreground">{streak}</span>
+          <span className="text-[0.65rem] text-dim font-normal ml-0.5">streak</span>
+        </button>
+
+        {!completed && (
+          <Link
+            href={`/games/${challenge.gameSlug}`}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-accent text-white font-semibold text-xs hover:bg-accent/90 transition-colors"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            Play
+          </Link>
+        )}
+      </div>
+
+      {/* Calendar overlay — positioned above or below depending on space */}
+      {showCalendar && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowCalendar(false)} />
+          <div className="absolute bottom-full left-0 right-0 z-50 mb-1 rounded-2xl bg-card border border-white/[0.06] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.6)] animate-fade-in">
+            <ChallengeCalendar />
+          </div>
+        </>
+      )}
+    </div>
   );
 }

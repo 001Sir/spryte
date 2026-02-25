@@ -91,6 +91,22 @@ const perGameAchievements: Achievement[] = [
   // Rift
   { id: 'rf-scorer', title: 'Rift Walker', description: 'Score 500+ in Rift', icon: '🌀', category: 'per-game', gameSlug: 'rift', check: (s) => (s.perGame['rift']?.highScore ?? 0) >= 500 },
   { id: 'rf-waves', title: 'Dimensional Master', description: 'Survive 10 waves in Rift', icon: '🔮', category: 'per-game', gameSlug: 'rift', check: (s) => (s.perGame['rift']?.bestLevel ?? 0) >= 10 },
+
+  // Morph
+  { id: 'mp-scorer', title: 'Shape Shifter', description: 'Score 1000+ in Morph', icon: '🔶', category: 'per-game', gameSlug: 'morph', check: (s) => (s.perGame['morph']?.highScore ?? 0) >= 1000 },
+  { id: 'mp-distance', title: 'Marathon Morph', description: 'Travel 5000m in Morph', icon: '🏃', category: 'per-game', gameSlug: 'morph', check: (s) => (s.perGame['morph']?.bestLevel ?? 0) >= 50 },
+
+  // Dendrite
+  { id: 'dn-scorer', title: 'Neural Architect', description: 'Score 500+ in Dendrite', icon: '🧠', category: 'per-game', gameSlug: 'dendrite', check: (s) => (s.perGame['dendrite']?.highScore ?? 0) >= 500 },
+  { id: 'dn-levels', title: 'Synapse Master', description: 'Reach round 10 in Dendrite', icon: '⚡', category: 'per-game', gameSlug: 'dendrite', check: (s) => (s.perGame['dendrite']?.bestLevel ?? 0) >= 10 },
+
+  // Phylo
+  { id: 'ph-scorer', title: 'Taxonomist', description: 'Score 500+ in Phylo', icon: '🌿', category: 'per-game', gameSlug: 'phylo', check: (s) => (s.perGame['phylo']?.highScore ?? 0) >= 500 },
+  { id: 'ph-levels', title: 'Tree of Life', description: 'Place 15 creatures in Phylo', icon: '🌳', category: 'per-game', gameSlug: 'phylo', check: (s) => (s.perGame['phylo']?.bestLevel ?? 0) >= 15 },
+
+  // Convect
+  { id: 'cv-scorer', title: 'Heat Engineer', description: 'Score 500+ in Convect', icon: '🔥', category: 'per-game', gameSlug: 'convect', check: (s) => (s.perGame['convect']?.highScore ?? 0) >= 500 },
+  { id: 'cv-levels', title: 'Thermodynamicist', description: 'Complete 10 levels in Convect', icon: '🌡️', category: 'per-game', gameSlug: 'convect', check: (s) => (s.perGame['convect']?.bestLevel ?? 0) >= 10 },
 ];
 
 // Cross-game achievements (5)

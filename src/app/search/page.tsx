@@ -16,7 +16,7 @@ export default function SearchPage() {
   const results = liveQuery ? searchGames(liveQuery) : [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 pt-16 pb-8">
       <h1 className="text-3xl font-bold mb-4">
         {liveQuery ? `Results for "${liveQuery}"` : 'Search'}
       </h1>

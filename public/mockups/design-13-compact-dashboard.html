@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design 13 — Compact Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #06050e; color: #eeedf5; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── Navbar ─── */
+  .nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(16px); background: rgba(6,5,14,0.85); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 14px 40px; display: flex; align-items: center; gap: 24px; }
+  .nav-logo { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .nav-logo span { color: #e94560; }
+  .nav-links { display: flex; gap: 20px; margin-left: auto; }
+  .nav-links a { font-size: 13px; color: #8886a0; transition: color 0.2s; }
+  .nav-links a:hover { color: #eeedf5; }
+
+  /* ─── Container ─── */
+  .container { max-width: 1400px; margin: 0 auto; padding: 28px 40px; }
+
+  /* ─── Stats Row ─── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card { padding: 20px 22px; border-radius: 14px; background: #0f0e20; border: 1px solid rgba(255,255,255,0.04); transition: border-color 0.2s; }
+  .stat-card:hover { border-color: rgba(255,255,255,0.08); }
+  .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #8886a0; margin-bottom: 6px; }
+  .stat-value { font-size: 32px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; }
+  .stat-sub { font-size: 11px; color: #8886a0; margin-top: 4px; }
+  .stat-accent { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-left: 8px; }
+
+  /* ─── Top Row: Featured + Daily ─── */
+  .top-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 24px; }
+
+  /* ─── Featured Banner ─── */
+  .featured { position: relative; border-radius: 16px; overflow: hidden; background: #0f0e20; border: 1px solid rgba(255,255,255,0.04); transition: transform 0.3s, box-shadow 0.3s; cursor: pointer; }
+  .featured:hover { transform: translateY(-2px); box-shadow: 0 12px 48px rgba(0,0,0,0.4); }
+  .featured-inner { display: flex; height: 180px; }
+  .featured-art { width: 45%; position: relative; overflow: hidden; }
+  .featured-art img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+  .featured:hover .featured-art img { transform: scale(1.05); }
+  .featured-art-grad { position: absolute; inset: 0; background: linear-gradient(to right, transparent 40%, #0f0e20 100%); }
+  .featured-info { width: 55%; padding: 24px 28px; display: flex; flex-direction: column; justify-content: center; }
+  .featured-badge { display: inline-block; width: fit-content; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 3px 10px; border-radius: 6px; background: rgba(233,69,96,0.12); color: #e94560; margin-bottom: 8px; }
+  .featured-info h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+  .featured-info p { font-size: 12px; color: #8886a0; line-height: 1.5; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .btn-play-sm { display: inline-flex; width: fit-content; align-items: center; gap: 6px; padding: 8px 20px; border-radius: 10px; background: #e94560; color: #fff; font-weight: 600; font-size: 12px; border: none; cursor: pointer; transition: background 0.2s; }
+  .btn-play-sm:hover { background: #d6304b; }
+
+  /* ─── Daily Challenge ─── */
+  .daily { border-radius: 16px; background: linear-gradient(135deg, rgba(233,69,96,0.06) 0%, rgba(124,107,255,0.04) 100%); border: 1px solid rgba(233,69,96,0.08); padding: 24px; display: flex; flex-direction: column; justify-content: center; }
+  .daily-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #e94560; margin-bottom: 8px; }
+  .daily-icon { font-size: 28px; margin-bottom: 8px; }
+  .daily-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .daily-sub { font-size: 12px; color: #8886a0; margin-bottom: 14px; }
+  .daily-bottom { display: flex; align-items: center; gap: 10px; }
+  .daily-streak { font-size: 14px; font-weight: 700; }
+  .btn-daily { padding: 8px 18px; border-radius: 8px; background: #e94560; color: #fff; font-weight: 600; font-size: 12px; border: none; cursor: pointer; transition: background 0.2s; }
+  .btn-daily:hover { background: #d6304b; }
+
+  /* ─── Section Header ─── */
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .section-header h2 { font-size: 16px; font-weight: 700; }
+  .section-count { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: rgba(124,107,255,0.1); color: #7c6bff; }
+
+  /* ─── Dense 6-Column Grid (thumbnail only, title on hover) ─── */
+  .dense-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 40px; }
+  .dense-card { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1/1; background: #0f0e20; border: 1px solid rgba(255,255,255,0.04); cursor: pointer; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; }
+  .dense-card:hover { transform: translateY(-3px) scale(1.02); border-color: rgba(255,255,255,0.1); box-shadow: 0 12px 36px rgba(0,0,0,0.5); z-index: 2; }
+  .dense-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+  .dense-card:hover img { transform: scale(1.08); }
+
+  /* Hover overlay with title */
+  .dense-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(6,5,14,0.95) 0%, rgba(6,5,14,0.2) 50%, transparent 70%); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px; }
+  .dense-card:hover .dense-overlay { opacity: 1; }
+  .dense-overlay h3 { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+  .dense-overlay .meta { font-size: 10px; color: #8886a0; display: flex; align-items: center; gap: 4px; }
+  .diff-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+
+  /* Play button on hover */
+  .dense-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.7); width: 40px; height: 40px; border-radius: 50%; background: rgba(233,69,96,0.85); display: flex; align-items: center; justify-content: center; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; }
+  .dense-card:hover .dense-play { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+
+  /* New dot indicator */
+  .new-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #e94560; box-shadow: 0 0 8px rgba(233,69,96,0.5); z-index: 2; }
+
+  /* ─── Footer ─── */
+  .footer { border-top: 1px solid rgba(255,255,255,0.04); margin-top: 20px; padding: 24px 40px; text-align: center; font-size: 12px; color: rgba(136,134,160,0.5); }
+
+  @media (max-width: 900px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .top-row { grid-template-columns: 1fr; }
+    .dense-grid { grid-template-columns: repeat(3, 1fr); }
+    .container { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="nav">
+  <div class="nav-logo">Spryte <span>Games</span></div>
+  <div class="nav-links">
+    <a href="#">Games</a>
+    <a href="#">Achievements</a>
+    <a href="#">Stats</a>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Games Played</div>
+      <div class="stat-value">127</div>
+      <div class="stat-sub">+12 this week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Play Time</div>
+      <div class="stat-value">48h</div>
+      <div class="stat-sub">Avg 22 min / session</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Achievements</div>
+      <div class="stat-value">34<span class="stat-accent" style="background:rgba(124,107,255,0.12);color:#7c6bff">/80</span></div>
+      <div class="stat-sub">42.5% unlocked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Daily Streak</div>
+      <div class="stat-value">3 &#128293;</div>
+      <div class="stat-sub">Best: 14 days</div>
+    </div>
+  </div>
+
+  <!-- Featured + Daily -->
+  <div class="top-row">
+    <a class="featured" href="#">
+      <div class="featured-inner">
+        <div class="featured-art">
+          <img src="../thumbnails/gravity-well.svg" alt="">
+          <div class="featured-art-grad"></div>
+        </div>
+        <div class="featured-info">
+          <span class="featured-badge">Featured</span>
+          <h2>Gravity Well</h2>
+          <p>Manipulate gravitational fields to guide particles through cosmic mazes. Careful — your wells also pull hazard debris.</p>
+          <button class="btn-play-sm">&#9654; Play Now</button>
+        </div>
+      </div>
+    </a>
+    <div class="daily">
+      <div class="daily-label">&#127919; Daily Challenge</div>
+      <div class="daily-title">Score 500 in Chroma Flood</div>
+      <div class="daily-sub">Target: 500 pts &middot; Resets in 14h</div>
+      <div class="daily-bottom">
+        <span class="daily-streak">&#128293; 3 streak</span>
+        <button class="btn-daily">&#9654; Play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Games Dense Grid -->
+  <div class="section-header">
+    <h2>All Games</h2>
+    <span class="section-count">16</span>
+  </div>
+
+  <div class="dense-grid">
+    <a class="dense-card" href="#">
+      <img src="../thumbnails/gravity-well.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Gravity Well</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <img src="../thumbnails/chroma-flood.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Chroma Flood</h3><div class="meta"><span class="diff-dot" style="background:#4ade80"></span> Easy &middot; Puzzle</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <img src="../thumbnails/echo-chamber.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Echo Chamber</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <img src="../thumbnails/terravore.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Terravore</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Action</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <img src="../thumbnails/pulse-weaver.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Pulse Weaver</h3><div class="meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Action</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <img src="../thumbnails/orbit-keeper.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Orbit Keeper</h3><div class="meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Strategy</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/symbiosis.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Symbiosis</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Action</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/drift.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Drift</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/spectrum.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Spectrum</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/deja-vu.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>D&eacute;j&agrave; Vu</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/slide-devil.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Slide Devil</h3><div class="meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Action</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/whats-missing.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>What's Missing?</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/cascade.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Cascade</h3><div class="meta"><span class="diff-dot" style="background:#4ade80"></span> Easy &middot; Puzzle</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/ricochet.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Ricochet</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/burn.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Burn</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Strategy</div></div>
+    </a>
+    <a class="dense-card" href="#">
+      <span class="new-dot"></span>
+      <img src="../thumbnails/rift.svg" alt="">
+      <div class="dense-play">&#9654;</div>
+      <div class="dense-overlay"><h3>Rift</h3><div class="meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Action</div></div>
+    </a>
+  </div>
+</div>
+
+<div class="footer">&copy; 2026 Spryte Games</div>
+</body>
+</html>

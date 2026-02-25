@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design 6 — Immersive Full-Bleed</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#06050e;color:#eeedf5;font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif}
+  a{color:inherit;text-decoration:none}
+  .nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(20px);background:rgba(6,5,14,0.7);border-bottom:1px solid rgba(255,255,255,0.03);padding:16px 48px;display:flex;align-items:center}
+  .nav-logo{font-size:17px;font-weight:800;letter-spacing:-0.02em}.nav-logo span{color:#e94560}
+  .nav-right{margin-left:auto;display:flex;align-items:center;gap:20px}
+  .nav-right a{font-size:12px;color:#706f82;font-weight:500;transition:color .2s}.nav-right a:hover{color:#eeedf5}
+  .search-pill{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);font-size:12px;color:#706f82;cursor:pointer}
+  .search-pill kbd{font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,0.06);font-family:inherit}
+
+  .container{max-width:1400px;margin:0 auto;padding:0 48px}
+
+  /* Hero — full bleed with game art */
+  .hero{position:relative;height:480px;overflow:hidden}
+  .hero-art{position:absolute;inset:0}
+  .hero-art img{width:100%;height:100%;object-fit:cover;filter:brightness(0.5) saturate(1.2)}
+  .hero::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,#06050e 0%,#06050e 8%,rgba(6,5,14,0.6) 50%,rgba(6,5,14,0.3) 100%)}
+  .hero-inner{position:relative;z-index:2;height:100%;display:flex;align-items:flex-end;max-width:1400px;margin:0 auto;padding:0 48px 44px}
+  .hero-text{max-width:520px}
+  .hero-text .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#e94560;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .hero-text .label .dot{width:6px;height:6px;border-radius:50%;background:#e94560;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .hero-text h1{font-size:52px;font-weight:900;line-height:.95;letter-spacing:-.04em;margin-bottom:12px}
+  .hero-text p{font-size:15px;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:24px}
+  .hero-btns{display:flex;gap:10px}
+  .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:13px 30px;border-radius:12px;background:#e94560;color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;transition:all .3s}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(233,69,96,0.35)}
+  .btn-secondary{display:inline-flex;align-items:center;gap:6px;padding:13px 24px;border-radius:12px;background:rgba(255,255,255,0.06);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.08);color:#eeedf5;font-weight:600;font-size:13px;cursor:pointer;transition:all .3s}
+  .btn-secondary:hover{background:rgba(255,255,255,0.1)}
+
+  /* Game cards — full bleed rows, no visible card border */
+  .section{margin:48px 0}
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .section-head h2{font-size:20px;font-weight:800;letter-spacing:-.01em}
+  .section-head .count{font-size:11px;color:#706f82}
+  .section-head .more{font-size:12px;color:#7c6bff;font-weight:600}
+
+  .row{display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}
+  .row::-webkit-scrollbar{height:3px}.row::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.05);border-radius:2px}
+
+  .tile{flex-shrink:0;width:260px;scroll-snap-align:start;border-radius:14px;overflow:hidden;position:relative;cursor:pointer;transition:transform .4s cubic-bezier(.16,1,.3,1)}
+  .tile:hover{transform:scale(1.03)}
+  .tile-img{aspect-ratio:16/10;overflow:hidden;position:relative}
+  .tile-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+  .tile:hover .tile-img img{transform:scale(1.08)}
+  .tile-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,#06050e 0%,transparent 60%)}
+  .tile-info{position:absolute;bottom:0;left:0;right:0;padding:14px 16px;z-index:2}
+  .tile-info h3{font-size:14px;font-weight:700;margin-bottom:2px}
+  .tile-info .meta{font-size:11px;color:rgba(255,255,255,0.4);display:flex;align-items:center;gap:6px}
+  .tile-badge{position:absolute;top:10px;left:10px;z-index:3;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:5px;backdrop-filter:blur(8px)}
+  .badge-new{background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.15)}
+  .badge-feat{background:rgba(233,69,96,0.15);color:#e94560;border:1px solid rgba(233,69,96,0.15)}
+  .play-circle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:rgba(233,69,96,0.9);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s;z-index:4;box-shadow:0 4px 20px rgba(233,69,96,0.4)}
+  .tile:hover .play-circle{opacity:1}
+
+  /* Grid section */
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .grid .tile{width:auto}
+
+  /* Daily */
+  .daily-strip{display:flex;align-items:center;gap:16px;padding:16px 22px;border-radius:14px;background:rgba(233,69,96,0.04);border:1px solid rgba(233,69,96,0.08);margin-bottom:48px}
+  .daily-strip .icon{width:38px;height:38px;border-radius:10px;background:rgba(233,69,96,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+  .daily-strip .info{flex:1}.daily-strip .info .label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#e94560}
+  .daily-strip .info .desc{font-size:13px;font-weight:600;margin-top:1px}
+  .daily-strip .streak{display:flex;align-items:center;gap:4px;font-weight:700;font-size:14px}
+  .btn-sm{padding:8px 18px;border-radius:10px;background:#e94560;color:#fff;font-weight:600;font-size:12px;border:none;cursor:pointer}
+
+  .footer{border-top:1px solid rgba(255,255,255,0.03);margin-top:60px;padding:24px 48px;text-align:center;font-size:11px;color:rgba(136,134,160,0.35)}
+
+  @media(max-width:768px){.container{padding:0 16px}.hero-inner{padding:0 16px 28px}.hero{height:360px}.hero-text h1{font-size:36px}.grid{grid-template-columns:repeat(2,1fr);gap:10px}.tile{width:180px}}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="nav-logo">Spryte <span>Games</span></div><div class="nav-right"><div class="search-pill">Search <kbd>⌘K</kbd></div><a href="#">Games</a><a href="#">Achievements</a><a href="#">Stats</a></div></nav>
+
+<section class="hero">
+  <div class="hero-art"><img src="../thumbnails/gravity-well.svg" alt=""></div>
+  <div class="hero-inner"><div class="hero-text">
+    <div class="label"><span class="dot"></span> Featured Game</div>
+    <h1>Gravity<br>Well</h1>
+    <p>Manipulate gravitational fields to guide particles through cosmic mazes.</p>
+    <div class="hero-btns"><button class="btn-primary">▶ Play Now</button><button class="btn-secondary">Learn More</button></div>
+  </div></div>
+</section>
+
+<div class="container">
+  <div class="daily-strip">
+    <div class="icon">🎯</div>
+    <div class="info"><div class="label">Daily Challenge</div><div class="desc">Score 500 points in Chroma Flood</div></div>
+    <div class="streak">🔥 3</div>
+    <button class="btn-sm">▶ Play</button>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><h2>New Releases</h2><a class="more" href="#">See all →</a></div>
+    <div class="row">
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/rift.svg" alt=""><span class="tile-badge badge-new">New</span><div class="play-circle"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><div class="tile-info"><h3>Rift</h3><div class="meta">Hard · Action</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/burn.svg" alt=""><span class="tile-badge badge-new">New</span><div class="play-circle"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><div class="tile-info"><h3>Burn</h3><div class="meta">Hard · Action</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/cascade.svg" alt=""><span class="tile-badge badge-new">New</span><div class="play-circle"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><div class="tile-info"><h3>Cascade</h3><div class="meta">Medium · Physics</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/ricochet.svg" alt=""><span class="tile-badge badge-new">New</span><div class="play-circle"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div><div class="tile-info"><h3>Ricochet</h3><div class="meta">Medium · Physics</div></div></a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><h2>All Games</h2><span class="count">16 games</span></div>
+    <div class="grid">
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/gravity-well.svg" alt=""><span class="tile-badge badge-feat">★</span></div><div class="tile-info"><h3>Gravity Well</h3><div class="meta">Easy · Action</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/chroma-flood.svg" alt=""></div><div class="tile-info"><h3>Chroma Flood</h3><div class="meta">Easy · Puzzle</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/echo-chamber.svg" alt=""></div><div class="tile-info"><h3>Echo Chamber</h3><div class="meta">Medium · Puzzle</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/terravore.svg" alt=""></div><div class="tile-info"><h3>Terravore</h3><div class="meta">Medium · Action</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/pulse-weaver.svg" alt=""></div><div class="tile-info"><h3>Pulse Weaver</h3><div class="meta">Hard · Action</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/orbit-keeper.svg" alt=""></div><div class="tile-info"><h3>Orbit Keeper</h3><div class="meta">Medium · Arcade</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/symbiosis.svg" alt=""></div><div class="tile-info"><h3>Symbiosis</h3><div class="meta">Medium · Strategy</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/drift.svg" alt=""></div><div class="tile-info"><h3>Drift</h3><div class="meta">Easy · Arcade</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/spectrum.svg" alt=""></div><div class="tile-info"><h3>Spectrum</h3><div class="meta">Easy · Puzzle</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/deja-vu.svg" alt=""></div><div class="tile-info"><h3>Déjà Vu</h3><div class="meta">Medium · Puzzle</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/slide-devil.svg" alt=""></div><div class="tile-info"><h3>Slide Devil</h3><div class="meta">Medium · Puzzle</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/whats-missing.svg" alt=""></div><div class="tile-info"><h3>What's Missing?</h3><div class="meta">Easy · Puzzle</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/rift.svg" alt=""><span class="tile-badge badge-new">New</span></div><div class="tile-info"><h3>Rift</h3><div class="meta">Hard · Action</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/burn.svg" alt=""><span class="tile-badge badge-new">New</span></div><div class="tile-info"><h3>Burn</h3><div class="meta">Hard · Action</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/cascade.svg" alt=""><span class="tile-badge badge-new">New</span></div><div class="tile-info"><h3>Cascade</h3><div class="meta">Medium · Physics</div></div></a>
+      <a class="tile" href="#"><div class="tile-img"><img src="../thumbnails/ricochet.svg" alt=""><span class="tile-badge badge-new">New</span></div><div class="tile-info"><h3>Ricochet</h3><div class="meta">Medium · Physics</div></div></a>
+    </div>
+  </div>
+</div>
+<div class="footer">© 2026 Spryte Games · Free to play · No plugins required</div>
+</body>
+</html>

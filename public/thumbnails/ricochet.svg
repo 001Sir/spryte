@@ -39,5 +39,4 @@
   <!-- Remaining target -->
   <circle cx="80" cy="240" r="12" fill="none" stroke="#ef4444" stroke-width="2" opacity="0.8"/>
   <circle cx="80" cy="240" r="5" fill="#ef4444" opacity="0.6"/>
-  <text x="200" y="286" text-anchor="middle" fill="#22d3ee" font-family="sans-serif" font-size="18" font-weight="bold" opacity="0.8">RICOCHET</text>
 </svg>

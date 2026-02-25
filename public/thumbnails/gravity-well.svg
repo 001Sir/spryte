@@ -13,5 +13,4 @@
   <circle cx="80" cy="220" r="6" fill="#fbbf24" opacity="0.8"/>
   <circle cx="280" cy="240" r="15" fill="none" stroke="#fbbf24" stroke-width="2" opacity="0.6"/>
   <circle cx="280" cy="240" r="8" fill="#fbbf24" opacity="0.3"/>
-  <text x="200" y="280" text-anchor="middle" fill="#7c3aed" font-family="sans-serif" font-size="18" font-weight="bold" opacity="0.8">GRAVITY WELL</text>
 </svg>

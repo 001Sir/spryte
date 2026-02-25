@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design 7 — Apple TV+ Style</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #06050e; color: #eeedf5; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── Navbar ─── */
+  .nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(16px); background: rgba(6,5,14,0.85); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 14px 40px; display: flex; align-items: center; gap: 24px; }
+  .nav-logo { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .nav-logo span { color: #e94560; }
+  .nav-links { display: flex; gap: 20px; margin-left: auto; }
+  .nav-links a { font-size: 13px; color: #8886a0; transition: color 0.2s; }
+  .nav-links a:hover { color: #eeedf5; }
+
+  /* ─── Container ─── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+
+  /* ─── Cinematic Hero Cards ─── */
+  .cinematic-section { padding: 60px 0 40px; }
+  .cinematic-card { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; margin-bottom: 32px; cursor: pointer; transition: transform 0.4s ease, box-shadow 0.4s ease; }
+  .cinematic-card:hover { transform: scale(1.01); box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
+  .cinematic-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease; }
+  .cinematic-card:hover img { transform: scale(1.04); }
+  .cinematic-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(6,5,14,0.95) 0%, rgba(6,5,14,0.4) 35%, transparent 65%); }
+  .cinematic-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 48px 56px; }
+  .cinematic-badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; padding: 5px 14px; border-radius: 6px; background: rgba(233,69,96,0.15); color: #e94560; border: 1px solid rgba(233,69,96,0.25); margin-bottom: 14px; }
+  .cinematic-content h2 { font-size: 52px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 12px; }
+  .cinematic-content p { font-size: 16px; color: #8886a0; max-width: 560px; line-height: 1.6; margin-bottom: 24px; }
+  .cinematic-meta { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .meta-pill { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06); }
+  .cinematic-actions { display: flex; gap: 12px; }
+  .btn-play { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 14px; background: #e94560; color: #fff; font-weight: 700; font-size: 15px; border: none; cursor: pointer; transition: background 0.2s, transform 0.2s; }
+  .btn-play:hover { background: #d6304b; transform: translateY(-1px); }
+  .btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 14px 28px; border-radius: 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #eeedf5; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+  /* ─── Medium cinematic (half-height) ─── */
+  .cinematic-card.medium { aspect-ratio: 21/9; }
+  .cinematic-card.medium .cinematic-content { padding: 36px 48px; }
+  .cinematic-card.medium .cinematic-content h2 { font-size: 36px; }
+
+  /* ─── Daily Challenge ─── */
+  .daily-section { margin-bottom: 48px; }
+  .daily { display: flex; align-items: center; gap: 16px; padding: 20px 28px; border-radius: 16px; background: linear-gradient(135deg, rgba(233,69,96,0.06) 0%, rgba(124,107,255,0.04) 100%); border: 1px solid rgba(233,69,96,0.1); }
+  .daily-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(233,69,96,0.12); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .daily-info { flex: 1; }
+  .daily-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #e94560; margin-bottom: 4px; }
+  .daily-desc { font-size: 15px; font-weight: 600; }
+  .daily-target { font-size: 12px; color: #8886a0; margin-top: 2px; }
+  .streak-badge { display: flex; align-items: center; gap: 4px; padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.04); font-size: 14px; font-weight: 700; }
+  .btn-sm { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 10px; background: #e94560; color: #fff; font-weight: 600; font-size: 13px; border: none; cursor: pointer; transition: background 0.2s; }
+  .btn-sm:hover { background: #d6304b; }
+
+  /* ─── Section header ─── */
+  .section-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 24px; }
+  .section-header h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .section-count { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: rgba(124,107,255,0.1); color: #7c6bff; }
+
+  /* ─── Compact Grid ─── */
+  .compact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 60px; }
+  .compact-card { border-radius: 14px; overflow: hidden; background: #0f0e20; border: 1px solid rgba(255,255,255,0.04); transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; }
+  .compact-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.08); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+  .compact-thumb { position: relative; aspect-ratio: 16/10; overflow: hidden; }
+  .compact-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+  .compact-card:hover .compact-thumb img { transform: scale(1.06); }
+  .compact-thumb .grad { position: absolute; inset: 0; background: linear-gradient(to top, #0f0e20 0%, transparent 50%); }
+  .compact-body { padding: 12px 14px; }
+  .compact-body h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .compact-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #8886a0; }
+  .diff-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+  /* ─── Footer ─── */
+  .footer { border-top: 1px solid rgba(255,255,255,0.04); margin-top: 20px; padding: 28px 40px; text-align: center; font-size: 12px; color: rgba(136,134,160,0.5); }
+
+  @media (max-width: 900px) {
+    .compact-grid { grid-template-columns: repeat(2, 1fr); }
+    .cinematic-content h2 { font-size: 32px; }
+    .cinematic-content { padding: 32px; }
+    .container { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="nav">
+  <div class="nav-logo">Spryte <span>Games</span></div>
+  <div class="nav-links">
+    <a href="#">Games</a>
+    <a href="#">Achievements</a>
+    <a href="#">Stats</a>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Cinematic Featured Games -->
+  <section class="cinematic-section">
+
+    <!-- Hero 1 — Full Size -->
+    <a class="cinematic-card" href="#">
+      <img src="../thumbnails/gravity-well.svg" alt="Gravity Well">
+      <div class="cinematic-overlay"></div>
+      <div class="cinematic-content">
+        <span class="cinematic-badge">Featured</span>
+        <h2>Gravity Well</h2>
+        <div class="cinematic-meta">
+          <span class="meta-pill">Puzzle</span>
+          <span class="meta-pill">Physics</span>
+          <span class="meta-pill" style="color:#f59e0b">&#9679; Medium</span>
+        </div>
+        <p>Manipulate gravitational fields to guide particles through cosmic mazes. Careful — your wells also pull hazard debris into the path.</p>
+        <div class="cinematic-actions">
+          <button class="btn-play">&#9654; Play Now</button>
+          <button class="btn-ghost">How to Play</button>
+        </div>
+      </div>
+    </a>
+
+    <!-- Hero 2 — Full Size -->
+    <a class="cinematic-card" href="#">
+      <img src="../thumbnails/rift.svg" alt="Rift">
+      <div class="cinematic-overlay"></div>
+      <div class="cinematic-content">
+        <span class="cinematic-badge">New</span>
+        <h2>Rift</h2>
+        <div class="cinematic-meta">
+          <span class="meta-pill">Action</span>
+          <span class="meta-pill">Arcade</span>
+          <span class="meta-pill" style="color:#e94560">&#9679; Hard</span>
+        </div>
+        <p>Your movement leaves a dimensional rift. Enemy bullets that touch your trail warp through it and redirect toward enemies.</p>
+        <div class="cinematic-actions">
+          <button class="btn-play">&#9654; Play Now</button>
+          <button class="btn-ghost">How to Play</button>
+        </div>
+      </div>
+    </a>
+
+    <!-- Hero 3 — Medium -->
+    <a class="cinematic-card medium" href="#">
+      <img src="../thumbnails/echo-chamber.svg" alt="Echo Chamber">
+      <div class="cinematic-overlay"></div>
+      <div class="cinematic-content">
+        <span class="cinematic-badge">Staff Pick</span>
+        <h2>Echo Chamber</h2>
+        <div class="cinematic-meta">
+          <span class="meta-pill">Puzzle</span>
+          <span class="meta-pill">Action</span>
+          <span class="meta-pill" style="color:#f59e0b">&#9679; Medium</span>
+        </div>
+        <p>Navigate dark rooms using expanding sound-wave pulses that briefly reveal your surroundings.</p>
+        <div class="cinematic-actions">
+          <button class="btn-play">&#9654; Play Now</button>
+        </div>
+      </div>
+    </a>
+
+    <!-- Hero 4 — Medium -->
+    <a class="cinematic-card medium" href="#">
+      <img src="../thumbnails/symbiosis.svg" alt="Symbiosis">
+      <div class="cinematic-overlay"></div>
+      <div class="cinematic-content">
+        <span class="cinematic-badge">New</span>
+        <h2>Symbiosis</h2>
+        <div class="cinematic-meta">
+          <span class="meta-pill">Action</span>
+          <span class="meta-pill">Strategy</span>
+          <span class="meta-pill" style="color:#f59e0b">&#9679; Medium</span>
+        </div>
+        <p>Control two linked organisms — a tough Host and a nimble Parasite. Use the elastic tether between them to clothesline waves of enemies.</p>
+        <div class="cinematic-actions">
+          <button class="btn-play">&#9654; Play Now</button>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <!-- Daily Challenge -->
+  <div class="daily-section">
+    <div class="daily">
+      <div class="daily-icon">&#127919;</div>
+      <div class="daily-info">
+        <div class="daily-label">Daily Challenge</div>
+        <div class="daily-desc">Score 500 points in Chroma Flood</div>
+        <div class="daily-target">Target: 500 points</div>
+      </div>
+      <div class="streak-badge">&#128293; 3</div>
+      <button class="btn-sm">&#9654; Play</button>
+    </div>
+  </div>
+
+  <!-- All Games Compact Grid -->
+  <div class="section-header">
+    <h2>All Games</h2>
+    <span class="section-count">16</span>
+  </div>
+  <div class="compact-grid">
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/gravity-well.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Gravity Well</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/chroma-flood.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Chroma Flood</h3><div class="compact-meta"><span class="diff-dot" style="background:#4ade80"></span> Easy &middot; Puzzle</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/echo-chamber.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Echo Chamber</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/terravore.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Terravore</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Action</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/pulse-weaver.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Pulse Weaver</h3><div class="compact-meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Action</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/orbit-keeper.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Orbit Keeper</h3><div class="compact-meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Strategy</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/symbiosis.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Symbiosis</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Action</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/drift.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Drift</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/spectrum.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Spectrum</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/deja-vu.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>D&eacute;j&agrave; Vu</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/slide-devil.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Slide Devil</h3><div class="compact-meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Action</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/whats-missing.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>What's Missing?</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/cascade.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Cascade</h3><div class="compact-meta"><span class="diff-dot" style="background:#4ade80"></span> Easy &middot; Puzzle</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/ricochet.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Ricochet</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/burn.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Burn</h3><div class="compact-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Strategy</div></div>
+    </a>
+    <a class="compact-card" href="#">
+      <div class="compact-thumb"><img src="../thumbnails/rift.svg" alt=""><div class="grad"></div></div>
+      <div class="compact-body"><h3>Rift</h3><div class="compact-meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Action</div></div>
+    </a>
+  </div>
+</div>
+
+<div class="footer">&copy; 2026 Spryte Games</div>
+</body>
+</html>

@@ -49,6 +49,7 @@ const gameComponents: Record<string, ReturnType<typeof dynamic>> = {
   'ricochet': dynamic(() => import('@/games/ricochet/RicochetGame'), { ssr: false, loading: () => <BrandedLoading title="Ricochet" color="#0ea5e9" /> }),
   'burn': dynamic(() => import('@/games/burn/BurnGame'), { ssr: false, loading: () => <BrandedLoading title="Burn" color="#e94560" /> }),
   'rift': dynamic(() => import('@/games/rift/RiftGame'), { ssr: false, loading: () => <BrandedLoading title="Rift" color="#00f0ff" /> }),
+  'morph': dynamic(() => import('@/games/morph/MorphGame'), { ssr: false, loading: () => <BrandedLoading title="Morph" color="#f97316" /> }),
 };
 
 export default function GamePlayer({ slug }: { slug: string }) {

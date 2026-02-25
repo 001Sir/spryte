@@ -17,5 +17,4 @@
   <circle cx="200" cy="210" r="8" fill="none" stroke="#ef4444" stroke-width="1"/>
   <circle cx="340" cy="70" r="4" fill="#06b6d4" opacity="0.7"/>
   <circle cx="60" cy="90" r="4" fill="#06b6d4" opacity="0.7"/>
-  <text x="200" y="275" text-anchor="middle" fill="#d946ef" font-family="sans-serif" font-size="18" font-weight="bold" opacity="0.8">SYMBIOSIS</text>
 </svg>

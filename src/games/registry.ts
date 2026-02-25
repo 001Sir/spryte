@@ -24,6 +24,9 @@ const registry: GameManifest[] = [
   { slug: 'ricochet', component: dynamic(() => import('./ricochet/RicochetGame'), { ssr: false }) },
   { slug: 'burn', component: dynamic(() => import('./burn/BurnGame'), { ssr: false }) },
   { slug: 'rift', component: dynamic(() => import('./rift/RiftGame'), { ssr: false }) },
+  { slug: 'dendrite', component: dynamic(() => import('./dendrite/DendriteGame'), { ssr: false }) },
+  { slug: 'phylo', component: dynamic(() => import('./phylo/PhyloGame'), { ssr: false }) },
+  { slug: 'convect', component: dynamic(() => import('./convect/ConvectGame'), { ssr: false }) },
 ];
 
 const registryMap = new Map(registry.map((r) => [r.slug, r]));

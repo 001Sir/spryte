@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#0a1a15"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow-strong">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="400" height="300" fill="url(#bg)"/>
+
+  <!-- Tree trunk -->
+  <g stroke="#5b4a3a" stroke-width="4" fill="none" opacity="0.8">
+    <line x1="200" y1="280" x2="200" y2="200"/>
+    <line x1="200" y1="200" x2="120" y2="140"/>
+    <line x1="200" y1="200" x2="280" y2="140"/>
+    <line x1="120" y1="140" x2="70" y2="80"/>
+    <line x1="120" y1="140" x2="160" y2="80"/>
+    <line x1="280" y1="140" x2="240" y2="80"/>
+    <line x1="280" y1="140" x2="330" y2="80"/>
+  </g>
+
+  <!-- Branch glow -->
+  <g stroke="#10b981" stroke-width="2" fill="none" filter="url(#glow)" opacity="0.4">
+    <line x1="200" y1="280" x2="200" y2="200"/>
+    <line x1="200" y1="200" x2="120" y2="140"/>
+    <line x1="200" y1="200" x2="280" y2="140"/>
+    <line x1="120" y1="140" x2="70" y2="80"/>
+    <line x1="120" y1="140" x2="160" y2="80"/>
+    <line x1="280" y1="140" x2="240" y2="80"/>
+    <line x1="280" y1="140" x2="330" y2="80"/>
+  </g>
+
+  <!-- Creature nodes -->
+  <g filter="url(#glow)">
+    <!-- Root creature (blob with fur) -->
+    <circle cx="200" cy="200" r="12" fill="#2d4a3e" stroke="#10b981" stroke-width="2"/>
+    <ellipse cx="200" cy="198" rx="7" ry="5" fill="#34d399" opacity="0.8"/>
+    <circle cx="197" cy="196" r="1.5" fill="#fff"/>
+    <circle cx="203" cy="196" r="1.5" fill="#fff"/>
+
+    <!-- Left branch creature (segmented with scales) -->
+    <circle cx="120" cy="140" r="11" fill="#2d4a3e" stroke="#10b981" stroke-width="2"/>
+    <circle cx="116" cy="138" r="4" fill="#f59e0b" opacity="0.7"/>
+    <circle cx="124" cy="138" r="4" fill="#f59e0b" opacity="0.7"/>
+    <circle cx="120" cy="144" r="3" fill="#f59e0b" opacity="0.5"/>
+
+    <!-- Right branch creature (shell) -->
+    <circle cx="280" cy="140" r="11" fill="#2d4a3e" stroke="#10b981" stroke-width="2"/>
+    <ellipse cx="280" cy="138" rx="6" ry="4" fill="#60a5fa" opacity="0.7"/>
+    <path d="M278 135 Q283 130 285 136" stroke="#93c5fd" stroke-width="1" fill="none"/>
+
+    <!-- Leaf creatures -->
+    <circle cx="70" cy="80" r="10" fill="#2d4a3e" stroke="#10b981" stroke-width="1.5"/>
+    <ellipse cx="70" cy="78" rx="5" ry="3" fill="#ef4444" opacity="0.7"/>
+    <line x1="64" y1="83" x2="62" y2="90" stroke="#ef4444" stroke-width="1.5"/>
+    <line x1="76" y1="83" x2="78" y2="90" stroke="#ef4444" stroke-width="1.5"/>
+
+    <circle cx="160" cy="80" r="10" fill="#2d4a3e" stroke="#10b981" stroke-width="1.5"/>
+    <ellipse cx="160" cy="78" rx="5" ry="3" fill="#a78bfa" opacity="0.7"/>
+    <line x1="155" y1="75" x2="148" y2="72" stroke="#a78bfa" stroke-width="1"/>
+    <line x1="165" y1="75" x2="172" y2="72" stroke="#a78bfa" stroke-width="1"/>
+
+    <circle cx="240" cy="80" r="10" fill="#2d4a3e" stroke="#10b981" stroke-width="1.5"/>
+    <ellipse cx="240" cy="78" rx="6" ry="3" fill="#2dd4bf" opacity="0.7"/>
+
+    <circle cx="330" cy="80" r="10" fill="#2d4a3e" stroke="#10b981" stroke-width="1.5"/>
+    <ellipse cx="330" cy="78" rx="5" ry="4" fill="#fb923c" opacity="0.7"/>
+    <path d="M326 84 Q330 90 334 84" stroke="#fb923c" stroke-width="1" fill="none"/>
+  </g>
+
+  <!-- New creature in staging area -->
+  <g filter="url(#glow-strong)">
+    <circle cx="200" cy="35" r="18" fill="#1a2e25" stroke="#34d399" stroke-width="2" stroke-dasharray="4 2"/>
+    <ellipse cx="200" cy="33" rx="9" ry="6" fill="#f472b6" opacity="0.8"/>
+    <circle cx="196" cy="31" r="2" fill="#fff"/>
+    <circle cx="204" cy="31" r="2" fill="#fff"/>
+    <line x1="192" y1="38" x2="188" y2="46" stroke="#f472b6" stroke-width="1.5"/>
+    <line x1="208" y1="38" x2="212" y2="46" stroke="#f472b6" stroke-width="1.5"/>
+    <text x="200" y="62" font-family="monospace" font-size="8" fill="#34d399" text-anchor="middle" opacity="0.7">Place me!</text>
+  </g>
+
+  <!-- Sparkle particles -->
+  <g fill="#10b981" opacity="0.4">
+    <circle cx="95" cy="110" r="1.5"/>
+    <circle cx="250" cy="170" r="1"/>
+    <circle cx="150" cy="180" r="1.5"/>
+    <circle cx="310" cy="110" r="1"/>
+    <circle cx="180" cy="100" r="1"/>
+  </g>
+
+  <!-- Title -->
+  <text x="200" y="286" font-family="monospace" font-weight="bold" font-size="14" fill="#10b981" text-anchor="middle" opacity="0.5" filter="url(#glow)">PHYLO</text>
+</svg>

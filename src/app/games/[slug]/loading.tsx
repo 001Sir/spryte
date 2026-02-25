@@ -1,6 +1,6 @@
 export default function GameLoading() {
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8" role="status" aria-label="Loading game page">
+    <div className="max-w-5xl mx-auto px-4 pt-16 pb-8" role="status" aria-label="Loading game page">
       {/* Breadcrumb skeleton */}
       <nav className="flex items-center gap-2 mb-5">
         <div className="animate-skeleton-pulse bg-white/5 rounded h-4 w-12" />

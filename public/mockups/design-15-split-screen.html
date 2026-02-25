@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design 15 — Split Screen</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #06050e; color: #eeedf5; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── Navbar ─── */
+  .nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(16px); background: rgba(6,5,14,0.85); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 14px 40px; display: flex; align-items: center; gap: 24px; }
+  .nav-logo { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .nav-logo span { color: #e94560; }
+  .nav-links { display: flex; gap: 20px; margin-left: auto; }
+  .nav-links a { font-size: 13px; color: #8886a0; transition: color 0.2s; }
+  .nav-links a:hover { color: #eeedf5; }
+
+  /* ─── Split Layout ─── */
+  .split { display: flex; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - 56px); }
+
+  /* ─── Left Column (Sticky) ─── */
+  .left-col { width: 40%; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; padding: 36px 32px 36px 40px; border-right: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 24px; }
+  .left-col::-webkit-scrollbar { width: 3px; }
+  .left-col::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 2px; }
+
+  /* Featured Game */
+  .featured { border-radius: 18px; overflow: hidden; background: #0f0e20; border: 1px solid rgba(255,255,255,0.04); transition: box-shadow 0.3s; }
+  .featured:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+  .featured-art { position: relative; aspect-ratio: 16/10; overflow: hidden; }
+  .featured-art img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
+  .featured:hover .featured-art img { transform: scale(1.04); }
+  .featured-art-grad { position: absolute; inset: 0; background: linear-gradient(to top, #0f0e20 0%, transparent 50%); }
+  .featured-body { padding: 20px 24px 24px; }
+  .featured-badge { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 6px; background: rgba(233,69,96,0.12); color: #e94560; border: 1px solid rgba(233,69,96,0.15); margin-bottom: 10px; }
+  .featured-body h2 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 8px; }
+  .featured-desc { font-size: 14px; color: #8886a0; line-height: 1.6; margin-bottom: 14px; }
+  .featured-meta { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .meta-pill { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); }
+  .featured-actions { display: flex; gap: 10px; }
+  .btn-play { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; border-radius: 12px; background: #e94560; color: #fff; font-weight: 700; font-size: 14px; border: none; cursor: pointer; transition: background 0.2s, transform 0.2s; box-shadow: 0 4px 16px rgba(233,69,96,0.25); }
+  .btn-play:hover { background: #d6304b; transform: translateY(-1px); }
+  .btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 12px 24px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: #eeedf5; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.08); }
+
+  /* Daily Challenge */
+  .daily { border-radius: 16px; background: linear-gradient(135deg, rgba(233,69,96,0.06) 0%, rgba(124,107,255,0.04) 100%); border: 1px solid rgba(233,69,96,0.08); padding: 20px; }
+  .daily-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .daily-icon { font-size: 20px; }
+  .daily-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #e94560; }
+  .daily-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .daily-sub { font-size: 12px; color: #8886a0; margin-bottom: 14px; }
+  .daily-footer { display: flex; align-items: center; gap: 12px; }
+  .daily-streak { font-size: 14px; font-weight: 700; }
+  .btn-daily { padding: 8px 20px; border-radius: 10px; background: #e94560; color: #fff; font-weight: 600; font-size: 12px; border: none; cursor: pointer; transition: background 0.2s; }
+  .btn-daily:hover { background: #d6304b; }
+
+  /* Quick Stats */
+  .quick-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .qs { padding: 14px; border-radius: 12px; background: #0f0e20; border: 1px solid rgba(255,255,255,0.04); text-align: center; }
+  .qs-val { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
+  .qs-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #8886a0; margin-top: 2px; }
+
+  /* ─── Right Column (Scrollable Grid) ─── */
+  .right-col { width: 60%; padding: 36px 40px 36px 32px; }
+
+  /* Section Header */
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .section-header h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .section-count { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: rgba(124,107,255,0.1); color: #7c6bff; }
+
+  /* 3-column grid */
+  .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .game-card { border-radius: 14px; overflow: hidden; background: #0f0e20; border: 1px solid rgba(255,255,255,0.04); transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; cursor: pointer; }
+  .game-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.08); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+  .game-thumb { position: relative; aspect-ratio: 16/10; overflow: hidden; }
+  .game-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+  .game-card:hover .game-thumb img { transform: scale(1.06); }
+  .game-thumb .grad { position: absolute; inset: 0; background: linear-gradient(to top, #0f0e20 0%, transparent 50%); }
+  .game-body { padding: 10px 12px; }
+  .game-body h3 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .game-body .meta { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #8886a0; }
+  .diff-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+
+  /* Play overlay */
+  .play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(6,5,14,0.4); opacity: 0; transition: opacity 0.3s; }
+  .game-card:hover .play-overlay { opacity: 1; }
+  .play-circle { width: 38px; height: 38px; border-radius: 50%; background: rgba(233,69,96,0.85); display: flex; align-items: center; justify-content: center; font-size: 13px; transform: scale(0.8); transition: transform 0.3s; }
+  .game-card:hover .play-circle { transform: scale(1); }
+
+  /* New badge */
+  .new-badge { position: absolute; top: 8px; left: 8px; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 5px; background: rgba(233,69,96,0.2); color: #e94560; border: 1px solid rgba(233,69,96,0.15); z-index: 2; }
+
+  /* ─── Footer ─── */
+  .footer { border-top: 1px solid rgba(255,255,255,0.04); padding: 24px 40px; text-align: center; font-size: 12px; color: rgba(136,134,160,0.5); }
+
+  @media (max-width: 900px) {
+    .split { flex-direction: column; }
+    .left-col { width: 100%; position: relative; top: 0; height: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.03); padding: 24px 20px; }
+    .right-col { width: 100%; padding: 24px 20px; }
+    .game-grid { grid-template-columns: repeat(2, 1fr); }
+    .featured-body h2 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="nav">
+  <div class="nav-logo">Spryte <span>Games</span></div>
+  <div class="nav-links">
+    <a href="#">Games</a>
+    <a href="#">Achievements</a>
+    <a href="#">Stats</a>
+  </div>
+</nav>
+
+<div class="split">
+  <!-- Left Column (Sticky) -->
+  <div class="left-col">
+    <!-- Featured Game -->
+    <a class="featured" href="#">
+      <div class="featured-art">
+        <img src="../thumbnails/gravity-well.svg" alt="Gravity Well">
+        <div class="featured-art-grad"></div>
+      </div>
+      <div class="featured-body">
+        <span class="featured-badge">Featured</span>
+        <h2>Gravity Well</h2>
+        <p class="featured-desc">Manipulate gravitational fields to guide particles through cosmic mazes. Careful — your wells also pull hazard debris into the path.</p>
+        <div class="featured-meta">
+          <span class="meta-pill">Puzzle</span>
+          <span class="meta-pill">Physics</span>
+          <span class="meta-pill" style="color:#f59e0b">&#9679; Medium</span>
+        </div>
+        <div class="featured-actions">
+          <button class="btn-play">&#9654; Play Now</button>
+          <button class="btn-ghost">How to Play</button>
+        </div>
+      </div>
+    </a>
+
+    <!-- Daily Challenge -->
+    <div class="daily">
+      <div class="daily-header">
+        <span class="daily-icon">&#127919;</span>
+        <span class="daily-label">Daily Challenge</span>
+      </div>
+      <div class="daily-title">Score 500 points in Chroma Flood</div>
+      <div class="daily-sub">Target: 500 points &middot; Resets in 14h</div>
+      <div class="daily-footer">
+        <span class="daily-streak">&#128293; 3 day streak</span>
+        <button class="btn-daily">&#9654; Play Challenge</button>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="qs">
+        <div class="qs-val">127</div>
+        <div class="qs-label">Played</div>
+      </div>
+      <div class="qs">
+        <div class="qs-val">48h</div>
+        <div class="qs-label">Time</div>
+      </div>
+      <div class="qs">
+        <div class="qs-val">34</div>
+        <div class="qs-label">Badges</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column (Scrollable) -->
+  <div class="right-col">
+    <div class="section-header">
+      <h2>All Games</h2>
+      <span class="section-count">15</span>
+    </div>
+
+    <div class="game-grid">
+      <a class="game-card" href="#">
+        <div class="game-thumb"><img src="../thumbnails/chroma-flood.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Chroma Flood</h3><div class="meta"><span class="diff-dot" style="background:#4ade80"></span> Easy &middot; Puzzle</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><img src="../thumbnails/echo-chamber.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Echo Chamber</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><img src="../thumbnails/terravore.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Terravore</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Action</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><img src="../thumbnails/pulse-weaver.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Pulse Weaver</h3><div class="meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Action</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><img src="../thumbnails/orbit-keeper.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Orbit Keeper</h3><div class="meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Strategy</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/symbiosis.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Symbiosis</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Action</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/drift.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Drift</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/spectrum.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Spectrum</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/deja-vu.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>D&eacute;j&agrave; Vu</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/slide-devil.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Slide Devil</h3><div class="meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Action</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/whats-missing.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>What's Missing?</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/cascade.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Cascade</h3><div class="meta"><span class="diff-dot" style="background:#4ade80"></span> Easy &middot; Puzzle</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/ricochet.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Ricochet</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Puzzle</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/burn.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Burn</h3><div class="meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium &middot; Strategy</div></div>
+      </a>
+      <a class="game-card" href="#">
+        <div class="game-thumb"><span class="new-badge">NEW</span><img src="../thumbnails/rift.svg" alt=""><div class="grad"></div><div class="play-overlay"><div class="play-circle">&#9654;</div></div></div>
+        <div class="game-body"><h3>Rift</h3><div class="meta"><span class="diff-dot" style="background:#e94560"></span> Hard &middot; Action</div></div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="footer">&copy; 2026 Spryte Games</div>
+</body>
+</html>

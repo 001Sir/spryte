@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design 5 — Sidebar Categories</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #06050e; color: #eeedf5; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; }
+  a { color: inherit; text-decoration: none; }
+
+  .nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(16px); background: rgba(6,5,14,0.85); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 14px 40px; display: flex; align-items: center; gap: 24px; }
+  .nav-logo { font-size: 18px; font-weight: 800; }
+  .nav-logo span { color: #e94560; }
+  .nav-links { display: flex; gap: 20px; margin-left: auto; }
+  .nav-links a { font-size: 13px; color: #8886a0; }
+
+  .page { max-width: 1400px; margin: 0 auto; padding: 24px 40px; display: grid; grid-template-columns: 220px 1fr; gap: 28px; }
+
+  /* ─── Sidebar ─── */
+  .sidebar { position: sticky; top: 80px; align-self: start; }
+  .sidebar-section { margin-bottom: 28px; }
+  .sidebar-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #8886a0; margin-bottom: 10px; }
+  .cat-list { display: flex; flex-direction: column; gap: 2px; }
+  .cat-link { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #8886a0; transition: all 0.2s; }
+  .cat-link:hover { background: rgba(255,255,255,0.04); color: #eeedf5; }
+  .cat-link.active { background: rgba(233,69,96,0.08); color: #e94560; }
+  .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .cat-count { margin-left: auto; font-size: 11px; color: rgba(136,134,160,0.4); }
+  .sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar-nav a { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 13px; color: #8886a0; transition: all 0.2s; }
+  .sidebar-nav a:hover { background: rgba(255,255,255,0.04); color: #eeedf5; }
+
+  /* Daily card */
+  .daily-sidebar { padding: 14px; border-radius: 12px; background: #0f0e20; border: 1px solid rgba(255,255,255,0.04); }
+  .daily-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #e94560; margin-bottom: 6px; }
+  .daily-desc { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .daily-target { font-size: 10px; color: #8886a0; margin-bottom: 10px; }
+  .daily-row { display: flex; align-items: center; justify-content: space-between; }
+  .streak { display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; }
+  .btn-sm { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 8px; background: #e94560; color: #fff; font-weight: 600; font-size: 11px; border: none; cursor: pointer; }
+
+  /* ─── Main content ─── */
+  .main { min-width: 0; }
+
+  /* Featured banner */
+  .featured { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.04); }
+  .featured img { width: 100%; aspect-ratio: 21/8; object-fit: cover; display: block; }
+  .featured-overlay { position: absolute; inset: 0; background: linear-gradient(to right, #06050e, rgba(6,5,14,0.3) 50%, transparent), linear-gradient(to top, #06050e, transparent 40%); }
+  .featured-content { position: absolute; bottom: 24px; left: 24px; }
+  .feat-badge { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 3px 10px; border-radius: 5px; background: rgba(233,69,96,0.15); color: #e94560; border: 1px solid rgba(233,69,96,0.2); margin-bottom: 8px; }
+  .featured-content h1 { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .featured-content p { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 12px; max-width: 400px; }
+  .btn-play { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 10px; background: #e94560; color: #fff; font-weight: 700; font-size: 13px; border: none; cursor: pointer; }
+
+  /* Grid */
+  .grid-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .grid-head h2 { font-size: 16px; font-weight: 700; }
+  .grid-count { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 99px; background: rgba(124,107,255,0.1); color: #7c6bff; }
+
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding-bottom: 40px; }
+  .card { border-radius: 10px; overflow: hidden; background: #0f0e20; border: 1px solid rgba(255,255,255,0.04); transition: transform 0.3s, border-color 0.3s; }
+  .card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.08); }
+  .card-thumb { position: relative; aspect-ratio: 16/10; overflow: hidden; }
+  .card-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+  .card:hover .card-thumb img { transform: scale(1.04); }
+  .card-thumb .grad { position: absolute; bottom: 0; left: 0; right: 0; height: 50%; background: linear-gradient(to top, #0f0e20, transparent); }
+  .card-badge { position: absolute; top: 6px; left: 6px; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 4px; backdrop-filter: blur(8px); }
+  .badge-new { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
+  .card-body { padding: 8px 10px 10px; }
+  .card-body h3 { font-size: 12px; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-meta { font-size: 10px; color: #8886a0; display: flex; align-items: center; gap: 5px; }
+  .diff-dot { width: 4px; height: 4px; border-radius: 50%; }
+
+  .footer { border-top: 1px solid rgba(255,255,255,0.04); padding: 20px 40px; text-align: center; font-size: 12px; color: rgba(136,134,160,0.5); }
+
+  @media (max-width: 1024px) { .page { grid-template-columns: 1fr; } .sidebar { position: static; display: flex; gap: 12px; overflow-x: auto; } .sidebar-section { margin-bottom: 0; flex-shrink: 0; } .cat-list { flex-direction: row; } .grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 768px) { .page { padding: 16px; } .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">Spryte <span>Games</span></div>
+  <div class="nav-links"><a href="#">Games</a><a href="#">Achievements</a><a href="#">Stats</a></div>
+</nav>
+
+<div class="page">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Categories</div>
+      <div class="cat-list">
+        <a class="cat-link active" href="#"><span class="cat-dot" style="background:#e94560"></span> All Games <span class="cat-count">16</span></a>
+        <a class="cat-link" href="#"><span class="cat-dot" style="background:#e94560"></span> Action <span class="cat-count">6</span></a>
+        <a class="cat-link" href="#"><span class="cat-dot" style="background:#7c3aed"></span> Puzzle <span class="cat-count">5</span></a>
+        <a class="cat-link" href="#"><span class="cat-dot" style="background:#06b6d4"></span> Arcade <span class="cat-count">4</span></a>
+        <a class="cat-link" href="#"><span class="cat-dot" style="background:#f59e0b"></span> Physics <span class="cat-count">3</span></a>
+        <a class="cat-link" href="#"><span class="cat-dot" style="background:#22c55e"></span> Strategy <span class="cat-count">2</span></a>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick Links</div>
+      <div class="sidebar-nav">
+        <a href="#">🏆 Achievements</a>
+        <a href="#">📊 Statistics</a>
+        <a href="#">❓ FAQ</a>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="daily-sidebar">
+        <div class="daily-label">🎯 Daily Challenge</div>
+        <div class="daily-desc">Score 500 in Chroma Flood</div>
+        <div class="daily-target">Target: 500 points</div>
+        <div class="daily-row">
+          <span class="streak">🔥 3</span>
+          <button class="btn-sm">&#9654; Play</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+    <a class="featured" href="#">
+      <img src="/thumbnails/gravity-well.svg" alt="">
+      <div class="featured-overlay"></div>
+      <div class="featured-content">
+        <span class="feat-badge">Featured</span>
+        <h1>Gravity Well</h1>
+        <p>Manipulate gravitational fields to guide particles through cosmic mazes.</p>
+        <button class="btn-play">&#9654; Play Now</button>
+      </div>
+    </a>
+
+    <div class="grid-head">
+      <h2>All Games</h2>
+      <span class="grid-count">16</span>
+    </div>
+    <div class="grid">
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/rift.svg" alt=""><div class="grad"></div><span class="card-badge badge-new">New</span></div><div class="card-body"><h3>Rift</h3><div class="card-meta"><span class="diff-dot" style="background:#e94560"></span> Hard</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/burn.svg" alt=""><div class="grad"></div><span class="card-badge badge-new">New</span></div><div class="card-body"><h3>Burn</h3><div class="card-meta"><span class="diff-dot" style="background:#e94560"></span> Hard</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/cascade.svg" alt=""><div class="grad"></div><span class="card-badge badge-new">New</span></div><div class="card-body"><h3>Cascade</h3><div class="card-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/ricochet.svg" alt=""><div class="grad"></div><span class="card-badge badge-new">New</span></div><div class="card-body"><h3>Ricochet</h3><div class="card-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/gravity-well.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Gravity Well</h3><div class="card-meta"><span class="diff-dot" style="background:#4ade80"></span> Easy</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/chroma-flood.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Chroma Flood</h3><div class="card-meta"><span class="diff-dot" style="background:#4ade80"></span> Easy</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/echo-chamber.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Echo Chamber</h3><div class="card-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/terravore.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Terravore</h3><div class="card-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/pulse-weaver.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Pulse Weaver</h3><div class="card-meta"><span class="diff-dot" style="background:#e94560"></span> Hard</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/orbit-keeper.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Orbit Keeper</h3><div class="card-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/symbiosis.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Symbiosis</h3><div class="card-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/drift.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Drift</h3><div class="card-meta"><span class="diff-dot" style="background:#4ade80"></span> Easy</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/spectrum.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Spectrum</h3><div class="card-meta"><span class="diff-dot" style="background:#4ade80"></span> Easy</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/deja-vu.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Déjà Vu</h3><div class="card-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/slide-devil.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>Slide Devil</h3><div class="card-meta"><span class="diff-dot" style="background:#f59e0b"></span> Medium</div></div></a>
+      <a class="card" href="#"><div class="card-thumb"><img src="/thumbnails/whats-missing.svg" alt=""><div class="grad"></div></div><div class="card-body"><h3>What's Missing?</h3><div class="card-meta"><span class="diff-dot" style="background:#4ade80"></span> Easy</div></div></a>
+    </div>
+  </main>
+</div>
+
+<div class="footer">&copy; 2026 Spryte Games</div>
+</body>
+</html>
