@@ -16,15 +16,10 @@ const BG = '#0a0a1a';
 const EMERALD = '#10b981';
 const EMERALD_DIM = '#065f46';
 const EMERALD_GLOW = '#34d399';
-const EMERALD_DARK = '#047857';
 const BRANCH_BASE = '#92400e';
-const BRANCH_GREEN = '#166534';
-const BRANCH_HEALTHY = '#22c55e';
-const BRANCH_CRACKED = '#dc2626';
 const HUD_TEXT = '#e5e7eb';
 const HUD_DIM = '#9ca3af';
 
-const STAGING_Y = 70;
 const TREE_ROOT_X = W / 2;
 const TREE_ROOT_Y = H - 60;
 
@@ -131,18 +126,10 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-function easeOutQuad(t: number): number {
-  return 1 - (1 - t) * (1 - t);
-}
-
 function easeOutBack(t: number): number {
   const c1 = 1.70158;
   const c3 = c1 + 1;
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-}
-
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
 function hslToRgb(h: number, s: number, l: number): string {
@@ -370,8 +357,6 @@ function drawCreature(
     ctx.lineWidth = 1;
     ctx.globalAlpha = 0.5;
     for (let i = 0; i < 6; i++) {
-      const fx = x + randRange(-bodyExtentX * 0.5, bodyExtentX * 0.5);
-      const fy = drawY + randRange(-bodyExtentY * 0.4, bodyExtentY * 0.4);
       const fSize = s * 0.05;
       // Use deterministic positions based on index
       const ax = x + Math.cos(i * 1.1) * bodyExtentX * 0.4;
@@ -381,7 +366,6 @@ function drawCreature(
       ctx.lineTo(ax, ay + fSize * 0.3);
       ctx.lineTo(ax + fSize, ay - fSize * 0.5);
       ctx.stroke();
-      void fx; void fy; // suppress unused
     }
     ctx.globalAlpha = 1;
   }
@@ -726,8 +710,7 @@ export default function PhyloGame() {
     let collapseStarted = false;
 
     // Growth animation
-    let growingBranch: TreeNode | null = null;
-    let growthTimer = 0;
+    let growingBranches: { node: TreeNode; timer: number }[] = [];
     let growthDuration = 0.5;
 
     // Menu background tree
@@ -780,7 +763,7 @@ export default function PhyloGame() {
     }
 
     function getEndpoints(nodes: TreeNode[]): TreeNode[] {
-      return nodes.filter((n) => n.isEndpoint && n.creature !== null);
+      return nodes.filter((n) => n.isEndpoint && n.creature === null);
     }
 
     function buildInitialTree(): TreeNode {
@@ -862,21 +845,6 @@ export default function PhyloGame() {
       return countSharedTraits(creature, neighbor);
     }
 
-    function findBestEndpoint(creature: Creature): { node: TreeNode; score: number } | null {
-      let best: TreeNode | null = null;
-      let bestScore = -1;
-
-      for (const ep of endpoints) {
-        const s = evaluatePlacement(ep, creature);
-        if (s > bestScore) {
-          bestScore = s;
-          best = ep;
-        }
-      }
-
-      return best ? { node: best, score: bestScore } : null;
-    }
-
     // -------------------------------------------------------------------
     // Add new branch after placement
     // -------------------------------------------------------------------
@@ -913,8 +881,7 @@ export default function PhyloGame() {
         newNode.isEndpoint = true;
 
         // Animate growth
-        growingBranch = newNode;
-        growthTimer = 0;
+        growingBranches.push({ node: newNode, timer: 0 });
       }
 
       // Refresh node lists
@@ -1170,8 +1137,7 @@ export default function PhyloGame() {
       collapseTimer = 0;
       collapseStarted = false;
       newHighScoreFlag = false;
-      growingBranch = null;
-      growthTimer = 0;
+      growingBranches = [];
       curveball = false;
       curveballTimer = 0;
       roundsSinceCurveball = 0;
@@ -1206,13 +1172,14 @@ export default function PhyloGame() {
       for (let i = 0; i < count; i++) {
         const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
         const speed = 40 + Math.random() * 100;
+        const lifeVal = 0.6 + Math.random() * 0.6;
         particles.push({
           x,
           y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed - 30,
-          life: 0.6 + Math.random() * 0.6,
-          maxLife: 0.6 + Math.random() * 0.6,
+          life: lifeVal,
+          maxLife: lifeVal,
           color,
           size: type === 'leaf' ? 3 + Math.random() * 4 : 1.5 + Math.random() * 3,
           type,
@@ -1243,13 +1210,14 @@ export default function PhyloGame() {
       // Occasional DNA helix or leaf particle in background
       if (Math.random() < 0.02) {
         const type = Math.random() > 0.5 ? 'dna' : 'leaf';
+        const bgLifeVal = 4 + Math.random() * 3;
         particles.push({
           x: Math.random() * W,
           y: H + 10,
           vx: randRange(-10, 10),
           vy: randRange(-40, -20),
-          life: 4 + Math.random() * 3,
-          maxLife: 4 + Math.random() * 3,
+          life: bgLifeVal,
+          maxLife: bgLifeVal,
           color: type === 'dna' ? EMERALD_DIM : '#166534',
           size: 2 + Math.random() * 3,
           type,
@@ -1299,7 +1267,7 @@ export default function PhyloGame() {
       }
 
       if (state === 'gameover') {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if ((e.key === 'Enter' || e.key === ' ') && collapseTimer > 1.0) {
           e.preventDefault();
           SoundEngine.play('click');
           state = 'menu';
@@ -1338,8 +1306,10 @@ export default function PhyloGame() {
       }
 
       if (state === 'gameover') {
-        SoundEngine.play('click');
-        state = 'menu';
+        if (collapseTimer > 1.0) {
+          SoundEngine.play('click');
+          state = 'menu';
+        }
         return;
       }
 
@@ -1367,8 +1337,10 @@ export default function PhyloGame() {
       }
 
       if (state === 'gameover') {
-        SoundEngine.play('click');
-        state = 'menu';
+        if (collapseTimer > 1.0) {
+          SoundEngine.play('click');
+          state = 'menu';
+        }
         return;
       }
 
@@ -1456,13 +1428,14 @@ export default function PhyloGame() {
       }
 
       // Growth animation
-      if (growingBranch) {
-        growthTimer += dt;
-        const progress = Math.min(1, growthTimer / growthDuration);
-        growingBranch.growthProgress = easeOutBack(progress);
+      for (let i = growingBranches.length - 1; i >= 0; i--) {
+        const gb = growingBranches[i];
+        gb.timer += dt;
+        const progress = Math.min(1, gb.timer / growthDuration);
+        gb.node.growthProgress = easeOutBack(progress);
         if (progress >= 1) {
-          growingBranch.growthProgress = 1;
-          growingBranch = null;
+          gb.node.growthProgress = 1;
+          growingBranches.splice(i, 1);
         }
       }
 
@@ -1557,7 +1530,7 @@ export default function PhyloGame() {
         const by = (parent.y + endY) / 2;
 
         for (let c = 0; c < child.crackLevel; c++) {
-          const crackAngle = (c / child.crackLevel) * Math.PI + Math.random() * 0.5;
+          const crackAngle = (c / child.crackLevel) * Math.PI + ((child.x * 7 + child.y * 13 + c * 37) % 100) / 200;
           const crackLen = 5 + c * 3;
           ctx.beginPath();
           ctx.moveTo(bx, by);
@@ -1624,21 +1597,22 @@ export default function PhyloGame() {
 
         ctx.restore();
 
-        // Show trait match preview on hover
+        // Show vague match hint glow on hover (no exact numbers)
         if (isHovered && currentCreature) {
           const shared = evaluatePlacement(node, currentCreature);
-          let color = '#ef4444';
-          let label = 'WRONG';
-          if (shared >= 4) { color = '#fbbf24'; label = 'PERFECT'; }
-          else if (shared === 3) { color = EMERALD; label = 'GOOD'; }
-          else if (shared === 2) { color = '#f97316'; label = 'OKAY'; }
+          let glowColor = '#ef4444'; // red = poor match
+          if (shared >= 4) { glowColor = '#fbbf24'; } // gold = strong match
+          else if (shared === 3) { glowColor = EMERALD; } // green = decent match
+          else if (shared === 2) { glowColor = '#f97316'; } // orange = weak match
 
           ctx.save();
-          ctx.font = 'bold 11px "Segoe UI", system-ui, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillStyle = color;
-          ctx.globalAlpha = 0.9;
-          ctx.fillText(`${shared}/6 ${label}`, node.x, node.y - 20);
+          ctx.shadowColor = glowColor;
+          ctx.shadowBlur = 12 + Math.sin(gameTime * 5) * 4;
+          ctx.fillStyle = glowColor;
+          ctx.globalAlpha = 0.35;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, 16, 0, Math.PI * 2);
+          ctx.fill();
           ctx.restore();
         }
       }
@@ -2067,10 +2041,11 @@ export default function PhyloGame() {
     function drawPlaying() {
       drawBackground();
 
-      // Apply screen shake
-      if (shakeAmount > 0) {
-        const sx = (Math.random() - 0.5) * shakeAmount * 2;
-        const sy = (Math.random() - 0.5) * shakeAmount * 2;
+      // Apply screen shake with gradual decay
+      const currentShake = shakeTimer > 0 ? shakeAmount * (shakeTimer / 0.3) : 0;
+      if (currentShake > 0) {
+        const sx = (Math.random() - 0.5) * currentShake * 2;
+        const sy = (Math.random() - 0.5) * currentShake * 2;
         ctx.save();
         ctx.translate(sx, sy);
       }
@@ -2087,7 +2062,7 @@ export default function PhyloGame() {
       // Draw trait comparison panel
       drawTraitComparison();
 
-      if (shakeAmount > 0) {
+      if (currentShake > 0) {
         ctx.restore();
       }
 
@@ -2097,10 +2072,7 @@ export default function PhyloGame() {
       // Draw HUD
       drawHUD();
 
-      // Draw touch controller
-      if (touchCtrl) {
-        touchCtrl.draw(ctx, W, H);
-      }
+      // Touch controller instantiated for input but D-pad not rendered (point-and-click game)
 
       // Pause overlay
       if (paused) {
@@ -2252,22 +2224,6 @@ export default function PhyloGame() {
       if (state === 'gameover') {
         gameTime += dt;
         collapseTimer += dt;
-
-        // Update particles in gameover
-        for (let i = particles.length - 1; i >= 0; i--) {
-          const p = particles[i];
-          p.x += p.vx * dt;
-          p.y += p.vy * dt;
-          p.vy += 100 * dt;
-          p.life -= dt;
-          if (p.life <= 0) particles.splice(i, 1);
-        }
-        for (let i = floatingTexts.length - 1; i >= 0; i--) {
-          const ft = floatingTexts[i];
-          ft.y += ft.vy * dt;
-          ft.life -= dt;
-          if (ft.life <= 0) floatingTexts.splice(i, 1);
-        }
       }
 
       update(dt);

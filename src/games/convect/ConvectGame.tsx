@@ -486,6 +486,7 @@ export default function ConvectGame() {
     let menuVx: number[][] = [];
     let menuVy: number[][] = [];
     let menuParticles: { x: number; y: number; vx: number; vy: number; trail: { x: number; y: number }[] }[] = [];
+    let menuTempBuffer: number[][] = createGrid(0);
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -550,8 +551,9 @@ export default function ConvectGame() {
       const fy = gy - y0;
 
       const get = (x: number, y: number) => {
-        if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return 0;
-        return field[x][y];
+        const cx = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(x)));
+        const cy = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(y)));
+        return field[cx][cy];
       };
 
       return (
@@ -601,7 +603,13 @@ export default function ConvectGame() {
     function updateMenuBackground(dt: number) {
       const cols = GRID_COLS;
       const rows = GRID_ROWS;
-      const buf = createGrid(0);
+      // Reuse persistent buffer instead of allocating every frame
+      const buf = menuTempBuffer;
+      for (let x = 0; x < cols; x++) {
+        for (let y = 0; y < rows; y++) {
+          buf[x][y] = 0;
+        }
+      }
 
       // Maintain sources
       for (let x = 15; x <= 25; x++) {
@@ -813,7 +821,10 @@ export default function ConvectGame() {
 
     function placeSource(gx: number, gy: number, type: 'heat' | 'cold') {
       if (gx < 0 || gx >= GRID_COLS || gy < 0 || gy >= GRID_ROWS) return;
-      if (cellType[gx][gy] !== EMPTY) return;
+      if (cellType[gx][gy] !== EMPTY) {
+        SoundEngine.play('wallHit');
+        return;
+      }
 
       // Check if source already exists here
       const existing = sources.findIndex(s => s.gx === gx && s.gy === gy);
@@ -831,12 +842,18 @@ export default function ConvectGame() {
       for (const p of flowParticles) {
         const pgx = Math.floor(p.x / CELL_W);
         const pgy = Math.floor(p.y / CELL_H);
-        if (pgx === gx && pgy === gy) return;
+        if (pgx === gx && pgy === gy) {
+          SoundEngine.play('wallHit');
+          return;
+        }
       }
       for (const g of goalZones) {
         const ggx = Math.floor(g.x / CELL_W);
         const ggy = Math.floor(g.y / CELL_H);
-        if (ggx === gx && ggy === gy) return;
+        if (ggx === gx && ggy === gy) {
+          SoundEngine.play('wallHit');
+          return;
+        }
       }
 
       if (type === 'heat' && heatRemaining > 0) {
@@ -847,6 +864,8 @@ export default function ConvectGame() {
         sources.push({ gx, gy, type: 'cold' });
         coldRemaining--;
         SoundEngine.play('extinguish');
+      } else {
+        SoundEngine.play('wallHit');
       }
     }
 
@@ -993,7 +1012,7 @@ export default function ConvectGame() {
           if (count > 0) {
             tempBuffer[x][y] = temperature[x][y] + DIFFUSION_RATE * dt * (
               sum - count * temperature[x][y]
-            ) / count * count; // normalize properly
+            ) / count;
           }
           tempBuffer[x][y] = clamp(tempBuffer[x][y], 0, 1);
         }
@@ -1167,7 +1186,7 @@ export default function ConvectGame() {
       const unusedSources = heatRemaining + coldRemaining;
       const sourceBonus = unusedSources * 50;
       const timeBonus = Math.max(0, Math.floor((60 - levelTime) * 2));
-      const perfectBonus = deliveredCount >= totalParticles ? 200 : 0;
+      const perfectBonus = (heatRemaining + coldRemaining > 0 && levelTime < 30) ? 200 : 0;
 
       score += sourceBonus + timeBonus + perfectBonus;
 
@@ -1217,13 +1236,13 @@ export default function ConvectGame() {
         // Timeout check
         if (levelTime >= LEVEL_TIMEOUT) {
           // Not a hard fail — player can still retry
+          phase = 'placing';
+          initLevel(level);
           floatingTexts.push({
             x: W / 2, y: H / 2,
             text: 'TIME UP! Press R to retry', color: '#ef4444',
             vy: -15, life: 3, maxLife: 3,
           });
-          phase = 'placing';
-          initLevel(level);
         }
       } else if (phase === 'levelComplete') {
         levelCompleteTimer += dt;
@@ -1370,12 +1389,13 @@ export default function ConvectGame() {
             }
             // Cracks when damaged
             if (health < 0.6 && health > 0) {
+              const pseudoRand = ((x * 7 + y * 13) % 100) / 100;
               ctx.strokeStyle = '#ffffff';
               ctx.lineWidth = 1;
               ctx.globalAlpha = (1 - health) * 0.5;
               ctx.beginPath();
               ctx.moveTo(px + CELL_W / 2, py);
-              ctx.lineTo(px + CELL_W / 2 + (Math.random() - 0.5) * 6, py + CELL_H);
+              ctx.lineTo(px + CELL_W / 2 + (pseudoRand - 0.5) * 6, py + CELL_H);
               ctx.stroke();
             }
             ctx.globalAlpha = 1;
@@ -1460,6 +1480,7 @@ export default function ConvectGame() {
             // Arrowhead
             const ax = cx + nx * scale;
             const ay = cy + ny * scale;
+            ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.moveTo(ax, ay);
             ctx.lineTo(ax - nx * 2 + ny * 1.5, ay - ny * 2 - nx * 1.5);
@@ -1500,6 +1521,15 @@ export default function ConvectGame() {
           ctx.beginPath();
           ctx.arc(goal.x, goal.y, goal.radius, 0, Math.PI * 2);
           ctx.fill();
+        }
+        // Goal pairing label
+        if (goal.particleIndex >= 0 && totalParticles > 1) {
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 10px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${goal.particleIndex + 1}`, goal.x, goal.y);
         }
         ctx.restore();
       }
@@ -1576,6 +1606,15 @@ export default function ConvectGame() {
         ctx.arc(fp.x, fp.y, PARTICLE_RADIUS + 2, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
+
+        // Particle-to-goal pairing label
+        if (fp.goalIndex >= 0 && totalParticles > 1) {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 8px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${fp.goalIndex + 1}`, fp.x, fp.y);
+        }
 
         // Goal dwell indicator
         if (fp.inGoalTimer > 0 && !fp.delivered) {
@@ -1767,8 +1806,7 @@ export default function ConvectGame() {
         drawGameOver();
       }
 
-      // Touch controller overlay
-      touch.draw(ctx, W, H);
+      // Touch controller overlay (disabled — D-pad not wired to gameplay)
     }
 
     // ── Input Handling ────────────────────────────────────────────────────
@@ -1889,13 +1927,7 @@ export default function ConvectGame() {
     }
 
     function restartGame() {
-      state = 'playing';
-      level = 0;
-      score = 0;
-      newHighScoreFlag = false;
-      initLevel(0);
-      SoundEngine.play('click');
-      reportGameStart('convect');
+      startGame();
     }
 
     function handleResize() {

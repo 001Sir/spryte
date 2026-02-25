@@ -50,6 +50,9 @@ const gameComponents: Record<string, ReturnType<typeof dynamic>> = {
   'burn': dynamic(() => import('@/games/burn/BurnGame'), { ssr: false, loading: () => <BrandedLoading title="Burn" color="#e94560" /> }),
   'rift': dynamic(() => import('@/games/rift/RiftGame'), { ssr: false, loading: () => <BrandedLoading title="Rift" color="#00f0ff" /> }),
   'morph': dynamic(() => import('@/games/morph/MorphGame'), { ssr: false, loading: () => <BrandedLoading title="Morph" color="#f97316" /> }),
+  'dendrite': dynamic(() => import('@/games/dendrite/DendriteGame'), { ssr: false, loading: () => <BrandedLoading title="Dendrite" color="#a855f7" /> }),
+  'phylo': dynamic(() => import('@/games/phylo/PhyloGame'), { ssr: false, loading: () => <BrandedLoading title="Phylo" color="#10b981" /> }),
+  'convect': dynamic(() => import('@/games/convect/ConvectGame'), { ssr: false, loading: () => <BrandedLoading title="Convect" color="#ef4444" /> }),
 };
 
 export default function GamePlayer({ slug }: { slug: string }) {

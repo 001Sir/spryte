@@ -250,17 +250,36 @@ function computeOptimalPath(
   startIdx: number,
   targetIdx: number,
 ): number {
-  // Simple heuristic: the optimal is the BFS distance if every same-category
-  // pair is connected. We'll just return a reasonable minimum.
-  const startCat = nodes[startIdx].category;
-  const targetCat = nodes[targetIdx].category;
-
-  if (startCat === targetCat) return 1; // direct connection is optimal
-
-  // Check if there's a node that shares category with both (bridge)
-  // Otherwise 2 connections is optimal (start->bridge->target)
-  // In practice, the optimal is usually 2-4 depending on layout
-  return 2;
+  // Build hypothetical graph: connect any two nodes that share a category
+  const n = nodes.length;
+  const adj: number[][] = Array.from({ length: n }, () => []);
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (nodes[i].category === nodes[j].category) {
+        adj[i].push(j);
+        adj[j].push(i);
+      }
+    }
+  }
+  // Also connect nodes that are in related categories (start's cat to target's cat)
+  // For simplicity, also connect any pair within 1 category hop
+  // BFS from start to target
+  const visited = new Set<number>();
+  const queue: [number, number][] = [[startIdx, 0]];
+  visited.add(startIdx);
+  while (queue.length > 0) {
+    const [curr, dist] = queue.shift()!;
+    if (curr === targetIdx) return Math.max(1, dist);
+    for (const neighbor of adj[curr]) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        queue.push([neighbor, dist + 1]);
+      }
+    }
+  }
+  // If no path exists through same-category links,
+  // the optimal is a direct connection (if possible) = 1
+  return 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -291,19 +310,15 @@ export default function DendriteGame() {
     // Input state
     // -------------------------------------------------------------------
 
-    const keys: Record<string, boolean> = {};
     let mouseX = W / 2;
     let mouseY = H / 2;
     let mouseDown = false;
-    let mouseClicked = false;
     let rightClicked = false;
     let spacePressed = false;
 
     // Dragging state
     let dragging = false;
     let dragFromIdx = -1;
-    let dragStartX = 0;
-    let dragStartY = 0;
 
     // -------------------------------------------------------------------
     // Game state
@@ -311,6 +326,7 @@ export default function DendriteGame() {
 
     let state: GameState = 'menu';
     let paused = false;
+    let isNewHighScore = false;
 
     // Round state
     let round = 0;
@@ -699,6 +715,7 @@ export default function DendriteGame() {
       shakeTimer = 0;
 
       reportGameStart(GAME_SLUG);
+      SoundEngine.startAmbient('quiz-ambient');
       SoundEngine.play('click');
 
       generateRound();
@@ -747,7 +764,7 @@ export default function DendriteGame() {
       const efficiencyBonus = Math.round(efficiency * 100);
 
       const timeTaken = roundTime;
-      const timeBonus = Math.max(0, Math.round((30 - timeTaken) * 5));
+      const timeBonus = Math.max(0, Math.round((roundTimeLimit * 0.6 - timeTaken) * 5));
 
       streak++;
       if (streak > bestStreak) bestStreak = streak;
@@ -778,6 +795,7 @@ export default function DendriteGame() {
       if (score > highScore) {
         highScore = score;
         setHighScore(GAME_SLUG, highScore);
+        isNewHighScore = true;
         SoundEngine.play('newHighScore');
         spawnFloatingText(W / 2, H / 2 - 60, 'NEW HIGH SCORE!', GOLD, 22);
       }
@@ -832,10 +850,12 @@ export default function DendriteGame() {
     function endGame() {
       state = 'gameover';
       SoundEngine.play('gameOver');
+      SoundEngine.stopAmbient();
 
       if (score > highScore) {
         highScore = score;
         setHighScore(GAME_SLUG, highScore);
+        isNewHighScore = true;
       }
 
       reportGameEnd(GAME_SLUG, score, false, round);
@@ -1415,7 +1435,7 @@ export default function DendriteGame() {
       const instructions = [
         'Connect concept nodes by dragging between them',
         'Fire a signal from START to reach TARGET',
-        'Related concepts form better pathways',
+        'Connect words from the same category to build your path',
       ];
       instructions.forEach((line, i) => {
         ctx.fillText(line, W / 2, H / 2 + 10 + i * 22);
@@ -1494,7 +1514,7 @@ export default function DendriteGame() {
       ctx.fillText(`Best Streak: ${bestStreak}`, W / 2, statsY + lineH * 3);
 
       // High score notification
-      if (score > 0 && score >= highScore) {
+      if (isNewHighScore) {
         ctx.fillStyle = GOLD;
         ctx.font = 'bold 14px monospace';
         ctx.fillText('NEW HIGH SCORE!', W / 2, statsY + lineH * 4 + 10);
@@ -1569,10 +1589,7 @@ export default function DendriteGame() {
 
       ctx.restore();
 
-      // Touch controls overlay (outside shake transform)
-      if (isTouch && state === 'playing') {
-        touch.draw(ctx, W, H);
-      }
+      // Don't draw D-pad overlay — this game uses touch drag, not D-pad
     }
 
     // -------------------------------------------------------------------
@@ -1580,8 +1597,6 @@ export default function DendriteGame() {
     // -------------------------------------------------------------------
 
     const onKeyDown = (e: KeyboardEvent) => {
-      keys[e.key.toLowerCase()] = true;
-
       if (e.key === ' ') {
         e.preventDefault();
         if (state === 'playing' && !paused) {
@@ -1595,6 +1610,7 @@ export default function DendriteGame() {
           startGame();
         } else if (state === 'gameover') {
           state = 'menu';
+          isNewHighScore = false;
           initBgNodes();
         }
       }
@@ -1605,8 +1621,7 @@ export default function DendriteGame() {
       }
     };
 
-    const onKeyUp = (e: KeyboardEvent) => {
-      keys[e.key.toLowerCase()] = false;
+    const onKeyUp = (_e: KeyboardEvent) => {
     };
 
     // Cache canvas rect
@@ -1671,8 +1686,6 @@ export default function DendriteGame() {
           if (nodeIdx >= 0) {
             dragging = true;
             dragFromIdx = nodeIdx;
-            dragStartX = cx;
-            dragStartY = cy;
           }
         }
       }
@@ -1717,6 +1730,7 @@ export default function DendriteGame() {
 
       if (state === 'gameover') {
         state = 'menu';
+        isNewHighScore = false;
         initBgNodes();
         return;
       }
@@ -1739,8 +1753,6 @@ export default function DendriteGame() {
         if (nodeIdx >= 0) {
           dragging = true;
           dragFromIdx = nodeIdx;
-          dragStartX = cx;
-          dragStartY = cy;
         }
       }
     };
