@@ -69,7 +69,7 @@ export default function Home() {
         <div className="mb-8">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-dim mb-2">Browse Collection</p>
           <h1 className="text-[clamp(1.8rem,5vw,2.4rem)] font-black tracking-tight font-[family-name:var(--font-display)]" style={{ letterSpacing: '-0.03em' }}>
-            {games.length} Games. One <span className="text-accent">Platform</span>.
+            Multiple Games. One <span className="text-accent">Platform</span>.
           </h1>
         </div>
 

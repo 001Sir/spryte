@@ -148,7 +148,6 @@ export const games: Game[] = [
     difficulty: 'Medium',
     thumbnail: '/thumbnails/symbiosis.svg',
     color: '#d946ef',
-    isNew: true,
   },
   {
     slug: 'drift',
@@ -172,7 +171,6 @@ export const games: Game[] = [
     difficulty: 'Medium',
     thumbnail: '/thumbnails/drift.svg',
     color: '#51e2ff',
-    isNew: true,
   },
   {
     slug: 'spectrum',
@@ -197,7 +195,6 @@ export const games: Game[] = [
     difficulty: 'Medium',
     thumbnail: '/thumbnails/spectrum.svg',
     color: '#f97316',
-    isNew: true,
   },
   {
     slug: 'deja-vu',
@@ -222,7 +219,6 @@ export const games: Game[] = [
     difficulty: 'Medium',
     thumbnail: '/thumbnails/deja-vu.svg',
     color: '#14b8a6',
-    isNew: true,
   },
   {
     slug: 'slide-devil',
@@ -246,7 +242,6 @@ export const games: Game[] = [
     difficulty: 'Hard',
     thumbnail: '/thumbnails/slide-devil.svg',
     color: '#dc2626',
-    isNew: true,
   },
   {
     slug: 'whats-missing',
@@ -271,7 +266,6 @@ export const games: Game[] = [
     difficulty: 'Medium',
     thumbnail: '/thumbnails/whats-missing.svg',
     color: '#e879f9',
-    isNew: true,
   },
   {
     slug: 'cascade',
@@ -296,7 +290,6 @@ export const games: Game[] = [
     difficulty: 'Easy',
     thumbnail: '/thumbnails/cascade.svg',
     color: '#f59e0b',
-    isNew: true,
   },
   {
     slug: 'ricochet',
@@ -321,7 +314,6 @@ export const games: Game[] = [
     difficulty: 'Medium',
     thumbnail: '/thumbnails/ricochet.svg',
     color: '#22d3ee',
-    isNew: true,
   },
   {
     slug: 'burn',
@@ -347,7 +339,6 @@ export const games: Game[] = [
     difficulty: 'Medium',
     thumbnail: '/thumbnails/burn.svg',
     color: '#f97316',
-    isNew: true,
   },
   {
     slug: 'rift',
@@ -372,7 +363,6 @@ export const games: Game[] = [
     difficulty: 'Hard',
     thumbnail: '/thumbnails/rift.svg',
     color: '#00f0ff',
-    isNew: true,
   },
   {
     slug: 'morph',
