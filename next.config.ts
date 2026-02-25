@@ -4,6 +4,9 @@ const isDev = process.env.NODE_ENV === 'development';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    viewTransition: true,
+  },
   async headers() {
     const scriptSrc = isDev
       ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'"

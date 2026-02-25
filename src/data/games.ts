@@ -349,6 +349,31 @@ export const games: Game[] = [
     color: '#f97316',
     isNew: true,
   },
+  {
+    slug: 'rift',
+    title: 'Rift',
+    description: 'Your movement leaves a dimensional rift. Enemy bullets that touch your trail warp through it and redirect toward enemies. No weapons — your trail IS the weapon. Weave, redirect, survive.',
+    categories: ['Action', 'Arcade'],
+    controls: 'Mouse to move, P to pause',
+    howToPlay: [
+      'Move your orb with the mouse — it leaves a glowing trail behind',
+      'Enemy bullets that hit your trail warp through a dimensional rift',
+      'Warped bullets redirect toward the nearest enemy — this is your ONLY attack',
+      'Weave strategically to maximize bullet redirection',
+      'Kill enemies in quick succession to build combos for score multipliers',
+      'Every 5 waves, choose a powerful upgrade to customize your rift',
+      'You have 3 lives — avoid getting hit by enemy fire',
+    ],
+    controlsList: [
+      { key: 'Mouse', action: 'Move orb (creates trail)' },
+      { key: 'Click', action: 'Start / Select upgrade' },
+      { key: 'P', action: 'Pause' },
+    ],
+    difficulty: 'Hard',
+    thumbnail: '/thumbnails/rift.svg',
+    color: '#00f0ff',
+    isNew: true,
+  },
 ];
 
 export function getGameBySlug(slug: string): Game | undefined {

@@ -1,6 +1,7 @@
 import { games, getAllCategories, getGamesByCategory } from '@/data/games';
 import { categoryColors, categoryIcons } from '@/data/categories';
-import GameCard from '@/components/game/GameCard';
+import BentoGameGrid from '@/components/game/BentoGameGrid';
+import SectionHeader from '@/components/ui/SectionHeader';
 import RecentlyPlayed from '@/components/game/RecentlyPlayed';
 import Favorites from '@/components/game/Favorites';
 import DailyChallenge from '@/components/game/DailyChallenge';
@@ -85,8 +86,8 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(gameListJsonLd) }}
       />
 
-      {/* ── Hero — Full viewport cinematic ── */}
-      <section className="relative min-h-screen flex items-end overflow-hidden">
+      {/* ── Hero — Compact cinematic ── */}
+      <section className="relative min-h-[65vh] flex items-end overflow-hidden">
         {/* Shimmer skeleton — visible until video/image loads */}
         <div className="absolute inset-0 z-[0] animate-shimmer bg-gradient-to-r from-transparent via-white/[0.02] to-transparent" />
         {/* Blurred backdrop — video if preview exists, otherwise thumbnail */}
@@ -117,115 +118,114 @@ export default function Home() {
         {/* Bottom gradient — strong fade to bg */}
         <div className="absolute bottom-0 left-0 right-0 h-[70%] z-[3]" style={{ background: 'linear-gradient(to top, #06050e 0%, #06050e 15%, rgba(6,5,14,0.8) 40%, transparent)' }} />
 
-        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-10 pb-20 pt-32">
-          {/* H1 with pulsing dot — primary SEO heading */}
-          <div className="flex items-center gap-2 mb-5">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse-dot" />
-            <h1 className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-accent">
-              Free Browser Games — Play Instantly
-            </h1>
-          </div>
+        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-10 py-16">
+          <div className="flex flex-col md:flex-row md:items-end md:gap-12">
+            {/* Hero text */}
+            <div className="flex-1 min-w-0">
+              {/* H1 with pulsing dot — primary SEO heading */}
+              <div className="flex items-center gap-2 mb-5">
+                <span className="w-2 h-2 rounded-full bg-accent animate-pulse-dot" />
+                <h1 className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-accent">
+                  Free Browser Games — Play Instantly
+                </h1>
+              </div>
 
-          {/* Featured game title */}
-          <h2
-            className="text-[clamp(2.5rem,7vw,4.5rem)] font-black leading-[1] tracking-tight mb-4 max-w-[700px]"
-            style={{ letterSpacing: '-0.03em' }}
-          >
-            {firstWord} <span className="text-accent">{restWords}</span>
-          </h2>
+              {/* Featured game title */}
+              <h2
+                className="text-[clamp(2.5rem,7vw,4.5rem)] font-black leading-[1] tracking-tight mb-4 max-w-[700px] font-[family-name:var(--font-display)]"
+                style={{ letterSpacing: '-0.03em' }}
+              >
+                {firstWord} <span className="text-accent">{restWords}</span>
+              </h2>
 
-          <p className="text-muted text-[1.05rem] leading-relaxed max-w-[500px] mb-9">
-            {featured.description}
-          </p>
+              <p className="text-muted text-[1.05rem] leading-relaxed max-w-[500px] mb-9">
+                {featured.description}
+              </p>
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-4 mb-8">
-            <Link
-              href={`/games/${featured.slug}`}
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-[14px] bg-accent text-white font-bold text-[0.95rem] transition-all duration-300 hover:-translate-y-0.5 shadow-[0_4px_30px_rgba(233,69,96,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_8px_40px_rgba(233,69,96,0.4),inset_0_1px_0_rgba(255,255,255,0.15)]"
-              aria-label={`Play ${featured.title} now`}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              Play Now
-            </Link>
-            <Link
-              href={`/games/${featured.slug}#how-to-play`}
-              className="inline-flex items-center gap-2 px-7 py-4 rounded-[14px] backdrop-blur-lg bg-white/[0.04] border border-white/[0.1] text-foreground font-semibold text-[0.9rem] transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.2]"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
-              </svg>
-              How to Play
-            </Link>
-          </div>
-
-          {/* Meta row */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 text-[0.8rem] text-dim">
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: difficultyDot[featured.difficulty] || '#9896a8' }}
-              />
-              {featured.difficulty}
-            </div>
-            <span className="text-[0.8rem] text-dim">
-              {featured.categories.join(' / ')}
-            </span>
-            <span className="text-[0.8rem] text-dim">
-              {featured.controls.split(',')[0]}
-            </span>
-          </div>
-        </div>
-
-        {/* Game preview card — floating on right (tablet + desktop) */}
-        <div className="hidden md:block absolute right-6 md:right-8 lg:right-10 xl:right-20 bottom-24 z-10">
-          <div className="relative w-[240px] lg:w-[320px] rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5)] group/preview">
-            <div className="aspect-[16/10] relative overflow-hidden">
-              {featured.preview ? (
-                <video
-                  src={featured.preview}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Image
-                  src={featured.thumbnail}
-                  alt={`${featured.title} preview`}
-                  fill
-                  sizes="(max-width: 1024px) 240px, 320px"
-                  className="object-cover"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#111024] via-transparent to-transparent" />
-              {/* Play overlay */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/preview:bg-black/40 transition-colors">
-                <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center shadow-[0_4px_20px_rgba(233,69,96,0.4)] transition-transform duration-300 group-hover/preview:scale-110">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white" className="ml-0.5" aria-hidden="true">
+              {/* Action buttons */}
+              <div className="flex items-center gap-4 mb-8">
+                <Link
+                  href={`/games/${featured.slug}`}
+                  className="inline-flex items-center gap-2.5 px-8 py-4 rounded-[14px] bg-accent text-white font-bold text-[0.95rem] transition-all duration-300 hover:-translate-y-0.5 shadow-[0_4px_30px_rgba(233,69,96,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_8px_40px_rgba(233,69,96,0.4),inset_0_1px_0_rgba(255,255,255,0.15)]"
+                  aria-label={`Play ${featured.title} now`}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M8 5v14l11-7z" />
                   </svg>
+                  Play Now
+                </Link>
+                <Link
+                  href={`/games/${featured.slug}#how-to-play`}
+                  className="inline-flex items-center gap-2 px-7 py-4 rounded-[14px] backdrop-blur-lg bg-white/[0.04] border border-white/[0.1] text-foreground font-semibold text-[0.9rem] transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.2]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+                  </svg>
+                  How to Play
+                </Link>
+              </div>
+
+              {/* Meta row */}
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 text-[0.8rem] text-dim">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: difficultyDot[featured.difficulty] || '#9896a8' }}
+                  />
+                  {featured.difficulty}
                 </div>
+                <span className="text-[0.8rem] text-dim">
+                  {featured.categories.join(' / ')}
+                </span>
+                <span className="text-[0.8rem] text-dim">
+                  {featured.controls.split(',')[0]}
+                </span>
               </div>
             </div>
-            <div className="bg-card p-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[0.7rem] font-semibold text-foreground">{featured.title}</span>
-                <span className="text-[0.6rem] text-dim px-2 py-0.5 rounded bg-white/[0.04]">{featured.categories[0]}</span>
-              </div>
+
+            {/* Game preview card — inline on right (tablet + desktop) */}
+            <div className="hidden md:block shrink-0">
+              <Link href={`/games/${featured.slug}`} className="group/preview block">
+                <div className="relative w-[260px] lg:w-[320px] rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+                  <div className="aspect-[16/10] relative overflow-hidden">
+                    {featured.preview ? (
+                      <video
+                        src={featured.preview}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={featured.thumbnail}
+                        alt={`${featured.title} preview`}
+                        fill
+                        sizes="(max-width: 1024px) 260px, 320px"
+                        className="object-cover"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+                    {/* Play overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/preview:bg-black/40 transition-colors">
+                      <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center shadow-[0_4px_20px_rgba(233,69,96,0.4)] transition-transform duration-300 group-hover/preview:scale-110">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white" className="ml-0.5" aria-hidden="true">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-card p-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[0.7rem] font-semibold text-foreground">{featured.title}</span>
+                      <span className="text-[0.6rem] text-dim px-2 py-0.5 rounded bg-white/[0.04]">{featured.categories[0]}</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             </div>
           </div>
-        </div>
-
-        {/* Scroll cue */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 animate-scroll-cue">
-          <span className="text-[0.65rem] uppercase tracking-[0.1em] text-dim">Scroll</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-dim" aria-hidden="true">
-            <path d="M12 5v14M5 12l7 7 7-7" />
-          </svg>
         </div>
       </section>
 
@@ -238,12 +238,7 @@ export default function Home() {
         {/* ── New Releases — Horizontal Showcase ── */}
         {newGames.length > 0 && (
           <section className="mb-20 pt-12">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-baseline gap-3">
-                <h2 className="text-[1.3rem] font-bold tracking-tight">New Releases</h2>
-                <span className="text-dim text-[0.85rem]">{newGames.length} games just dropped</span>
-              </div>
-            </div>
+            <SectionHeader title="New Releases" count={newGames.length} subtitle="just dropped" />
             <ScrollableRow className="flex gap-5 overflow-x-auto pb-4 snap-scroll-x">
               {newGames.map((game) => (
                 <Link
@@ -312,9 +307,7 @@ export default function Home() {
 
         {/* ── Category Strip ── */}
         <section className="mb-20">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-[1.3rem] font-bold tracking-tight">Browse Categories</h2>
-          </div>
+          <SectionHeader title="Browse Categories" count={categories.length} />
           <ScrollableRow className="flex gap-3 overflow-x-auto pb-2" >
             {categories.map((cat) => {
               const catGames = getGamesByCategory(cat);
@@ -340,16 +333,10 @@ export default function Home() {
           </ScrollableRow>
         </section>
 
-        {/* ── All Games ── */}
+        {/* ── All Games — Bento Grid ── */}
         <section className="mb-20" id="games">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-[1.3rem] font-bold tracking-tight">All Games</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {games.map((game) => (
-              <GameCard key={game.slug} game={game} />
-            ))}
-          </div>
+          <SectionHeader title="All Games" count={games.length} href="/games" />
+          <BentoGameGrid games={games} />
         </section>
       </div>
     </>

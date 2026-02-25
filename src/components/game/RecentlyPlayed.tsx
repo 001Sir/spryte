@@ -50,8 +50,8 @@ export default function RecentlyPlayed() {
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               style={{ transitionTimingFunction: 'var(--ease-cinematic)' }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#111024]/80 hidden sm:block" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#111024] via-transparent to-transparent sm:hidden" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0f0e20]/80 hidden sm:block" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0f0e20] via-transparent to-transparent sm:hidden" />
             {/* Play overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center shadow-[0_4px_20px_rgba(233,69,96,0.4)] transition-transform duration-300 group-hover:scale-110">

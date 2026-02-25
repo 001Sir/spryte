@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Game } from '@/types/game';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { getHighScore } from '@/lib/highscores';
 import { useFavorites } from '@/hooks/useFavorites';
 import { getGameAchievements, getEarnedAchievements } from '@/lib/achievements';
@@ -14,8 +14,24 @@ const difficultyDot: Record<string, string> = {
   Hard: '#e94560',
 };
 
-export default function GameCard({ game }: { game: Game }) {
+type CardSize = 'default' | 'large' | 'wide';
+
+export function GameCardSkeleton({ size = 'default' }: { size?: CardSize }) {
+  return (
+    <div className={`bg-card border border-white/[0.06] rounded-[14px] overflow-hidden ${size === 'large' ? 'h-full' : ''}`}>
+      <div className={`${size === 'large' ? 'aspect-[4/3]' : size === 'wide' ? 'aspect-[16/7]' : 'aspect-[4/3]'} bg-white/[0.02] animate-skeleton-pulse`} />
+      <div className="p-3 space-y-2">
+        <div className="h-4 w-2/3 bg-white/[0.04] rounded animate-skeleton-pulse" />
+        <div className="h-3 w-full bg-white/[0.03] rounded animate-skeleton-pulse" />
+        <div className="h-3 w-1/2 bg-white/[0.03] rounded animate-skeleton-pulse" />
+      </div>
+    </div>
+  );
+}
+
+export default function GameCard({ game, size = 'default' }: { game: Game; size?: CardSize }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cardRef = useRef<HTMLAnchorElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [highScore, setHighScore] = useState(0);
   const [achievementCount, setAchievementCount] = useState({ earned: 0, total: 0 });
@@ -43,22 +59,41 @@ export default function GameCard({ game }: { game: Game }) {
       videoRef.current.pause();
       setVideoReady(false);
     }
+    // Reset tilt
+    if (cardRef.current) {
+      cardRef.current.style.transform = '';
+    }
   };
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) translateY(-4px)`;
+  }, []);
 
   return (
     <Link
+      ref={cardRef}
       href={`/games/${game.slug}`}
-      className="group block bg-card border border-white/[0.06] rounded-[14px] overflow-hidden card-glow hover:border-white/[0.1] transition-all duration-300 hover:-translate-y-1 focus-visible:-translate-y-1"
+      className={`group block bg-card border border-white/[0.06] rounded-[14px] overflow-hidden card-glow hover:border-white/[0.1] focus-visible:-translate-y-1 ${size === 'large' ? 'h-full' : ''}`}
       style={{
-        '--glow-color': `${game.color}20`,
+        '--glow-color': `${game.color}30`,
+        transition: 'box-shadow 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.2s ease-out',
       } as React.CSSProperties}
       aria-label={`Play ${game.title} — ${game.difficulty} difficulty`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
     >
       <div
-        className="aspect-[4/3] relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${game.color}22, ${game.color}44)` }}
+        className={`${size === 'large' ? 'aspect-[4/3]' : size === 'wide' ? 'aspect-[16/7]' : 'aspect-[4/3]'} relative overflow-hidden`}
+        style={{
+          background: `linear-gradient(135deg, ${game.color}22, ${game.color}44)`,
+          viewTransitionName: `game-thumb-${game.slug}`,
+        }}
       >
         {/* Static thumbnail */}
         <Image
@@ -86,7 +121,7 @@ export default function GameCard({ game }: { game: Game }) {
           />
         )}
         {/* Gradient from card bg fading up */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#111024] via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent pointer-events-none" />
         {/* Accent play button — scales in on hover */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[2] play-btn-hover">
           <div className="w-11 h-11 rounded-full bg-accent flex items-center justify-center shadow-[0_4px_16px_rgba(233,69,96,0.4)]">
@@ -110,7 +145,7 @@ export default function GameCard({ game }: { game: Game }) {
         </div>
         {/* Achievement badge - bottom left */}
         {achievementCount.earned > 0 && (
-          <div className="absolute bottom-2 left-2 z-[2]">
+          <div className="absolute bottom-2 left-2 z-[2] badge-slide">
             <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md backdrop-blur-md bg-purple-500/20 text-purple-400 border border-purple-500/20">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
@@ -121,7 +156,7 @@ export default function GameCard({ game }: { game: Game }) {
         )}
         {/* High score badge - top right */}
         {highScore > 0 && (
-          <div className="absolute top-2 right-2 z-[2]">
+          <div className="absolute top-2 right-2 z-[2] badge-slide">
             <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md backdrop-blur-md bg-amber-500/20 text-amber-400 border border-amber-500/20">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />

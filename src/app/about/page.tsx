@@ -4,11 +4,87 @@ import { games } from '@/data/games';
 
 export const metadata: Metadata = {
   title: 'About',
-  description: 'Learn about Spryte Games — a free browser gaming platform with HTML5 Canvas games. No downloads, no accounts, just play.',
+  description:
+    'Learn about Spryte Games — a free browser gaming platform with HTML5 Canvas games. No downloads, no accounts, just play.',
+  openGraph: {
+    title: 'About — Spryte Games',
+    description:
+      'Learn about Spryte Games — a free browser gaming platform with HTML5 Canvas games.',
+    url: 'https://sprytegames.com/about',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'About Spryte Games',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About — Spryte Games',
+    description:
+      'Learn about Spryte Games — free browser games, no downloads, no accounts.',
+    images: ['/og-image.png'],
+  },
+  alternates: {
+    canonical: 'https://sprytegames.com/about',
+  },
 };
 
 export default function AboutPage() {
+  const aboutJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'About Spryte Games',
+    description:
+      'Spryte Games is a free browser gaming platform featuring original HTML5 Canvas games.',
+    url: 'https://sprytegames.com/about',
+    mainEntity: {
+      '@type': 'Organization',
+      name: 'Spryte Games',
+      url: 'https://sprytegames.com',
+      logo: 'https://sprytegames.com/logo.png',
+      description:
+        'A free browser gaming platform with HTML5 Canvas games. No downloads, no accounts, just play.',
+      sameAs: ['https://twitter.com/SpryteGames'],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        email: 'contact@sprytegames.com',
+        contactType: 'customer service',
+      },
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://sprytegames.com',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'About',
+        item: 'https://sprytegames.com/about',
+      },
+    ],
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
     <div className="max-w-[800px] mx-auto px-4 sm:px-10 py-24">
       <nav className="flex items-center gap-2 text-sm text-dim mb-8" aria-label="Breadcrumbs">
         <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
@@ -73,5 +149,6 @@ export default function AboutPage() {
         </section>
       </div>
     </div>
+    </>
   );
 }

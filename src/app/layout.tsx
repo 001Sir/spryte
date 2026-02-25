@@ -1,20 +1,27 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Inter_Tight } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ScrollToTop from "@/components/layout/ScrollToTop";
 import Particles from "@/components/layout/Particles";
-import PageTransition from "@/components/layout/PageTransition";
+
 import AchievementProvider from "@/components/providers/AchievementProvider";
 import OfflineIndicator from "@/components/ui/OfflineIndicator";
 import PwaPrompt from "@/components/layout/PwaPrompt";
 import { SwRegistration } from "@/components/providers/SwRegistration";
+import StorageMigration from "@/components/providers/StorageMigration";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
 });
 
 const geistMono = Geist_Mono({
@@ -107,7 +114,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Spryte Games" />
       </head>
       <body
-        className={`${inter.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
+        className={`${inter.variable} ${interTight.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
       >
         <noscript>
           <div style={{ padding: '2rem', textAlign: 'center', background: '#06050e', color: '#eeedf5' }}>
@@ -119,11 +126,12 @@ export default function RootLayout({
           Skip to content
         </a>
         <AchievementProvider>
+        <StorageMigration />
         <Particles />
         <OfflineIndicator />
         <Navbar />
         <main id="main-content" className="relative z-10">
-          <PageTransition>{children}</PageTransition>
+          {children}
         </main>
         <Footer />
         <ScrollToTop />

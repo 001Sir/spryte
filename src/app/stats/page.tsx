@@ -2,19 +2,77 @@
 
 import Link from 'next/link';
 import { useStats } from '@/hooks/useStats';
-import { getEarnedAchievements } from '@/lib/achievements';
+import { getEarnedAchievements, allAchievements } from '@/lib/achievements';
 import { getStreak, getBestStreak } from '@/lib/daily-challenge';
 import { games } from '@/data/games';
 import { useState, useEffect } from 'react';
 
+function ProgressRing({
+  value,
+  max,
+  size = 80,
+  strokeWidth = 6,
+  color,
+  label,
+  displayValue,
+}: {
+  value: number;
+  max: number;
+  size?: number;
+  strokeWidth?: number;
+  color: string;
+  label: string;
+  displayValue: string;
+}) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = max > 0 ? Math.min(value / max, 1) : 0;
+  const offset = circumference * (1 - progress);
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="rgba(255,255,255,0.04)"
+            strokeWidth={strokeWidth}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            className="transition-[stroke-dashoffset] duration-1000 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-sm font-bold text-foreground">{displayValue}</span>
+        </div>
+      </div>
+      <span className="text-[0.7rem] text-dim text-center">{label}</span>
+    </div>
+  );
+}
+
 export default function StatsPage() {
   const { stats, formatTime } = useStats();
   const [earnedCount, setEarnedCount] = useState(0);
+  const [totalAchievements, setTotalAchievements] = useState(0);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
 
   useEffect(() => {
     setEarnedCount(Object.keys(getEarnedAchievements()).length);
+    setTotalAchievements(allAchievements.length);
     setStreak(getStreak());
     setBestStreak(getBestStreak());
   }, []);
@@ -38,6 +96,10 @@ export default function StatsPage() {
   // Find max sessions for bar chart scaling
   const maxSessions = Math.max(1, ...gameStats.map((g) => g.stats?.sessions ?? 0));
 
+  // Target values for progress rings
+  const playtimeHours = stats.global.totalTimeMs / (1000 * 60 * 60);
+  const playtimeTarget = Math.max(10, Math.ceil(playtimeHours / 5) * 5); // Next 5h milestone
+
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-10 py-24">
       {/* Breadcrumbs */}
@@ -47,55 +109,60 @@ export default function StatsPage() {
         <span className="text-foreground">Statistics</span>
       </nav>
 
-      <h1 className="text-3xl font-bold mb-8">Your Statistics</h1>
+      <h1 className="text-3xl font-bold mb-8 font-[family-name:var(--font-display)]">Your Statistics</h1>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
-        <SummaryCard
+      {/* Progress rings */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-12">
+        <ProgressRing
+          value={playtimeHours}
+          max={playtimeTarget}
+          color="#3b82f6"
           label="Total Playtime"
-          value={formatTime(stats.global.totalTimeMs)}
-          icon={<ClockIcon />}
+          displayValue={formatTime(stats.global.totalTimeMs)}
         />
-        <SummaryCard
+        <ProgressRing
+          value={stats.global.totalSessions}
+          max={Math.max(50, stats.global.totalSessions)}
+          color="#22c55e"
           label="Total Sessions"
-          value={String(stats.global.totalSessions)}
-          icon={<PlayIcon />}
+          displayValue={String(stats.global.totalSessions)}
         />
-        <SummaryCard
-          label="Games Explored"
-          value={`${stats.global.gamesPlayed.length}/${games.length}`}
-          icon={<GridIcon />}
-        />
-        <SummaryCard
+        <ProgressRing
+          value={totalScore}
+          max={Math.max(1000, totalScore)}
+          color="#f59e0b"
           label="Total High Scores"
-          value={totalScore.toLocaleString()}
-          icon={<StarIcon />}
+          displayValue={totalScore > 999 ? `${(totalScore / 1000).toFixed(1)}k` : String(totalScore)}
+        />
+        <ProgressRing
+          value={earnedCount}
+          max={totalAchievements || 1}
+          color="#a855f7"
+          label="Achievements"
+          displayValue={`${earnedCount}/${totalAchievements}`}
         />
       </div>
 
       {/* Secondary stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-12">
-        <SummaryCard
-          label="Achievements"
-          value={String(earnedCount)}
-          icon={<TrophyIcon />}
-        />
-        <SummaryCard
-          label="Daily Streak"
-          value={`${streak} days`}
-          icon={<FireIcon />}
-        />
-        <SummaryCard
-          label="Best Streak"
-          value={`${bestStreak} days`}
-          icon={<MedalIcon />}
-        />
+      <div className="grid grid-cols-3 gap-4 mb-12">
+        <div className="bg-card border border-white/[0.06] rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-foreground">{stats.global.gamesPlayed.length}/{games.length}</div>
+          <div className="text-xs text-dim mt-1">Games Explored</div>
+        </div>
+        <div className="bg-card border border-white/[0.06] rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-orange-400">{streak}</div>
+          <div className="text-xs text-dim mt-1">Daily Streak</div>
+        </div>
+        <div className="bg-card border border-white/[0.06] rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-foreground">{bestStreak}</div>
+          <div className="text-xs text-dim mt-1">Best Streak</div>
+        </div>
       </div>
 
       {/* Most played game */}
       {mostPlayedGame && mostPlayed && (
         <section className="mb-12">
-          <h2 className="text-lg font-bold mb-4 section-header">Most Played</h2>
+          <h2 className="text-lg font-bold mb-4 section-header font-[family-name:var(--font-display)]">Most Played</h2>
           <Link
             href={`/games/${mostPlayedGame.slug}`}
             className="block bg-card border border-white/[0.06] rounded-xl p-5 hover:border-white/[0.1] transition-all"
@@ -118,15 +185,21 @@ export default function StatsPage() {
 
       {/* Per-game stats */}
       <section>
-        <h2 className="text-lg font-bold mb-4 section-header">Per-Game Stats</h2>
+        <h2 className="text-lg font-bold mb-4 section-header font-[family-name:var(--font-display)]">Per-Game Stats</h2>
         <div className="space-y-3">
-          {gameStats.map(({ game, stats: gs }) => (
+          {gameStats.map(({ game, stats: gs }, i) => (
             <Link
               key={game.slug}
               href={`/games/${game.slug}`}
               className="block bg-card border border-white/[0.06] rounded-xl p-4 hover:border-white/[0.1] transition-all"
             >
               <div className="flex items-center gap-4">
+                {/* Rank number */}
+                {gs && gs.sessions > 0 && (
+                  <span className="text-[0.7rem] font-bold text-dim w-6 text-center shrink-0">
+                    #{i + 1}
+                  </span>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-sm truncate">{game.title}</h3>
@@ -139,13 +212,13 @@ export default function StatsPage() {
 
                   {gs && gs.sessions > 0 ? (
                     <>
-                      {/* Sessions bar chart */}
-                      <div className="h-2 bg-white/[0.04] rounded-full overflow-hidden mb-2">
+                      {/* Sessions bar chart — taller with gradient */}
+                      <div className="h-3 bg-white/[0.04] rounded-full overflow-hidden mb-2">
                         <div
-                          className="h-full rounded-full transition-all duration-500"
+                          className="h-full rounded-full transition-all duration-700"
                           style={{
                             width: `${(gs.sessions / maxSessions) * 100}%`,
-                            background: game.color,
+                            background: `linear-gradient(90deg, ${game.color}, ${game.color}cc)`,
                           }}
                         />
                       </div>
@@ -167,43 +240,4 @@ export default function StatsPage() {
       </section>
     </div>
   );
-}
-
-function SummaryCard({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <div className="bg-card border border-white/[0.06] rounded-xl p-4">
-      <div className="flex items-center gap-2 mb-2 text-muted">{icon}<span className="text-xs">{label}</span></div>
-      <p className="text-xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function ClockIcon() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>;
-}
-function PlayIcon() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>;
-}
-function GridIcon() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>;
-}
-function StarIcon() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-amber-400" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>;
-}
-function TrophyIcon() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 22V12M14 22V12" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></svg>;
-}
-function FireIcon() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-orange-400" aria-hidden="true"><path d="M12 12c2-2.96 0-7-1-8 0 3.04-4 4.96-4 8a5 5 0 1 0 10 0c0-1.5-.5-3-1.5-4-.5 2-1.5 3-3.5 4Z" /></svg>;
-}
-function MedalIcon() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="8" r="6" /><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" /></svg>;
 }

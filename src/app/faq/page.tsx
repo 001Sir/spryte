@@ -4,7 +4,32 @@ import FaqAccordion from './FaqAccordion';
 
 export const metadata: Metadata = {
   title: 'FAQ',
-  description: 'Frequently asked questions about Spryte Games — free browser games, accounts, scoring, offline play, and more.',
+  description:
+    'Frequently asked questions about Spryte Games — free browser games, accounts, scoring, offline play, and more.',
+  openGraph: {
+    title: 'FAQ — Spryte Games',
+    description:
+      'Frequently asked questions about Spryte Games — free browser games, scoring, offline play, and more.',
+    url: 'https://sprytegames.com/faq',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Spryte Games FAQ',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FAQ — Spryte Games',
+    description:
+      'Frequently asked questions about Spryte Games — free browser games, accounts, and more.',
+    images: ['/og-image.png'],
+  },
+  alternates: {
+    canonical: 'https://sprytegames.com/faq',
+  },
 };
 
 const faqs = [
@@ -55,12 +80,35 @@ const faqJsonLd = {
   })),
 };
 
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: 'https://sprytegames.com',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'FAQ',
+      item: 'https://sprytegames.com/faq',
+    },
+  ],
+};
+
 export default function FaqPage() {
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       <div className="max-w-[800px] mx-auto px-4 sm:px-10 py-24">

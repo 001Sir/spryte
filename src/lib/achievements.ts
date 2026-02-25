@@ -87,6 +87,10 @@ const perGameAchievements: Achievement[] = [
   // What's Missing
   { id: 'wm-scorer', title: 'Eagle Eye', description: 'Score 400+ in What\'s Missing', icon: '🦅', category: 'per-game', gameSlug: 'whats-missing', check: (s) => (s.perGame['whats-missing']?.highScore ?? 0) >= 400 },
   { id: 'wm-sessions', title: 'Keen Observer', description: 'Play What\'s Missing 10 times', icon: '🔍', category: 'per-game', gameSlug: 'whats-missing', check: (s) => (s.perGame['whats-missing']?.sessions ?? 0) >= 10 },
+
+  // Rift
+  { id: 'rf-scorer', title: 'Rift Walker', description: 'Score 500+ in Rift', icon: '🌀', category: 'per-game', gameSlug: 'rift', check: (s) => (s.perGame['rift']?.highScore ?? 0) >= 500 },
+  { id: 'rf-waves', title: 'Dimensional Master', description: 'Survive 10 waves in Rift', icon: '🔮', category: 'per-game', gameSlug: 'rift', check: (s) => (s.perGame['rift']?.bestLevel ?? 0) >= 10 },
 ];
 
 // Cross-game achievements (5)

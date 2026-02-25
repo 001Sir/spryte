@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
 import { useGameEvents } from '@/hooks/useGameEvents';
 import { SoundEngine } from '@/lib/sounds';
@@ -12,48 +12,54 @@ import type { GameEndDetail } from '@/lib/game-events';
 import GameRecorder from './GameRecorder';
 import ShareScoreButton from '@/components/ui/ShareScoreButton';
 
-function LoadingSkeleton() {
+function BrandedLoading({ title, color }: { title?: string; color?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] w-full" role="status" aria-label="Loading game">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="" width={48} height={48} className="rounded-full opacity-30 animate-pulse mb-4" aria-hidden="true" />
-      <div className="w-full max-w-[800px] space-y-3 p-6">
-        <div className="animate-skeleton-pulse bg-white/5 rounded-lg h-[300px] w-full" />
-        <div className="flex gap-3">
-          <div className="animate-skeleton-pulse bg-white/5 rounded h-4 w-24" />
-          <div className="animate-skeleton-pulse bg-white/5 rounded h-4 w-32" />
-          <div className="animate-skeleton-pulse bg-white/5 rounded h-4 w-20" />
-        </div>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-[400px] w-full gap-4" role="status" aria-label="Loading game">
+      <div
+        className="w-12 h-12 rounded-full border-2 border-transparent animate-spin"
+        style={{
+          borderTopColor: color || '#e94560',
+          borderRightColor: `${color || '#e94560'}40`,
+        }}
+      />
+      {title && (
+        <p className="text-foreground font-semibold text-sm">{title}</p>
+      )}
+      <p className="text-dim text-xs">
+        Press <kbd className="px-1 py-0.5 bg-white/[0.06] rounded text-[10px] font-mono">F</kbd> for fullscreen, <kbd className="px-1 py-0.5 bg-white/[0.06] rounded text-[10px] font-mono">M</kbd> to mute
+      </p>
     </div>
   );
 }
 
 const gameComponents: Record<string, ReturnType<typeof dynamic>> = {
-  'gravity-well': dynamic(() => import('@/games/gravity-well/GravityWellGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'chroma-flood': dynamic(() => import('@/games/chroma-flood/ChromaFloodGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'echo-chamber': dynamic(() => import('@/games/echo-chamber/EchoChamberGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'terravore': dynamic(() => import('@/games/terravore/TerravoreGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'pulse-weaver': dynamic(() => import('@/games/pulse-weaver/PulseWeaverGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'orbit-keeper': dynamic(() => import('@/games/orbit-keeper/OrbitKeeperGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'symbiosis': dynamic(() => import('@/games/symbiosis/SymbiosisGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'drift': dynamic(() => import('@/games/drift/DriftGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'spectrum': dynamic(() => import('@/games/spectrum/SpectrumGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'deja-vu': dynamic(() => import('@/games/deja-vu/DejaVuGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'slide-devil': dynamic(() => import('@/games/slide-devil/SlideDevilGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'whats-missing': dynamic(() => import('@/games/whats-missing/WhatsMissingGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'cascade': dynamic(() => import('@/games/cascade/CascadeGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'ricochet': dynamic(() => import('@/games/ricochet/RicochetGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
-  'burn': dynamic(() => import('@/games/burn/BurnGame'), { ssr: false, loading: () => <LoadingSkeleton /> }),
+  'gravity-well': dynamic(() => import('@/games/gravity-well/GravityWellGame'), { ssr: false, loading: () => <BrandedLoading title="Gravity Well" color="#7c3aed" /> }),
+  'chroma-flood': dynamic(() => import('@/games/chroma-flood/ChromaFloodGame'), { ssr: false, loading: () => <BrandedLoading title="Chroma Flood" color="#06b6d4" /> }),
+  'echo-chamber': dynamic(() => import('@/games/echo-chamber/EchoChamberGame'), { ssr: false, loading: () => <BrandedLoading title="Echo Chamber" color="#7c3aed" /> }),
+  'terravore': dynamic(() => import('@/games/terravore/TerravoreGame'), { ssr: false, loading: () => <BrandedLoading title="Terravore" color="#e94560" /> }),
+  'pulse-weaver': dynamic(() => import('@/games/pulse-weaver/PulseWeaverGame'), { ssr: false, loading: () => <BrandedLoading title="Pulse Weaver" color="#e94560" /> }),
+  'orbit-keeper': dynamic(() => import('@/games/orbit-keeper/OrbitKeeperGame'), { ssr: false, loading: () => <BrandedLoading title="Orbit Keeper" color="#7c3aed" /> }),
+  'symbiosis': dynamic(() => import('@/games/symbiosis/SymbiosisGame'), { ssr: false, loading: () => <BrandedLoading title="Symbiosis" color="#22c55e" /> }),
+  'drift': dynamic(() => import('@/games/drift/DriftGame'), { ssr: false, loading: () => <BrandedLoading title="Drift" color="#06b6d4" /> }),
+  'spectrum': dynamic(() => import('@/games/spectrum/SpectrumGame'), { ssr: false, loading: () => <BrandedLoading title="Spectrum" color="#f59e0b" /> }),
+  'deja-vu': dynamic(() => import('@/games/deja-vu/DejaVuGame'), { ssr: false, loading: () => <BrandedLoading title="Déjà Vu" color="#06b6d4" /> }),
+  'slide-devil': dynamic(() => import('@/games/slide-devil/SlideDevilGame'), { ssr: false, loading: () => <BrandedLoading title="Slide Devil" color="#e94560" /> }),
+  'whats-missing': dynamic(() => import('@/games/whats-missing/WhatsMissingGame'), { ssr: false, loading: () => <BrandedLoading title="What's Missing?" color="#f59e0b" /> }),
+  'cascade': dynamic(() => import('@/games/cascade/CascadeGame'), { ssr: false, loading: () => <BrandedLoading title="Cascade" color="#f59e0b" /> }),
+  'ricochet': dynamic(() => import('@/games/ricochet/RicochetGame'), { ssr: false, loading: () => <BrandedLoading title="Ricochet" color="#0ea5e9" /> }),
+  'burn': dynamic(() => import('@/games/burn/BurnGame'), { ssr: false, loading: () => <BrandedLoading title="Burn" color="#e94560" /> }),
+  'rift': dynamic(() => import('@/games/rift/RiftGame'), { ssr: false, loading: () => <BrandedLoading title="Rift" color="#00f0ff" /> }),
 };
 
 export default function GamePlayer({ slug }: { slug: string }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMuted, setIsMuted] = useState(() => SoundEngine.muted);
   const [lastScore, setLastScore] = useState<{ score: number; isNewHigh: boolean } | null>(null);
+  const [toolbarVisible, setToolbarVisible] = useState(true);
   const { addPlayed } = useRecentlyPlayed();
   useGameEvents();
   const containerElRef = useRef<HTMLDivElement | null>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const GameComponent = gameComponents[slug];
   const gameData = getGameBySlug(slug);
 
@@ -85,15 +91,32 @@ export default function GamePlayer({ slug }: { slug: string }) {
   useEffect(() => {
     const onFSChange = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Safari webkit fullscreen API
-      setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
+      const inFS = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+      setIsFullscreen(inFS);
+      if (inFS) {
+        // Auto-hide toolbar after 2s in fullscreen
+        hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 2000);
+      } else {
+        setToolbarVisible(true);
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      }
     };
     document.addEventListener('fullscreenchange', onFSChange);
     document.addEventListener('webkitfullscreenchange', onFSChange);
     return () => {
       document.removeEventListener('fullscreenchange', onFSChange);
       document.removeEventListener('webkitfullscreenchange', onFSChange);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, []);
+
+  // Show toolbar on mouse move in fullscreen
+  const handleMouseMove = useCallback(() => {
+    if (!isFullscreen) return;
+    setToolbarVisible(true);
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 2000);
+  }, [isFullscreen]);
 
   const toggleFullscreen = () => {
     const el = containerElRef.current;
@@ -122,12 +145,10 @@ export default function GamePlayer({ slug }: { slug: string }) {
     setIsMuted(muted);
   };
 
-  // Keyboard shortcuts: F = fullscreen, M = mute — only when game container or body is focused
+  // Keyboard shortcuts: F = fullscreen, M = mute
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      // Only trigger if focus is within the game container or on the body (not in nav/search)
       const container = containerElRef.current;
       if (!container) return;
       const targetNode = e.target as Node;
@@ -165,56 +186,65 @@ export default function GamePlayer({ slug }: { slug: string }) {
         tabIndex={-1}
         onClick={() => SoundEngine.ensureResumed()}
         onTouchStart={() => SoundEngine.ensureResumed()}
+        onMouseMove={handleMouseMove}
       >
         <div className="flex items-center justify-center min-h-[400px]">
           <GameComponent />
         </div>
-        <button
-          onClick={toggleMute}
-          className="absolute top-3 right-14 bg-black/60 hover:bg-black/80 backdrop-blur-sm text-white px-3 py-2 rounded-lg transition-all duration-200 z-10 flex items-center gap-1.5 text-xs font-medium min-w-[44px] min-h-[44px] border border-white/10 hover:border-white/20"
-          aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
-          title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
-        >
-          {isMuted ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M11 5L6 9H2v6h4l5 4V5z" />
-              <line x1="23" y1="9" x2="17" y2="15" />
-              <line x1="17" y1="9" x2="23" y2="15" />
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M11 5L6 9H2v6h4l5 4V5z" />
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-            </svg>
-          )}
-        </button>
-        <button
-          onClick={toggleFullscreen}
-          className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 backdrop-blur-sm text-white px-3 py-2 rounded-lg transition-all duration-200 z-10 flex items-center gap-1.5 text-xs font-medium min-w-[44px] min-h-[44px] border border-white/10 hover:border-white/20"
-          aria-label={isFullscreen ? 'Exit fullscreen mode' : 'Enter fullscreen mode'}
-          title={isFullscreen ? 'Exit fullscreen (F)' : 'Fullscreen (F)'}
-        >
-          {isFullscreen ? (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      </div>
+
+      {/* Toolbar strip below canvas */}
+      <div
+        className={`flex items-center justify-between mt-2 px-1 transition-opacity duration-300 ${
+          isFullscreen && !toolbarVisible ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        <div className="flex items-center gap-1.5">
+          {/* Mute button */}
+          <button
+            onClick={toggleMute}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-card border border-white/[0.06] hover:bg-card-hover text-dim hover:text-foreground transition-all text-xs font-medium min-h-[36px]"
+            aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
+            title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
+          >
+            {isMuted ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+            )}
+            {isMuted ? 'Muted' : 'Sound'}
+          </button>
+
+          {/* Fullscreen button */}
+          <button
+            onClick={toggleFullscreen}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-card border border-white/[0.06] hover:bg-card-hover text-dim hover:text-foreground transition-all text-xs font-medium min-h-[36px]"
+            aria-label={isFullscreen ? 'Exit fullscreen mode' : 'Enter fullscreen mode'}
+            title={isFullscreen ? 'Exit fullscreen (F)' : 'Fullscreen (F)'}
+          >
+            {isFullscreen ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
               </svg>
-              Exit
-            </>
-          ) : (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
-              Fullscreen
-            </>
-          )}
-        </button>
-      </div>
-      <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
-        <p className="text-xs text-muted">
-          Press <kbd className="px-1.5 py-0.5 bg-card border border-white/[0.06] rounded text-[10px] font-mono">F</kbd> fullscreen · <kbd className="px-1.5 py-0.5 bg-card border border-white/[0.06] rounded text-[10px] font-mono">M</kbd> mute · <kbd className="px-1.5 py-0.5 bg-card border border-white/[0.06] rounded text-[10px] font-mono">P</kbd> pause
-        </p>
+            )}
+            {isFullscreen ? 'Exit' : 'Fullscreen'}
+          </button>
+
+          {/* Record */}
+          <GameRecorder slug={slug} />
+        </div>
+
         <div className="flex items-center gap-2">
           {lastScore && gameData && (
             <ShareScoreButton
@@ -225,7 +255,11 @@ export default function GamePlayer({ slug }: { slug: string }) {
               gameColor={gameData.color}
             />
           )}
-          <GameRecorder slug={slug} />
+          <span className="text-[10px] text-dim hidden sm:block">
+            <kbd className="px-1 py-0.5 bg-card border border-white/[0.06] rounded font-mono">F</kbd> fullscreen
+            <span className="mx-1">&middot;</span>
+            <kbd className="px-1 py-0.5 bg-card border border-white/[0.06] rounded font-mono">M</kbd> mute
+          </span>
         </div>
       </div>
     </div>
