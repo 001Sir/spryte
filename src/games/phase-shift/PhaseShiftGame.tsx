@@ -690,8 +690,8 @@ export default function PhaseShiftGame() {
 
     // ─── Game State ───
     let state: GameState = 'menu';
-    let levels = makeLevels();
-    let progress = loadProgress();
+    const levels = makeLevels();
+    const progress = loadProgress();
     let highScore = getHighScore('phase-shift');
     let totalScore = 0;
 
@@ -707,11 +707,11 @@ export default function PhaseShiftGame() {
     let modeTransitionColor = GOLD;
     let playerRotation = 0;
     let levelIntroTimer = 0;
-    let shakeIntensity = 0;
+    const shakeIntensity = 8;
     let attempts = 0;
 
     // ─── Player ───
-    let px = PLAYER_X;
+    const px = PLAYER_X;
     let py = 400;
     let vy = 0;
     let onGround = false;
@@ -733,8 +733,6 @@ export default function PhaseShiftGame() {
     let actionPressed = false; // jump/fly/flip/wave
     let actionJustPressed = false;
     let phaseJustPressed = false;
-    let touchAction = false;
-    let touchPhase = false;
 
     // ─── Level Elements (deep cloned per attempt) ───
     let levelElements: LevelElement[] = [];
@@ -917,11 +915,9 @@ export default function PhaseShiftGame() {
         const tx = e.changedTouches[i].clientX - rect.left;
         const halfW = rect.width / 2;
         if (tx < halfW) {
-          touchAction = true;
           actionJustPressed = true;
           actionPressed = true;
         } else {
-          touchPhase = true;
           phaseJustPressed = true;
         }
       }
@@ -987,10 +983,7 @@ export default function PhaseShiftGame() {
         const tx = e.changedTouches[i].clientX - rect.left;
         const halfW = rect.width / 2;
         if (tx < halfW) {
-          touchAction = false;
           actionPressed = false;
-        } else {
-          touchPhase = false;
         }
       }
     }
