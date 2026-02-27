@@ -183,12 +183,12 @@ function makeLevels(): Level[] {
       walls: [
         ...border(),
         { x: 200, y: 14, w: 14, h: 250 },
-        { x: 400, y: 336, w: 14, h: 264 },
-        { x: 600, y: 14, w: 14, h: 300 },
+        { x: 400, y: 350, w: 14, h: 250 },
+        { x: 600, y: 14, w: 14, h: 280 },
       ],
       spikes: [
-        { x: 250, y: 264, w: 112, h: 14, dir: 'down' },
-        { x: 450, y: 322, w: 112, h: 14, dir: 'up' },
+        { x: 280, y: 264, w: 80, h: 14, dir: 'down' },
+        { x: 470, y: 300, w: 80, h: 14, dir: 'up' },
       ],
       bouncePads: [],
       windZones: [],
@@ -197,13 +197,12 @@ function makeLevels(): Level[] {
       orbs: [
         { x: 100, y: 150, collected: false },
         { x: 300, y: 450, collected: false },
-        { x: 300, y: 120, collected: false },
         { x: 500, y: 200, collected: false },
         { x: 700, y: 450, collected: false },
       ],
       startX: 60, startY: 500,
       exitX: 700, exitY: 500,
-      par: 5,
+      par: 7,
     },
     // 9: Gravity Well
     {
@@ -339,7 +338,7 @@ export default function DriftGame() {
     // Wind particles
     const windParticles: { x: number; y: number; vx: number; vy: number; life: number }[] = [];
 
-    // Cached bounding rect (avoid layout thrashing on every mouse/touch event)
+    // Bounding rect – refreshed on every pointer interaction for accuracy after scroll/layout shifts
     let cachedRect = canvas.getBoundingClientRect();
 
     // Timing
@@ -420,8 +419,9 @@ export default function DriftGame() {
       blinkTimer = 3;
     };
 
-    // ── Get mouse pos ──
+    // ── Get mouse pos (refreshes bounding rect each call to stay accurate after scroll) ──
     const getMousePos = (e: MouseEvent | Touch): Vec => {
+      cachedRect = canvas.getBoundingClientRect();
       return { x: (e.clientX - cachedRect.left) * (W / cachedRect.width), y: (e.clientY - cachedRect.top) * (H / cachedRect.height) };
     };
 
@@ -1489,7 +1489,7 @@ export default function DriftGame() {
 
       if (state === 'playing' && onSurface) {
         const d = dist(pos.x, pos.y, gx, gy);
-        if (d < GHOST_R * 3) {
+        if (d < GHOST_R * 4) {
           isAiming = true;
           aimStartX = pos.x;
           aimStartY = pos.y;
@@ -1511,7 +1511,7 @@ export default function DriftGame() {
       }
 
       if (state === 'playing') {
-        hoveringGhost = onSurface && dist(pos.x, pos.y, gx, gy) < GHOST_R * 3;
+        hoveringGhost = onSurface && dist(pos.x, pos.y, gx, gy) < GHOST_R * 4;
         if (isAiming) {
           aimX = pos.x;
           aimY = pos.y;
@@ -1692,6 +1692,7 @@ export default function DriftGame() {
     // ── Attach events ──
     const onResize = () => { cachedRect = canvas.getBoundingClientRect(); };
     window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', onResize, { passive: true });
 
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mousemove', handleMouseMove);
@@ -1718,6 +1719,7 @@ export default function DriftGame() {
       SoundEngine.stopMusic();
       touch.destroy();
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onResize);
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseup', handleMouseUp);

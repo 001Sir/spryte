@@ -284,18 +284,26 @@ export default function PulseWeaverGame() {
       mouseX = (e.clientX - cachedRect.left) * scaleX;
       mouseY = (e.clientY - cachedRect.top) * scaleY;
     }
+    let mouseRightDown = false;
+
     function onMouseDown(e: MouseEvent) {
-      if (e.button !== 0) return;
-      mouseDown = true;
-      if (state === 'menu') {
-        startGame();
-      } else if (state === 'gameover') {
-        startGame();
+      if (e.button === 0) {
+        mouseDown = true;
+        if (state === 'menu') {
+          startGame();
+        } else if (state === 'gameover') {
+          startGame();
+        }
+      } else if (e.button === 2) {
+        mouseRightDown = true;
       }
     }
     function onMouseUp(e: MouseEvent) {
-      if (e.button !== 0) return;
-      mouseDown = false;
+      if (e.button === 0) {
+        mouseDown = false;
+      } else if (e.button === 2) {
+        mouseRightDown = false;
+      }
     }
     function onWheel(e: WheelEvent) {
       e.preventDefault();
@@ -429,6 +437,7 @@ export default function PulseWeaverGame() {
       playerMaxHealth = 100;
       frequency = 5;
       firing = false;
+      mouseRightDown = false;
       beamTime = 0;
       enemies = [];
       particles = [];
@@ -596,6 +605,17 @@ export default function PulseWeaverGame() {
           // Move at 60% speed for touch so it feels controlled
           dx *= 0.6;
           dy *= 0.6;
+        }
+      }
+
+      // Right-click move: move toward cursor (keyboard takes priority)
+      if (mouseRightDown && dx === 0 && dy === 0) {
+        const toMouseX = mouseX - px;
+        const toMouseY = mouseY - py;
+        const mouseDist = Math.hypot(toMouseX, toMouseY);
+        if (mouseDist > 20) {
+          dx = toMouseX / mouseDist;
+          dy = toMouseY / mouseDist;
         }
       }
 
@@ -930,7 +950,7 @@ export default function PulseWeaverGame() {
         'Match your beam frequency to enemy resonance',
         'to deal damage. Closer match = more damage!',
       ] : [
-        'WASD  -  Move ship',
+        'WASD / Right-click & hold  -  Move ship',
         'Mouse  -  Aim beam',
         'Left Click (hold)  -  Fire beam',
         'Scroll Wheel  -  Adjust frequency',

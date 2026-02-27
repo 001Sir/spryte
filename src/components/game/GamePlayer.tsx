@@ -53,6 +53,7 @@ const gameComponents: Record<string, ReturnType<typeof dynamic>> = {
   'dendrite': dynamic(() => import('@/games/dendrite/DendriteGame'), { ssr: false, loading: () => <BrandedLoading title="Dendrite" color="#a855f7" /> }),
   'phylo': dynamic(() => import('@/games/phylo/PhyloGame'), { ssr: false, loading: () => <BrandedLoading title="Phylo" color="#10b981" /> }),
   'convect': dynamic(() => import('@/games/convect/ConvectGame'), { ssr: false, loading: () => <BrandedLoading title="Convect" color="#ef4444" /> }),
+  'phase-shift': dynamic(() => import('@/games/phase-shift/PhaseShiftGame'), { ssr: false, loading: () => <BrandedLoading title="Phase Shift" color="#00ffff" /> }),
 };
 
 export default function GamePlayer({ slug }: { slug: string }) {

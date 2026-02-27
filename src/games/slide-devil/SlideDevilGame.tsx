@@ -799,6 +799,7 @@ export default function SlideDevilGame() {
       onWallRight = false;
       coyoteTimer = 0;
       jumpPressed = false;
+      mouseJumpRequested = false;
       controlsReversed = false;
       reverseTimer = 0;
       scaleX = 1;
@@ -1039,6 +1040,16 @@ export default function SlideDevilGame() {
       const right = keysDown['ArrowRight'] || keysDown['d'] || keysDown['D'];
       if (left) moveDir -= 1;
       if (right) moveDir += 1;
+
+      // Mouse direction (keyboard takes priority)
+      if (mouseActive && moveDir === 0) {
+        const playerCenterX = px + PLAYER_SIZE / 2;
+        const diff = mouseCanvasX - playerCenterX;
+        if (Math.abs(diff) > 30) {
+          moveDir = diff > 0 ? 1 : -1;
+        }
+      }
+
       if (controlsReversed) moveDir *= -1;
 
       // Horizontal acceleration
@@ -1160,7 +1171,8 @@ export default function SlideDevilGame() {
       }
 
       // Jump
-      const jumpKey = keysDown['ArrowUp'] || keysDown['w'] || keysDown['W'] || keysDown[' '];
+      const jumpKey = keysDown['ArrowUp'] || keysDown['w'] || keysDown['W'] || keysDown[' '] || mouseJumpRequested;
+      mouseJumpRequested = false;
       if (jumpKey && !jumpPressed) {
         jumpPressed = true;
         if (coyoteTimer > 0) {
@@ -1585,7 +1597,7 @@ export default function SlideDevilGame() {
       // Controls hint
       ctx.fillStyle = 'rgba(220,38,38,0.4)';
       ctx.font = '12px monospace';
-      ctx.fillText('Arrow Keys / WASD to move, Up / Space to jump, R to restart', W / 2, 460);
+      ctx.fillText('Arrow Keys / WASD to move, Up / Space / Click to jump, Mouse aims', W / 2, 460);
       ctx.fillText('Watch out for traps... nothing is safe.', W / 2, 480);
 
       // High score
@@ -2044,7 +2056,17 @@ export default function SlideDevilGame() {
         }
         return;
       }
+
+      // Click = jump during gameplay
+      if (state === 'playing' && !paused) {
+        mouseJumpRequested = true;
+      }
     };
+
+    // Mouse gameplay state
+    let mouseCanvasX = 0;
+    let mouseActive = false;
+    let mouseJumpRequested = false;
 
     const handleMouseMove = (e: MouseEvent) => {
       const pos = getMousePos(e);
@@ -2059,6 +2081,10 @@ export default function SlideDevilGame() {
       }
       if (state === 'victory') {
         menuHover = pos.x >= W / 2 - 90 && pos.x <= W / 2 + 90 && pos.y >= 480 && pos.y <= 528;
+      }
+      if (state === 'playing') {
+        mouseCanvasX = pos.x;
+        mouseActive = true;
       }
     };
 

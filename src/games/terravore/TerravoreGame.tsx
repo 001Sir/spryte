@@ -543,6 +543,7 @@ export default function TerravoreGame() {
       if (gemsCollected >= gemsTarget && cy <= LEVELS[level].skyRows) {
         // Reached surface with enough treasure
         totalScore += score;
+        mouseHeld = false;
         if (level < LEVELS.length - 1) {
           level++;
           state = 'LevelComplete';
@@ -574,11 +575,74 @@ export default function TerravoreGame() {
     function onKeyUp(e: KeyboardEvent) {
       keys[e.key.toLowerCase()] = false;
     }
-    function onClick() {
-      if (state === 'Menu') {
-        startGame();
-      } else if (state === 'GameOver') {
-        state = 'Menu';
+    // Mouse gameplay state
+    let mouseHeld = false;
+    let mouseCanvasX = 0;
+    let mouseCanvasY = 0;
+
+    function onMouseDown(e: MouseEvent) {
+      if (state === 'Menu') { if (e.button === 0) startGame(); return; }
+      if (state === 'GameOver') { if (e.button === 0) state = 'Menu'; return; }
+      if (state !== 'Playing' || paused) return;
+
+      mouseCanvasX = (e.clientX - cachedRect.left) * (W / cachedRect.width);
+      mouseCanvasY = (e.clientY - cachedRect.top) * (H / cachedRect.height);
+
+      if (e.button === 2) {
+        // Right-click = dig in facing direction
+        tryDig();
+        return;
+      }
+
+      if (e.button === 0) {
+        mouseHeld = true;
+        // Immediate first move/dig toward clicked cell
+        doMouseAction();
+      }
+    }
+
+    function onMouseUp(e: MouseEvent) {
+      if (e.button === 0) mouseHeld = false;
+    }
+
+    function onMouseMoveGame(e: MouseEvent) {
+      mouseCanvasX = (e.clientX - cachedRect.left) * (W / cachedRect.width);
+      mouseCanvasY = (e.clientY - cachedRect.top) * (H / cachedRect.height);
+    }
+
+    function onContextMenu(e: Event) {
+      e.preventDefault();
+    }
+
+    function doMouseAction() {
+      if (state !== 'Playing' || paused || digging) return;
+
+      // Convert mouse position to grid cell
+      const targetGX = Math.floor(mouseCanvasX / CELL);
+      const targetGY = Math.floor(mouseCanvasY / CELL);
+
+      // Already at target cell
+      if (targetGX === cx && targetGY === cy) return;
+
+      // Compute direction from player to target
+      const ddx = targetGX - cx;
+      const ddy = targetGY - cy;
+
+      let dir: Dir;
+      if (Math.abs(ddx) > Math.abs(ddy)) {
+        dir = ddx > 0 ? DIR.RIGHT : DIR.LEFT;
+      } else {
+        dir = ddy > 0 ? DIR.DOWN : DIR.UP;
+      }
+
+      // Check if the adjacent cell in that direction is solid/diggable
+      const nx = cx + DX[dir];
+      const ny = cy + DY[dir];
+      if (inBounds(nx, ny) && isSolid(grid[ny][nx]) && isDiggable(grid[ny][nx])) {
+        facing = dir;
+        tryDig();
+      } else {
+        tryMove(dir);
       }
     }
 
@@ -670,7 +734,10 @@ export default function TerravoreGame() {
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
     canvas.addEventListener('touchend', onTouchEnd, { passive: false });
 
-    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mousemove', onMouseMoveGame);
+    canvas.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
@@ -740,6 +807,11 @@ export default function TerravoreGame() {
         prevTouchAction = touch.state.action;
       }
 
+      // Mouse hold: continuous movement toward target
+      if (mouseHeld && !digging) {
+        doMouseAction();
+      }
+
       // Input handling
       if (!digging) {
         if (keys['arrowup'] || keys['w']) tryMove(DIR.UP);
@@ -787,6 +859,7 @@ export default function TerravoreGame() {
         totalScore += score;
         if (totalScore > highScore) { highScore = totalScore; newHighScore = true; setHighScore('terravore', totalScore); }
         state = 'GameOver';
+        mouseHeld = false;
         reportGameEnd('terravore', totalScore, true, level + 1);
         SoundEngine.stopAmbient();
         SoundEngine.play('gameOver');
@@ -1252,8 +1325,8 @@ export default function TerravoreGame() {
         'Avoid water floods and lava flows',
         'Return to surface once target is met',
       ] : [
-        'Arrow Keys / WASD  -  Move',
-        'Space  -  Dig in facing direction',
+        'Arrow Keys / WASD  -  Move  |  Click to move/dig',
+        'Space  -  Dig  |  Right-click to dig  |  Hold to move',
         '',
         'Collect gems buried in the earth',
         'Avoid water floods and lava flows',
@@ -1523,7 +1596,10 @@ export default function TerravoreGame() {
       SoundEngine.stopAmbient();
       touch.destroy();
       window.removeEventListener('resize', onResize);
-      canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('mouseup', onMouseUp);
+      canvas.removeEventListener('mousemove', onMouseMoveGame);
+      canvas.removeEventListener('contextmenu', onContextMenu);
       canvas.removeEventListener('touchstart', onTouchStart);
       canvas.removeEventListener('touchmove', onTouchMove);
       canvas.removeEventListener('touchend', onTouchEnd);

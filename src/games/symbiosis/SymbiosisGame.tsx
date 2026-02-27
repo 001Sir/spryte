@@ -249,8 +249,22 @@ export default function SymbiosisGame() {
       mouseX = ((e.clientX - cachedRect.left) / cachedRect.width) * CANVAS_W;
       mouseY = ((e.clientY - cachedRect.top) / cachedRect.height) * CANVAS_H;
     };
-    const onMouseDown = () => {
-      mouseClicked = true;
+    let mouseRightDown = false;
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button === 0) {
+        mouseClicked = true;
+      } else if (e.button === 2) {
+        mouseRightDown = true;
+      }
+    };
+
+    const onMouseUp = (e: MouseEvent) => {
+      if (e.button === 2) mouseRightDown = false;
+    };
+
+    const onContextMenu = (e: Event) => {
+      e.preventDefault();
     };
 
     // -- Touch handlers --
@@ -311,6 +325,8 @@ export default function SymbiosisGame() {
 
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('contextmenu', onContextMenu);
     canvas.addEventListener('touchstart', onTouchStart, { passive: false });
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
     canvas.addEventListener('touchend', onTouchEnd, { passive: false });
@@ -363,6 +379,7 @@ export default function SymbiosisGame() {
 
     function initGame() {
       paused = false;
+      mouseRightDown = false;
       host = {
         x: CANVAS_W / 2 - 60,
         y: CANVAS_H / 2,
@@ -587,6 +604,17 @@ export default function SymbiosisGame() {
           const followStrength = clamp((toParDist - TETHER_MAX_LENGTH * 0.5) / (TETHER_MAX_LENGTH * 0.5), 0, 1);
           hdx = (toParX / toParDist) * followStrength;
           hdy = (toParY / toParDist) * followStrength;
+        }
+      }
+
+      // Right-click move: move Host toward cursor (keyboard takes priority)
+      if (mouseRightDown && hdx === 0 && hdy === 0) {
+        const toMouseX = mouseX - host.x;
+        const toMouseY = mouseY - host.y;
+        const mouseDist = Math.sqrt(toMouseX * toMouseX + toMouseY * toMouseY);
+        if (mouseDist > 15) {
+          hdx = toMouseX / mouseDist;
+          hdy = toMouseY / mouseDist;
         }
       }
 
@@ -1192,7 +1220,7 @@ export default function SymbiosisGame() {
       if (isTouch) {
         ctx.fillText('Touch = Move Parasite  |  Double-tap = Link/Unlink', CANVAS_W / 2, CANVAS_H / 2 + 115);
       } else {
-        ctx.fillText('WASD = Move Host  |  Mouse = Move Parasite  |  Space = Link/Unlink', CANVAS_W / 2, CANVAS_H / 2 + 115);
+        ctx.fillText('WASD / Right-click = Move Host  |  Mouse = Parasite  |  Space/Click = Link', CANVAS_W / 2, CANVAS_H / 2 + 115);
       }
       ctx.fillText('Tether damages enemies on contact (3x score!)  |  Collect cyan orbs to heal', CANVAS_W / 2, CANVAS_H / 2 + 137);
 
@@ -1289,6 +1317,14 @@ export default function SymbiosisGame() {
           initGame();
         } else if (state === 'GameOver') {
           state = 'Menu';
+        } else if (state === 'Playing' && !paused) {
+          // Left click toggles tether
+          parasite.linked = !parasite.linked;
+          if (!parasite.linked) SoundEngine.play('tetherUnlink');
+          if (parasite.linked) {
+            spawnParticles(parasite.x, parasite.y, FUCHSIA, 6);
+            SoundEngine.play('tetherLink');
+          }
         }
       }
 
@@ -1346,6 +1382,8 @@ export default function SymbiosisGame() {
       touch.destroy();
       canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('mouseup', onMouseUp);
+      canvas.removeEventListener('contextmenu', onContextMenu);
       canvas.removeEventListener('touchstart', onTouchStart);
       canvas.removeEventListener('touchmove', onTouchMove);
       canvas.removeEventListener('touchend', onTouchEnd);

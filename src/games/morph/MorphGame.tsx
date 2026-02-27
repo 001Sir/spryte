@@ -2215,7 +2215,7 @@ export default function MorphGame() {
       ctx.font = '11px monospace';
       ctx.textAlign = 'center';
       ctx.fillText('SPACE = Jump   DOWN = Slide (Runner)   P = Pause', W / 2, H * 0.72);
-      ctx.fillText('Hold SPACE as Glider for lift', W / 2, H * 0.72 + 16);
+      ctx.fillText('Hold SPACE as Glider for lift | Mouse: L-click Jump, R-click Morph, Scroll cycle', W / 2, H * 0.72 + 16);
 
       // Start
       ctx.fillStyle = WHITE;
@@ -2414,7 +2414,9 @@ export default function MorphGame() {
       }
     }
 
-    function onClick(e: MouseEvent) {
+    function onMouseDown(e: MouseEvent) {
+      if (e.button !== 0) return;
+
       if (state === 'menu') { startGame(); return; }
       if (state === 'gameover') { startGame(); return; }
 
@@ -2432,6 +2434,54 @@ export default function MorphGame() {
             return;
           }
         }
+        return;
+      }
+
+      // Mouse gameplay: left half = jump/glide, right half = cycle morph
+      if (state === 'playing' && !paused) {
+        const rect = canvas!.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) / rect.width;
+        if (mx < 0.5) {
+          // Jump / glider lift (same as touch left half)
+          if (form === 'glider') {
+            glideHoldingUp = true;
+          }
+          if (onGround && form !== 'spike') {
+            vy = -getFormJump();
+            onGround = false;
+            hasDoubleJumped = false;
+            SoundEngine.play('launch');
+            spawnDust(px, GROUND_Y, 4);
+          } else if (!onGround && form === 'runner' && doubleJumpUnlocked && !hasDoubleJumped) {
+            vy = -getFormJump() * 0.8;
+            hasDoubleJumped = true;
+            SoundEngine.play('launch');
+            spawnParticles(px, py + getFormRadius(), FORM_COLORS.runner.trail, 6, 2);
+          }
+        } else {
+          // Cycle morph (same as touch right half)
+          const forms: FormType[] = ['runner', 'ball', 'glider', 'spike'];
+          const idx = forms.indexOf(form);
+          morphTo(forms[(idx + 1) % 4]);
+        }
+      }
+    }
+
+    function onMouseUp(e: MouseEvent) {
+      if (e.button !== 0) return;
+      // Release glider lift on mouse up (mirrors keyup behavior)
+      glideHoldingUp = false;
+    }
+
+    function onWheel(e: WheelEvent) {
+      if (state !== 'playing' || paused || upgradesAvailable) return;
+      e.preventDefault();
+      const forms: FormType[] = ['runner', 'ball', 'glider', 'spike'];
+      const idx = forms.indexOf(form);
+      if (e.deltaY > 0) {
+        morphTo(forms[(idx + 1) % 4]);
+      } else {
+        morphTo(forms[(idx + 3) % 4]);
       }
     }
 
@@ -2481,8 +2531,10 @@ export default function MorphGame() {
 
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
-    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
     canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('touchstart', onTouchStart, { passive: false });
 
     highScore = getHighScore('morph');
@@ -2494,8 +2546,10 @@ export default function MorphGame() {
       cancelAnimationFrame(animId);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
-      canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('mouseup', onMouseUp);
       canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('touchstart', onTouchStart);
       SoundEngine.stopAmbient();
     };

@@ -360,38 +360,66 @@ export default function EchoChamberGame() {
       keys[e.key] = false;
     }
 
-    function onClick() {
-      if (state === 'menu') {
-        state = 'playing';
-        reportGameStart('echo-chamber');
-        SoundEngine.startAmbient('dark-cave');
-        SoundEngine.play('menuSelect');
-        level = 1;
-        score = 0;
-        newHighScore = false;
-        totalGemsCollected = 0;
-        initLevel(level);
-        return;
-      }
-      if (state === 'gameover') {
-        state = 'menu';
-        return;
-      }
-      if (state === 'playing' && !paused) {
-        // send pulse
-        if (pulsesLeft > 0) {
-          pulsesLeft--;
-          waves.push({
-            cx: px,
-            cy: py,
-            radius: 0,
-            maxRadius: 500,
-            speed: 240,
-            alpha: 1,
-          });
-          SoundEngine.play('pulse');
+    // Mouse gameplay state
+    let mouseRightDown = false;
+    let mouseMoveX = 0;
+    let mouseMoveY = 0;
+
+    function onMouseDown(e: MouseEvent) {
+      if (e.button === 0) {
+        // Left click
+        if (state === 'menu') {
+          state = 'playing';
+          reportGameStart('echo-chamber');
+          SoundEngine.startAmbient('dark-cave');
+          SoundEngine.play('menuSelect');
+          level = 1;
+          score = 0;
+          newHighScore = false;
+          totalGemsCollected = 0;
+          initLevel(level);
+          return;
         }
+        if (state === 'gameover') {
+          state = 'menu';
+          return;
+        }
+        if (state === 'playing' && !paused) {
+          // send pulse
+          if (pulsesLeft > 0) {
+            pulsesLeft--;
+            waves.push({
+              cx: px,
+              cy: py,
+              radius: 0,
+              maxRadius: 500,
+              speed: 240,
+              alpha: 1,
+            });
+            SoundEngine.play('pulse');
+          }
+        }
+      } else if (e.button === 2) {
+        // Right click = move toward cursor
+        mouseRightDown = true;
+        const rect = canvas!.getBoundingClientRect();
+        mouseMoveX = (e.clientX - rect.left) * (W / rect.width);
+        mouseMoveY = (e.clientY - rect.top) * (H / rect.height);
       }
+    }
+
+    function onMouseUp(e: MouseEvent) {
+      if (e.button === 2) mouseRightDown = false;
+    }
+
+    function onMouseMoveGame(e: MouseEvent) {
+      const rect = canvas!.getBoundingClientRect();
+      mouseMoveX = (e.clientX - rect.left) * (W / rect.width);
+      mouseMoveY = (e.clientY - rect.top) * (H / rect.height);
+    }
+
+    function onContextMenu(e: Event) {
+      e.preventDefault();
     }
 
     /* ── touch handling (virtual joystick) ───────────────── */
@@ -503,7 +531,10 @@ export default function EchoChamberGame() {
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
     canvas.addEventListener('touchend', onTouchEnd, { passive: false });
 
-    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mousemove', onMouseMoveGame);
+    canvas.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
@@ -622,9 +653,21 @@ export default function EchoChamberGame() {
         prevTouchAction = touch.state.action;
       }
 
+      // Mouse right-click movement (keyboard takes priority)
+      if (mouseRightDown && dx === 0 && dy === 0) {
+        const mdx = mouseMoveX - px;
+        const mdy = mouseMoveY - py;
+        const dist = Math.sqrt(mdx * mdx + mdy * mdy);
+        if (dist > 8) {
+          dx = mdx / dist;
+          dy = mdy / dist;
+        }
+      }
+
       if (dx !== 0 && dy !== 0) {
-        dx *= 0.707;
-        dy *= 0.707;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        dx /= len;
+        dy /= len;
       }
       const nmx = px + dx * pSpeed * dt;
       const nmy = py + dy * pSpeed * dt;
@@ -807,8 +850,8 @@ export default function EchoChamberGame() {
         'Find gems, avoid enemies, reach the exit',
         'Enemies FREEZE when illuminated, but hunt in darkness',
       ] : [
-        'Arrow Keys / WASD  -  Move',
-        'Mouse Click  -  Send sound pulse',
+        'Arrow Keys / WASD  -  Move  |  Right-click & hold to move',
+        'Left Click  -  Send sound pulse',
         'Find gems, avoid enemies, reach the exit',
         'Enemies FREEZE when illuminated, but hunt in darkness',
       ];
@@ -1103,7 +1146,10 @@ export default function EchoChamberGame() {
       SoundEngine.stopAmbient();
       touch.destroy();
       window.removeEventListener('resize', onResize);
-      canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('mouseup', onMouseUp);
+      canvas.removeEventListener('mousemove', onMouseMoveGame);
+      canvas.removeEventListener('contextmenu', onContextMenu);
       canvas.removeEventListener('touchstart', onTouchStart);
       canvas.removeEventListener('touchmove', onTouchMove);
       canvas.removeEventListener('touchend', onTouchEnd);
