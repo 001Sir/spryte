@@ -794,16 +794,19 @@ export default function PhaseShiftGame() {
 
     // ─── Input Handlers ───
     function onKeyDown(e: KeyboardEvent) {
+      // Always prevent default on keys that scroll the page — even on repeat
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+        e.preventDefault();
+      }
+
       if (e.repeat) return;
 
       if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
         actionJustPressed = true;
         actionPressed = true;
-        e.preventDefault();
       }
       if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyX' || e.code === 'ArrowDown') {
         phaseJustPressed = true;
-        e.preventDefault();
       }
 
       // Menu/state navigation
