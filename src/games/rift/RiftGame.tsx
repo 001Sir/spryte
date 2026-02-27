@@ -521,7 +521,6 @@ export default function RiftGame() {
       if (invulnTimer > 0) return;
       lives--;
       invulnTimer = INVULN_TIME;
-      shakeTimer = 0.4;
       SoundEngine.play('playerDamage');
       spawnParticles(px, py, '#ff0000', 12, 3);
 

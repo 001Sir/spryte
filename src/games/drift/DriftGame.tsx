@@ -884,7 +884,6 @@ export default function DriftGame() {
           // Death
           spawnParticles(gx, gy, 30, '#ef4444', 5);
           spawnParticles(gx, gy, 20, '#f97316', 4);
-          shakeIntensity = 12;
           SoundEngine.play('spikeHit');
           state = 'gameover';
           reportGameEnd('drift', totalScore, false, currentLevel);

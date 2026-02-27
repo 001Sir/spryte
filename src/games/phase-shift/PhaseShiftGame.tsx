@@ -717,6 +717,10 @@ export default function PhaseShiftGame() {
     let onGround = false;
     let coyoteTimer = 0;
     let gravityDir = 1; // 1 = down, -1 = up (flip mode)
+    let deathGhostTimer = 0;
+    let deathX = 0;
+    let deathY = 0;
+    let deathMode: ModeType = 'dash';
 
     // ─── Particles ───
     let particles: Particle[] = [];
@@ -726,7 +730,6 @@ export default function PhaseShiftGame() {
     let bgStars: Star[] = [];
 
     // ─── Input ───
-    const keys: Record<string, boolean> = {};
     let actionPressed = false; // jump/fly/flip/wave
     let actionJustPressed = false;
     let phaseJustPressed = false;
@@ -792,7 +795,6 @@ export default function PhaseShiftGame() {
     // ─── Input Handlers ───
     function onKeyDown(e: KeyboardEvent) {
       if (e.repeat) return;
-      keys[e.code] = true;
 
       if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
         actionJustPressed = true;
@@ -849,6 +851,9 @@ export default function PhaseShiftGame() {
       if (state === 'dead') {
         if (e.code === 'Enter' || e.code === 'Space' || e.code === 'KeyR') {
           startLevel(currentLevel);
+          // Clear input so the intro isn't instantly skipped
+          actionJustPressed = false;
+          phaseJustPressed = false;
           SoundEngine.play('menuSelect');
           e.preventDefault();
           return;
@@ -880,6 +885,8 @@ export default function PhaseShiftGame() {
         }
         if (e.code === 'KeyR') {
           startLevel(currentLevel);
+          actionJustPressed = false;
+          phaseJustPressed = false;
           SoundEngine.play('menuSelect');
           e.preventDefault();
         }
@@ -887,13 +894,14 @@ export default function PhaseShiftGame() {
       }
       if (state === 'playing' && e.code === 'KeyR') {
         startLevel(currentLevel);
+        actionJustPressed = false;
+        phaseJustPressed = false;
         SoundEngine.play('menuSelect');
         e.preventDefault();
       }
     }
 
     function onKeyUp(e: KeyboardEvent) {
-      keys[e.code] = false;
       if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
         actionPressed = false;
       }
@@ -920,8 +928,40 @@ export default function PhaseShiftGame() {
         state = 'levelSelect';
         return;
       }
+      if (state === 'levelSelect') {
+        // Handle level selection via touch
+        const firstTouch = e.changedTouches[0];
+        const tx2 = (firstTouch.clientX - rect.left) * (W / rect.width);
+        const ty2 = (firstTouch.clientY - rect.top) * (H / rect.height);
+        const startX = 100;
+        const startY = 200;
+        const cellW = 120;
+        const cellH = 100;
+        for (let i = 0; i < 10; i++) {
+          const col = i % 5;
+          const row = Math.floor(i / 5);
+          const cx = startX + col * cellW;
+          const cy = startY + row * cellH;
+          if (tx2 >= cx && tx2 < cx + cellW - 10 && ty2 >= cy && ty2 < cy + cellH - 10) {
+            selectedLevel = i;
+            if (i < progress.unlocked) {
+              attempts = 0;
+              SoundEngine.play('menuSelect');
+              startLevel(i);
+              actionJustPressed = false;
+              phaseJustPressed = false;
+            } else {
+              SoundEngine.play('menuBack');
+            }
+            return;
+          }
+        }
+        return;
+      }
       if (state === 'dead') {
         startLevel(currentLevel);
+        actionJustPressed = false;
+        phaseJustPressed = false;
         SoundEngine.play('menuSelect');
         return;
       }
@@ -1034,10 +1074,12 @@ export default function PhaseShiftGame() {
     // ─── Die ───
     function die() {
       state = 'dead';
-      shakeTimer = 0.3;
-      shakeIntensity = 8;
+      deathGhostTimer = 0.5;
+      deathX = px;
+      deathY = py;
+      deathMode = mode;
       SoundEngine.play('playerDamage');
-      spawnParticles(px + PLAYER_SIZE / 2, py + PLAYER_SIZE / 2, 20, phase === 'A' ? CYAN : MAGENTA, 200);
+      spawnParticles(px + PLAYER_SIZE / 2, py + PLAYER_SIZE / 2, 25, phase === 'A' ? CYAN : MAGENTA, 200);
       reportGameEnd('phase-shift', totalScore, false, currentLevel + 1);
     }
 
@@ -1085,8 +1127,25 @@ export default function PhaseShiftGame() {
       reportGameEnd('phase-shift', totalScore, currentLevel === 9, currentLevel + 1);
     }
 
+    // ─── Update Particles (always, even when dead) ───
+    function updateParticles(dt: number) {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+    }
+
     // ─── Update ───
     function update(dt: number) {
+      // Always update particles so death explosions animate
+      updateParticles(dt);
+
+      // Death ghost fade
+      if (deathGhostTimer > 0) deathGhostTimer -= dt;
+
       if (state !== 'playing') return;
       if (!levelConfig) return;
 
@@ -1228,12 +1287,13 @@ export default function PhaseShiftGame() {
         return;
       }
 
-      // ─ Collectibles ─
+      // ─ Collectibles (wider hitbox at high speeds to prevent misses) ─
+      const collectW = 24 + cfg.scrollSpeed * dt;
       for (const c of levelCollectibles) {
         if (c.collected) continue;
         if (c.phase !== 'both' && c.phase !== phase) continue;
         const cx = c.x - cameraX;
-        if (collides(px, py, pSize, pSize, cx - 12, c.y - 12, 24, 24)) {
+        if (collides(px, py, pSize, pSize, cx - collectW / 2, c.y - 12, collectW, 24)) {
           c.collected = true;
           SoundEngine.play('collectStar');
           spawnParticles(cx, c.y, 10, GOLD, 80);
@@ -1244,15 +1304,6 @@ export default function PhaseShiftGame() {
       if (cameraX >= cfg.length) {
         completeLevel();
         return;
-      }
-
-      // ─ Particles ─
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.life -= dt;
-        if (p.life <= 0) particles.splice(i, 1);
       }
 
       // Trail
@@ -1376,6 +1427,44 @@ export default function PhaseShiftGame() {
       // ─ Player ─
       if (state === 'playing' || state === 'paused' || state === 'levelIntro') {
         drawPlayer();
+      }
+
+      // ─ Death ghost (fading player outline expanding outward) ─
+      if (state === 'dead' && deathGhostTimer > 0) {
+        ctx.save();
+        const ghostAlpha = (deathGhostTimer / 0.5) * 0.5;
+        const color = phase === 'A' ? CYAN : MAGENTA;
+        ctx.globalAlpha = ghostAlpha;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 20 * (deathGhostTimer / 0.5);
+        const ghCx = deathX + PLAYER_SIZE / 2;
+        const ghCy = deathY + PLAYER_SIZE / 2;
+        const ghHalf = PLAYER_SIZE / 2 + (1 - deathGhostTimer / 0.5) * 8;
+        if (deathMode === 'dash') {
+          ctx.strokeRect(ghCx - ghHalf, ghCy - ghHalf, ghHalf * 2, ghHalf * 2);
+        } else if (deathMode === 'glide') {
+          ctx.beginPath();
+          ctx.moveTo(ghCx + ghHalf, ghCy);
+          ctx.lineTo(ghCx - ghHalf, ghCy - ghHalf);
+          ctx.lineTo(ghCx - ghHalf, ghCy + ghHalf);
+          ctx.closePath();
+          ctx.stroke();
+        } else if (deathMode === 'flip') {
+          ctx.beginPath();
+          ctx.arc(ghCx, ghCy, ghHalf, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(ghCx, ghCy - ghHalf);
+          ctx.lineTo(ghCx + ghHalf, ghCy);
+          ctx.lineTo(ghCx, ghCy + ghHalf);
+          ctx.lineTo(ghCx - ghHalf, ghCy);
+          ctx.closePath();
+          ctx.stroke();
+        }
+        ctx.restore();
       }
 
       // ─ Particles ─
@@ -1541,13 +1630,20 @@ export default function PhaseShiftGame() {
         ctx.fillStyle = unlocked ? DIM : '#333';
         ctx.fillText(levels[i].name, cx + (cellW - 10) / 2, cy + 50);
 
-        // Stars
+        // Stars + best attempts
         if (unlocked) {
           const starCount = progress.stars[i] ? progress.stars[i].length : 0;
           for (let s = 0; s < 3; s++) {
             ctx.fillStyle = s < starCount ? GOLD : '#333';
             ctx.font = '14px monospace';
-            ctx.fillText(s < starCount ? '\u2605' : '\u2606', cx + 25 + s * 20, cy + 75);
+            ctx.fillText(s < starCount ? '\u2605' : '\u2606', cx + 25 + s * 20, cy + 72);
+          }
+          // Best attempt count
+          const best = progress.bestAttempts[i];
+          if (best > 0) {
+            ctx.fillStyle = '#556';
+            ctx.font = '9px monospace';
+            ctx.fillText(best === 1 ? '1st try!' : `${best} tries`, cx + (cellW - 10) / 2, cy + 86);
           }
         } else {
           ctx.fillStyle = '#444';
@@ -2077,18 +2173,48 @@ export default function PhaseShiftGame() {
     }
 
     function drawPauseOverlay() {
+      if (!levelConfig) return;
       ctx.save();
-      ctx.fillStyle = 'rgba(0,0,10,0.7)';
+      ctx.fillStyle = 'rgba(0,0,10,0.75)';
       ctx.fillRect(0, 0, W, H);
 
       ctx.textAlign = 'center';
       ctx.fillStyle = WHITE;
       ctx.font = 'bold 36px monospace';
-      ctx.fillText('PAUSED', W / 2, H / 2 - 20);
+      ctx.fillText('PAUSED', W / 2, H / 2 - 60);
 
-      ctx.fillStyle = DIM;
+      // Level info
+      ctx.fillStyle = '#888';
       ctx.font = '14px monospace';
-      ctx.fillText('P / ESC TO RESUME  |  R TO RESTART', W / 2, H / 2 + 20);
+      const pct = Math.floor(clamp(cameraX / levelConfig.length, 0, 1) * 100);
+      ctx.fillText(`LEVEL ${currentLevel + 1}: ${levelConfig.name.toUpperCase()}  —  ${pct}%`, W / 2, H / 2 - 25);
+
+      // Mode & phase status
+      ctx.font = '12px monospace';
+      const modeColor = mode === 'dash' ? '#ffaa00' : mode === 'glide' ? '#00ff88' : mode === 'flip' ? '#ff4488' : '#44aaff';
+      ctx.fillStyle = modeColor;
+      ctx.fillText(`MODE: ${mode.toUpperCase()}`, W / 2 - 80, H / 2 + 5);
+      if (levelConfig.allowPhaseShift) {
+        ctx.fillStyle = phase === 'A' ? CYAN : MAGENTA;
+        ctx.fillText(`PHASE: ${phase}`, W / 2 + 80, H / 2 + 5);
+      }
+
+      // Stars collected this run
+      const collected = levelCollectibles.filter(c => c.collected).length;
+      ctx.fillStyle = GOLD;
+      ctx.font = '14px monospace';
+      for (let s = 0; s < 3; s++) {
+        ctx.fillText(s < collected ? '\u2605' : '\u2606', W / 2 - 20 + s * 20, H / 2 + 35);
+      }
+
+      // Controls
+      ctx.fillStyle = DIM;
+      ctx.font = '13px monospace';
+      ctx.fillText('P / ESC = RESUME  |  R = RESTART', W / 2, H / 2 + 70);
+
+      ctx.fillStyle = '#445';
+      ctx.font = '11px monospace';
+      ctx.fillText('SPACE/W = Action  |  SHIFT/X = Phase Shift', W / 2, H / 2 + 95);
 
       ctx.restore();
     }

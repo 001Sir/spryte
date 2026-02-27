@@ -846,7 +846,6 @@ export default function MorphGame() {
       }
       lives--;
       invulnTimer = INVULN_TIME;
-      shakeTimer = 0.4;
       combo = 0;
       comboTimer = 0;
       obstacleStreak = 0;

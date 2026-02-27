@@ -813,9 +813,6 @@ export default function DendriteGame() {
       streak = 0;
       score = Math.max(0, score - 50);
 
-      shakeTimer = 0.4;
-      shakeIntensity = 8;
-
       // Spawn failure particles at the signal's last position or start
       const fx = signal.path.length > 0 ? signal.x : nodes[startIdx].x;
       const fy = signal.path.length > 0 ? signal.y : nodes[startIdx].y;
@@ -835,9 +832,6 @@ export default function DendriteGame() {
       roundComplete = true;
       roundCompleteTimer = 0;
       signalFired = true; // prevent firing
-
-      shakeTimer = 0.4;
-      shakeIntensity = 8;
 
       spawnParticles(W / 2, H / 2, RED, 15, 80, 0.5, 3);
       spawnFloatingText(W / 2, H / 2, 'TIME UP!', RED, 26);

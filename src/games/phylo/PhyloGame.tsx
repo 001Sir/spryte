@@ -1060,9 +1060,6 @@ export default function PhyloGame() {
         SoundEngine.play('playerDamage');
         spawnPlacementParticles(endpoint.x, endpoint.y, '#ef4444', 15, 'crack');
         addFloatingText(endpoint.x, endpoint.y - 30, 'WRONG!', '#ef4444', 22);
-        shakeAmount = 8;
-        shakeTimer = 0.3;
-
         // Crack parent branches too
         let node: TreeNode | null = endpoint.parent;
         while (node) {
