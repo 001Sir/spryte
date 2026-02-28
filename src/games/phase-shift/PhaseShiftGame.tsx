@@ -716,6 +716,7 @@ export default function PhaseShiftGame() {
     let vy = 0;
     let onGround = false;
     let coyoteTimer = 0;
+    let doubleJumpAvailable = false;
     let gravityDir = 1; // 1 = down, -1 = up (flip mode)
     let deathGhostTimer = 0;
     let deathX = 0;
@@ -775,6 +776,7 @@ export default function PhaseShiftGame() {
       py = lvl.groundY - PLAYER_SIZE;
       vy = 0;
       onGround = true;
+      doubleJumpAvailable = false;
       gravityDir = 1;
       particles = [];
       attempts++;
@@ -1192,14 +1194,27 @@ export default function PhaseShiftGame() {
         if (vy > 900) vy = 900;
 
         // Jump
-        if (onGround) coyoteTimer = COYOTE_MS;
-        else coyoteTimer = Math.max(0, coyoteTimer - dt * 1000);
+        if (onGround) {
+          coyoteTimer = COYOTE_MS;
+          doubleJumpAvailable = true;
+        } else {
+          coyoteTimer = Math.max(0, coyoteTimer - dt * 1000);
+        }
 
-        if (actionJustPressed && coyoteTimer > 0) {
-          vy = DASH_JUMP;
-          onGround = false;
-          coyoteTimer = 0;
-          SoundEngine.play('launch');
+        if (actionJustPressed) {
+          if (coyoteTimer > 0) {
+            // Normal jump (or coyote jump)
+            vy = DASH_JUMP;
+            onGround = false;
+            coyoteTimer = 0;
+            SoundEngine.play('launch');
+          } else if (doubleJumpAvailable) {
+            // Double jump
+            vy = DASH_JUMP * 0.85;
+            doubleJumpAvailable = false;
+            SoundEngine.play('launch');
+            spawnParticles(px + halfP, py + pSize, 6, phase === 'A' ? CYAN : MAGENTA, 40);
+          }
         }
       } else if (mode === 'glide') {
         if (actionPressed) {

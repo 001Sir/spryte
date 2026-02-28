@@ -210,6 +210,8 @@ export default function MorphGame() {
     let hoveredUpgrade = -1;
     let lastUpgradeDistance = 0;
     const UPGRADE_INTERVAL = 2000;
+    let upgradeCount = 0;
+    const MAX_UPGRADES = 1;
 
     // Upgrade stats
     let jumpPower = 600;
@@ -524,7 +526,7 @@ export default function MorphGame() {
 
     function morphTo(newForm: FormType) {
       if (newForm === form) return;
-      if (state !== 'playing' || upgradesAvailable) return;
+      if (state !== 'playing') return;
 
       form = newForm;
       morphTimer = MORPH_DURATION;
@@ -888,10 +890,10 @@ export default function MorphGame() {
       });
 
       const shuffled = filtered.sort(() => Math.random() - 0.5);
-      upgradeChoices = shuffled.slice(0, 3);
-      upgradesAvailable = true;
-      hoveredUpgrade = -1;
-      paused = true;
+      if (shuffled.length > 0) {
+        shuffled[0].apply();
+        SoundEngine.play('collectPowerup');
+      }
     }
 
     function selectUpgrade(index: number) {
@@ -928,7 +930,6 @@ export default function MorphGame() {
       nextObstacleX = 600;
       shakeTimer = 0;
       gameTime = 0;
-      upgradesAvailable = false; upgradeChoices = [];
       lastUpgradeDistance = 0; lastMilestone = 0;
       jumpPower = 600; glideStrength = 1.0; ballSmashPower = 1.0;
       spikeWeight = 1.0; comboWindowBonus = 0; magnetRange = 0;
@@ -1025,7 +1026,6 @@ export default function MorphGame() {
       if (distanceTraveled - lastUpgradeDistance >= UPGRADE_INTERVAL) {
         lastUpgradeDistance = Math.floor(distanceTraveled / UPGRADE_INTERVAL) * UPGRADE_INTERVAL;
         generateUpgrades();
-        return;
       }
 
       // Combo timer
@@ -1293,7 +1293,7 @@ export default function MorphGame() {
       }
 
       // Obstacle hint icons (upcoming)
-      if (state === 'playing' && !upgradesAvailable) drawObstacleHints();
+      if (state === 'playing') drawObstacleHints();
 
       // Collectibles
       for (const c of collectibles) {
@@ -1381,10 +1381,7 @@ export default function MorphGame() {
       if (state === 'playing') drawHUD();
 
       // Pause overlay
-      if (paused && !upgradesAvailable && state === 'playing') drawPauseScreen();
-
-      // Upgrade screen
-      if (upgradesAvailable) drawUpgradeScreen();
+      if (paused && state === 'playing') drawPauseScreen();
 
       // Menu
       if (state === 'menu') drawMenu();
@@ -2054,76 +2051,56 @@ export default function MorphGame() {
     }
 
     function drawUpgradeScreen() {
-      ctx.fillStyle = '#000000bb';
+      ctx.fillStyle = '#000000aa';
       ctx.fillRect(0, 0, W, H);
 
-      ctx.fillStyle = WHITE;
-      ctx.font = 'bold 24px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('CHOOSE UPGRADE', W / 2, 130);
 
-      ctx.fillStyle = GOLD;
-      ctx.font = '13px monospace';
-      ctx.fillText(`${Math.floor(distanceTraveled)}m reached!`, W / 2, 155);
+      // Title
+      ctx.fillStyle = WHITE;
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText('CHOOSE UPGRADE', W / 2, H / 2 - 55);
 
-      const cardW = 180;
-      const cardH = 130;
-      const gap = 25;
+      // Cards
+      const cardW = 140;
+      const cardH = 70;
+      const gap = 12;
       const startX = W / 2 - ((upgradeChoices.length * cardW + (upgradeChoices.length - 1) * gap) / 2);
+      const cardY = H / 2 - 35;
 
       for (let i = 0; i < upgradeChoices.length; i++) {
         const u = upgradeChoices[i];
         const cx = startX + i * (cardW + gap);
-        const cy = 185;
         const hovered = i === hoveredUpgrade;
 
         ctx.fillStyle = hovered ? '#2a2a4a' : '#1a1a2e';
         ctx.strokeStyle = hovered ? '#f97316' : '#3a3a5a';
         ctx.lineWidth = hovered ? 2 : 1;
         ctx.beginPath();
-        ctx.roundRect(cx, cy, cardW, cardH, 10);
+        ctx.roundRect(cx, cardY, cardW, cardH, 6);
         ctx.fill();
         ctx.stroke();
 
-        // Icon
+        // Icon + Title on same line
         ctx.fillStyle = '#f97316';
-        ctx.font = 'bold 26px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(u.icon, cx + cardW / 2, cy + 38);
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText(u.icon, cx + cardW / 2, cardY + 22);
 
-        // Title
         ctx.fillStyle = WHITE;
-        ctx.font = 'bold 13px monospace';
-        ctx.fillText(u.title, cx + cardW / 2, cy + 62);
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText(u.title, cx + cardW / 2, cardY + 38);
 
-        // Description (word wrap)
+        // Description - single line truncated
         ctx.fillStyle = DIM;
-        ctx.font = '10px monospace';
-        const words = u.description.split(' ');
-        let line = '';
-        let lineY = cy + 82;
-        for (const word of words) {
-          const testLine = line + (line ? ' ' : '') + word;
-          if (ctx.measureText(testLine).width > cardW - 20) {
-            ctx.fillText(line, cx + cardW / 2, lineY);
-            line = word;
-            lineY += 13;
-          } else {
-            line = testLine;
-          }
-        }
-        ctx.fillText(line, cx + cardW / 2, lineY);
+        ctx.font = '9px monospace';
+        const desc = u.description.length > 22 ? u.description.slice(0, 21) + '…' : u.description;
+        ctx.fillText(desc, cx + cardW / 2, cardY + 52);
 
         // Key hint
-        ctx.fillStyle = hovered ? '#f97316' : DIM;
-        ctx.font = 'bold 12px monospace';
-        ctx.fillText(`[${i + 1}]`, cx + cardW / 2, cy + cardH + 22);
+        ctx.fillStyle = hovered ? '#f97316' : '#555';
+        ctx.font = '9px monospace';
+        ctx.fillText(`${i + 1}`, cx + cardW / 2, cardY + 65);
       }
-
-      ctx.fillStyle = DIM;
-      ctx.font = '11px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('Click or press 1 / 2 / 3', W / 2, 390);
     }
 
     function drawMenu() {
@@ -2358,14 +2335,6 @@ export default function MorphGame() {
       }
       if (state !== 'playing') return;
 
-      // Upgrades
-      if (upgradesAvailable) {
-        if (e.key === '1') selectUpgrade(0);
-        if (e.key === '2') selectUpgrade(1);
-        if (e.key === '3') selectUpgrade(2);
-        return;
-      }
-
       e.preventDefault();
 
       // Morph keys
@@ -2402,7 +2371,7 @@ export default function MorphGame() {
 
       // Pause
       if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
-        if (!upgradesAvailable) paused = !paused;
+        paused = !paused;
       }
     }
 
@@ -2418,23 +2387,6 @@ export default function MorphGame() {
 
       if (state === 'menu') { startGame(); return; }
       if (state === 'gameover') { startGame(); return; }
-
-      if (upgradesAvailable) {
-        const rect = canvas!.getBoundingClientRect();
-        const mx = (e.clientX - rect.left) * (W / rect.width);
-        const my = (e.clientY - rect.top) * (H / rect.height);
-
-        const cardW = 180, cardH = 130, gap = 25;
-        const startX = W / 2 - ((upgradeChoices.length * cardW + (upgradeChoices.length - 1) * gap) / 2);
-        for (let i = 0; i < upgradeChoices.length; i++) {
-          const cx = startX + i * (cardW + gap);
-          if (mx >= cx && mx <= cx + cardW && my >= 185 && my <= 185 + cardH) {
-            selectUpgrade(i);
-            return;
-          }
-        }
-        return;
-      }
 
       // Mouse gameplay: left half = jump/glide, right half = cycle morph
       if (state === 'playing' && !paused) {
@@ -2473,7 +2425,7 @@ export default function MorphGame() {
     }
 
     function onWheel(e: WheelEvent) {
-      if (state !== 'playing' || paused || upgradesAvailable) return;
+      if (state !== 'playing' || paused) return;
       e.preventDefault();
       const forms: FormType[] = ['runner', 'ball', 'glider', 'spike'];
       const idx = forms.indexOf(form);
@@ -2484,22 +2436,8 @@ export default function MorphGame() {
       }
     }
 
-    function onMouseMove(e: MouseEvent) {
-      if (!upgradesAvailable) return;
-      const rect = canvas!.getBoundingClientRect();
-      const mx = (e.clientX - rect.left) * (W / rect.width);
-      const my = (e.clientY - rect.top) * (H / rect.height);
-
-      const cardW = 180, cardH = 130, gap = 25;
-      const startX = W / 2 - ((upgradeChoices.length * cardW + (upgradeChoices.length - 1) * gap) / 2);
-      hoveredUpgrade = -1;
-      for (let i = 0; i < upgradeChoices.length; i++) {
-        const cx = startX + i * (cardW + gap);
-        if (mx >= cx && mx <= cx + cardW && my >= 185 && my <= 185 + cardH) {
-          hoveredUpgrade = i;
-          break;
-        }
-      }
+    function onMouseMove(_e: MouseEvent) {
+      // no-op, kept for event listener
     }
 
     function onTouchStart(e: TouchEvent) {
@@ -2507,7 +2445,7 @@ export default function MorphGame() {
       if (state === 'menu') { startGame(); return; }
       if (state === 'gameover') { startGame(); return; }
 
-      if (state === 'playing' && !upgradesAvailable && !paused) {
+      if (state === 'playing' && !paused) {
         const rect = canvas!.getBoundingClientRect();
         const tx = (e.touches[0].clientX - rect.left) / rect.width;
         if (tx < 0.5) {

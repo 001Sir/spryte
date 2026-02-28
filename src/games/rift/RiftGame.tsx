@@ -549,7 +549,6 @@ export default function RiftGame() {
 
         // Upgrade every 5 waves
         if (wave % 5 === 0) {
-          waveTimer = 999; // don't auto-start; wait for upgrade selection
           generateUpgrades();
         }
       }
@@ -627,11 +626,11 @@ export default function RiftGame() {
         return true;
       });
 
-      // Pick 3 random
       const shuffled = filtered.sort(() => Math.random() - 0.5);
-      upgradeChoices = shuffled.slice(0, 3);
-      state = 'upgrading';
-      hoveredUpgrade = -1;
+      if (shuffled.length > 0) {
+        shuffled[0].apply();
+        SoundEngine.play('collectPowerup');
+      }
     }
 
     function selectUpgrade(index: number) {
@@ -715,11 +714,6 @@ export default function RiftGame() {
 
       if (state === 'gameover') {
         // Just update particles
-        updateParticles(dt);
-        return;
-      }
-
-      if (state === 'upgrading') {
         updateParticles(dt);
         return;
       }
@@ -1132,10 +1126,6 @@ export default function RiftGame() {
         ctx.fillText('Press P to resume', W / 2, H / 2 + 25);
       }
 
-      // Upgrade screen
-      if (state === 'upgrading') {
-        renderUpgradeScreen();
-      }
 
       // Game over screen
       if (state === 'gameover') {
@@ -1489,84 +1479,57 @@ export default function RiftGame() {
     }
 
     function renderUpgradeScreen() {
-      // Dim background
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, W, H);
 
+      ctx.textAlign = 'center';
+
       // Title
       ctx.fillStyle = GOLD;
-      ctx.font = 'bold 28px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('CHOOSE UPGRADE', W / 2, 100);
-
-      ctx.fillStyle = DIM;
-      ctx.font = '13px monospace';
-      ctx.fillText(`Wave ${wave} complete`, W / 2, 130);
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText('CHOOSE UPGRADE', W / 2, H / 2 - 55);
 
       // Cards
-      const cardW = 200;
-      const cardH = 160;
-      const gap = 30;
+      const cardW = 140;
+      const cardH = 70;
+      const gap = 12;
       const totalW = upgradeChoices.length * cardW + (upgradeChoices.length - 1) * gap;
       const startX = (W - totalW) / 2;
-      const cardY = 180;
+      const cardY = H / 2 - 35;
 
       for (let i = 0; i < upgradeChoices.length; i++) {
         const u = upgradeChoices[i];
         const cx = startX + i * (cardW + gap);
         const hovered = hoveredUpgrade === i;
 
-        // Card background
         ctx.fillStyle = hovered ? '#1a1a2f' : '#111122';
         ctx.strokeStyle = hovered ? CYAN : '#334455';
         ctx.lineWidth = hovered ? 2 : 1;
         ctx.beginPath();
-        ctx.roundRect(cx, cardY, cardW, cardH, 8);
+        ctx.roundRect(cx, cardY, cardW, cardH, 6);
         ctx.fill();
         ctx.stroke();
 
-        // Hover glow
-        if (hovered) {
-          ctx.shadowColor = CYAN;
-          ctx.shadowBlur = 15;
-          ctx.strokeStyle = CYAN;
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-        }
-
         // Icon
         ctx.fillStyle = CYAN;
-        ctx.font = 'bold 24px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(u.icon, cx + cardW / 2, cardY + 40);
+        ctx.font = 'bold 14px monospace';
+        ctx.fillText(u.icon, cx + cardW / 2, cardY + 22);
 
         // Title
         ctx.fillStyle = WHITE;
-        ctx.font = 'bold 14px monospace';
-        ctx.fillText(u.title, cx + cardW / 2, cardY + 70);
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText(u.title, cx + cardW / 2, cardY + 38);
 
-        // Description (word wrap)
+        // Description - single line truncated
         ctx.fillStyle = DIM;
-        ctx.font = '11px monospace';
-        const words = u.description.split(' ');
-        let line = '';
-        let lineY = cardY + 95;
-        for (const word of words) {
-          const test = line + (line ? ' ' : '') + word;
-          if (ctx.measureText(test).width > cardW - 24) {
-            ctx.fillText(line, cx + cardW / 2, lineY);
-            line = word;
-            lineY += 15;
-          } else {
-            line = test;
-          }
-        }
-        ctx.fillText(line, cx + cardW / 2, lineY);
+        ctx.font = '9px monospace';
+        const desc = u.description.length > 22 ? u.description.slice(0, 21) + '…' : u.description;
+        ctx.fillText(desc, cx + cardW / 2, cardY + 52);
 
-        // Keyboard shortcut hint
+        // Key hint
         ctx.fillStyle = hovered ? CYAN : '#445566';
-        ctx.font = '10px monospace';
-        ctx.fillText(`[${i + 1}]`, cx + cardW / 2, cardY + cardH - 10);
+        ctx.font = '9px monospace';
+        ctx.fillText(`${i + 1}`, cx + cardW / 2, cardY + 65);
       }
     }
 
@@ -1651,24 +1614,6 @@ export default function RiftGame() {
       const pos = getCanvasPos(e);
       mouseX = pos.x;
       mouseY = pos.y;
-      // Upgrade hover detection
-      if (state === 'upgrading') {
-        const cardW = 200;
-        const cardH = 160;
-        const gap = 30;
-        const totalW = upgradeChoices.length * cardW + (upgradeChoices.length - 1) * gap;
-        const startX = (W - totalW) / 2;
-        const cardY = 180;
-
-        hoveredUpgrade = -1;
-        for (let i = 0; i < upgradeChoices.length; i++) {
-          const cx = startX + i * (cardW + gap);
-          if (pos.x >= cx && pos.x <= cx + cardW && pos.y >= cardY && pos.y <= cardY + cardH) {
-            hoveredUpgrade = i;
-            break;
-          }
-        }
-      }
     }
 
     function onClick(e: MouseEvent) {
@@ -1686,10 +1631,6 @@ export default function RiftGame() {
         return;
       }
 
-      if (state === 'upgrading' && hoveredUpgrade >= 0) {
-        selectUpgrade(hoveredUpgrade);
-        return;
-      }
     }
 
     function onTouchStart(e: TouchEvent) {
@@ -1720,13 +1661,6 @@ export default function RiftGame() {
         }
       }
 
-      // Upgrade selection via number keys
-      if (state === 'upgrading') {
-        const num = parseInt(e.key);
-        if (num >= 1 && num <= upgradeChoices.length) {
-          selectUpgrade(num - 1);
-        }
-      }
     }
 
     // Attach event listeners
