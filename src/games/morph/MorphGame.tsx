@@ -211,7 +211,7 @@ export default function MorphGame() {
     const MAX_UPGRADES = 1;
 
     // Upgrade stats
-    let jumpPower = 600;
+    let jumpPower = 480;
     let glideStrength = 1.0;
     let ballSmashPower = 1.0;
     let spikeWeight = 1.0;
@@ -922,7 +922,7 @@ export default function MorphGame() {
       shakeTimer = 0;
       gameTime = 0;
       upgradeCount = 0; lastUpgradeDistance = 0; lastMilestone = 0;
-      jumpPower = 600; glideStrength = 1.0; ballSmashPower = 1.0;
+      jumpPower = 480; glideStrength = 1.0; ballSmashPower = 1.0;
       spikeWeight = 1.0; comboWindowBonus = 0; magnetRange = 0;
       shieldCharges = 0; doubleJumpUnlocked = false;
       ballBounceCount = 0; ballAngularVel = 0; ballAngle = 0;
