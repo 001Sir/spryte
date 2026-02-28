@@ -205,9 +205,6 @@ export default function MorphGame() {
     let shakeY = 0;
 
     // Upgrades
-    let upgradesAvailable = false;
-    let upgradeChoices: Upgrade[] = [];
-    let hoveredUpgrade = -1;
     let lastUpgradeDistance = 0;
     const UPGRADE_INTERVAL = 2000;
     let upgradeCount = 0;
@@ -891,18 +888,12 @@ export default function MorphGame() {
 
       const shuffled = filtered.sort(() => Math.random() - 0.5);
       if (shuffled.length > 0) {
-        shuffled[0].apply();
+        const chosen = shuffled[0];
+        chosen.apply();
         SoundEngine.play('collectPowerup');
+        spawnFloatingText(px, py - 40, `${chosen.icon} ${chosen.title}`, GOLD, 18);
+        spawnParticles(px, py, GOLD, 12, 4);
       }
-    }
-
-    function selectUpgrade(index: number) {
-      if (index < 0 || index >= upgradeChoices.length) return;
-      upgradeChoices[index].apply();
-      SoundEngine.play('collectPowerup');
-      upgradeChoices = [];
-      upgradesAvailable = false;
-      paused = false;
     }
 
     // -------------------------------------------------------------------
@@ -930,7 +921,7 @@ export default function MorphGame() {
       nextObstacleX = 600;
       shakeTimer = 0;
       gameTime = 0;
-      lastUpgradeDistance = 0; lastMilestone = 0;
+      upgradeCount = 0; lastUpgradeDistance = 0; lastMilestone = 0;
       jumpPower = 600; glideStrength = 1.0; ballSmashPower = 1.0;
       spikeWeight = 1.0; comboWindowBonus = 0; magnetRange = 0;
       shieldCharges = 0; doubleJumpUnlocked = false;
@@ -1022,10 +1013,11 @@ export default function MorphGame() {
         spawnParticles(W / 2, H / 2, GOLD, 20, 5);
       }
 
-      // Upgrade milestone
-      if (distanceTraveled - lastUpgradeDistance >= UPGRADE_INTERVAL) {
+      // Upgrade milestone (limited to MAX_UPGRADES per game)
+      if (upgradeCount < MAX_UPGRADES && distanceTraveled - lastUpgradeDistance >= UPGRADE_INTERVAL) {
         lastUpgradeDistance = Math.floor(distanceTraveled / UPGRADE_INTERVAL) * UPGRADE_INTERVAL;
         generateUpgrades();
+        upgradeCount++;
       }
 
       // Combo timer
@@ -2050,59 +2042,6 @@ export default function MorphGame() {
       ctx.fillText('Press P or ESC to resume', W / 2, H / 2 + 20);
     }
 
-    function drawUpgradeScreen() {
-      ctx.fillStyle = '#000000aa';
-      ctx.fillRect(0, 0, W, H);
-
-      ctx.textAlign = 'center';
-
-      // Title
-      ctx.fillStyle = WHITE;
-      ctx.font = 'bold 14px monospace';
-      ctx.fillText('CHOOSE UPGRADE', W / 2, H / 2 - 55);
-
-      // Cards
-      const cardW = 140;
-      const cardH = 70;
-      const gap = 12;
-      const startX = W / 2 - ((upgradeChoices.length * cardW + (upgradeChoices.length - 1) * gap) / 2);
-      const cardY = H / 2 - 35;
-
-      for (let i = 0; i < upgradeChoices.length; i++) {
-        const u = upgradeChoices[i];
-        const cx = startX + i * (cardW + gap);
-        const hovered = i === hoveredUpgrade;
-
-        ctx.fillStyle = hovered ? '#2a2a4a' : '#1a1a2e';
-        ctx.strokeStyle = hovered ? '#f97316' : '#3a3a5a';
-        ctx.lineWidth = hovered ? 2 : 1;
-        ctx.beginPath();
-        ctx.roundRect(cx, cardY, cardW, cardH, 6);
-        ctx.fill();
-        ctx.stroke();
-
-        // Icon + Title on same line
-        ctx.fillStyle = '#f97316';
-        ctx.font = 'bold 14px monospace';
-        ctx.fillText(u.icon, cx + cardW / 2, cardY + 22);
-
-        ctx.fillStyle = WHITE;
-        ctx.font = 'bold 10px monospace';
-        ctx.fillText(u.title, cx + cardW / 2, cardY + 38);
-
-        // Description - single line truncated
-        ctx.fillStyle = DIM;
-        ctx.font = '9px monospace';
-        const desc = u.description.length > 22 ? u.description.slice(0, 21) + '…' : u.description;
-        ctx.fillText(desc, cx + cardW / 2, cardY + 52);
-
-        // Key hint
-        ctx.fillStyle = hovered ? '#f97316' : '#555';
-        ctx.font = '9px monospace';
-        ctx.fillText(`${i + 1}`, cx + cardW / 2, cardY + 65);
-      }
-    }
-
     function drawMenu() {
       // Title
       const pulse = 1 + Math.sin(menuTime * 2) * 0.03;
@@ -2436,10 +2375,6 @@ export default function MorphGame() {
       }
     }
 
-    function onMouseMove(_e: MouseEvent) {
-      // no-op, kept for event listener
-    }
-
     function onTouchStart(e: TouchEvent) {
       e.preventDefault();
       if (state === 'menu') { startGame(); return; }
@@ -2470,7 +2405,6 @@ export default function MorphGame() {
     window.addEventListener('keyup', onKeyUp);
     canvas.addEventListener('mousedown', onMouseDown);
     canvas.addEventListener('mouseup', onMouseUp);
-    canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('touchstart', onTouchStart, { passive: false });
 
@@ -2485,7 +2419,6 @@ export default function MorphGame() {
       window.removeEventListener('keyup', onKeyUp);
       canvas.removeEventListener('mousedown', onMouseDown);
       canvas.removeEventListener('mouseup', onMouseUp);
-      canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('touchstart', onTouchStart);
       SoundEngine.stopAmbient();
